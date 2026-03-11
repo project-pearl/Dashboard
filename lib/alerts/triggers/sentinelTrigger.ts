@@ -11,12 +11,15 @@ import { getScoredHucs, ensureWarmed as warmScoring } from '../../sentinel/scori
 import { getAllStatuses, ensureWarmed as warmHealth } from '../../sentinel/sentinelHealth';
 import { classifyEvent, gatherConfounders } from '../../sentinel/classificationEngine';
 import { getAllEvents, ensureWarmed as warmQueue } from '../../sentinel/eventQueue';
+import { getNwsAlertsAll, ensureWarmed as warmNwsAlerts } from '../../nwsAlertCache';
 
 interface InvestigationState {
   consecutiveRuns: number;
   lastStage: string;
   lastConfidence: number;
   externalIssued: boolean;
+  weatherDrivenEvent: boolean;
+  weatherContext: string | null;
   updatedAt: string;
 }
 
@@ -101,7 +104,7 @@ function makeHucAlert(
 }
 
 export async function evaluateSentinelAlerts(): Promise<AlertEvent[]> {
-  await Promise.all([warmScoring(), warmHealth(), warmQueue()]);
+  await Promise.all([warmScoring(), warmHealth(), warmQueue(), warmNwsAlerts()]);
 
   const scoredHucs = getScoredHucs();
   const sourceStates = getAllStatuses();
@@ -148,11 +151,33 @@ export async function evaluateSentinelAlerts(): Promise<AlertEvent[]> {
       rationale.push('Persistence + corroboration gate satisfied.');
     }
 
+    // Weather-driven event suppression: if active NWS severe weather warning
+    // covers this HUC's state, suppress outbound alert and tag as weather-driven
+    let weatherDriven = false;
+    let weatherCtx: string | null = null;
+    if (externalEligible) {
+      const nwsAlerts = getNwsAlertsAll();
+      const severeTypes = ['tornado', 'severe thunderstorm', 'hurricane', 'tropical storm'];
+      const activeWarnings = nwsAlerts.filter(a =>
+        a.event.toLowerCase().includes('warning') &&
+        severeTypes.some(t => a.event.toLowerCase().includes(t)) &&
+        (a.areaDesc.includes(huc.stateAbbr) || a.senderName.includes(huc.stateAbbr)),
+      );
+      if (activeWarnings.length > 0) {
+        externalEligible = false;
+        weatherDriven = true;
+        weatherCtx = activeWarnings[0].event;
+        rationale.push(`Suppressed: active NWS ${activeWarnings[0].event} — weather-driven event.`);
+      }
+    }
+
     newInvestigations[huc.huc8] = {
       consecutiveRuns: nextRuns,
       lastStage: stage,
       lastConfidence: confidence,
       externalIssued: externalEligible ? true : Boolean(prev?.externalIssued),
+      weatherDrivenEvent: weatherDriven,
+      weatherContext: weatherCtx,
       updatedAt: now,
     };
 

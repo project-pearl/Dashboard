@@ -1,7 +1,7 @@
 // app/api/cron/rebuild-nws-alerts/route.ts
-// Cron endpoint — fetches NWS weather alerts for all 50 states + DC,
-// filters to water-relevant events (floods, tsunamis, storm surge, etc.).
-// Schedule: every 30 minutes via Vercel cron.
+// Cron endpoint — fetches NWS weather alerts for all 50 states + DC.
+// Stores ALL event types (severe weather, floods, etc.) for cross-correlation.
+// Schedule: every 10 minutes via Vercel cron.
 
 export const maxDuration = 120;
 
@@ -65,17 +65,19 @@ async function fetchStateAlerts(state: string): Promise<NwsAlert[]> {
   const alerts: NwsAlert[] = [];
   for (const f of features) {
     const p = f.properties;
-    if (!p?.event || !isWaterRelevant(p.event)) continue;
+    if (!p?.event) continue;
 
-    // Extract centroid from geometry if available (for precip forecast)
+    // Extract geometry and compute centroid
     const geom = f.geometry;
+    let geometry: { type: string; coordinates: any } | null = null;
     let centroidLat: number | null = null;
     let centroidLng: number | null = null;
     if (geom?.type === 'Point' && geom?.coordinates) {
+      geometry = { type: geom.type, coordinates: geom.coordinates };
       centroidLng = geom.coordinates[0];
       centroidLat = geom.coordinates[1];
     } else if (geom?.type === 'Polygon' && geom?.coordinates?.[0]) {
-      // Compute simple centroid from polygon vertices
+      geometry = { type: geom.type, coordinates: geom.coordinates };
       const coords = geom.coordinates[0];
       let sumLat = 0, sumLng = 0;
       for (const [lng, lat] of coords) {
@@ -100,9 +102,10 @@ async function fetchStateAlerts(state: string): Promise<NwsAlert[]> {
       senderName: p.senderName || '',
       affectedZones: (p.affectedZones || []).slice(0, 20),
       precipForecast: null,
-      _centroidLat: centroidLat,
-      _centroidLng: centroidLng,
-    } as NwsAlert & { _centroidLat: number | null; _centroidLng: number | null });
+      geometry,
+      centroidLat,
+      centroidLng,
+    });
   }
 
   return alerts;
@@ -207,18 +210,18 @@ async function fetchPrecipForecast(lat: number, lng: number): Promise<PrecipFore
  * Limited to MAX_PRECIP_LOCATIONS to stay within time budget.
  */
 async function enrichFloodAlertsWithPrecip(
-  alertsByState: Record<string, { alerts: (NwsAlert & { _centroidLat?: number | null; _centroidLng?: number | null })[]; fetched: string }>
+  alertsByState: Record<string, { alerts: NwsAlert[]; fetched: string }>
 ): Promise<number> {
   // Collect flood alerts with coordinates
-  const floodAlerts: { alert: NwsAlert & { _centroidLat?: number | null; _centroidLng?: number | null }; lat: number; lng: number }[] = [];
+  const floodAlerts: { alert: NwsAlert; lat: number; lng: number }[] = [];
 
   for (const entry of Object.values(alertsByState)) {
     for (const alert of entry.alerts) {
-      if (isFloodAlert(alert.event) && alert._centroidLat != null && alert._centroidLng != null) {
+      if (isFloodAlert(alert.event) && alert.centroidLat != null && alert.centroidLng != null) {
         floodAlerts.push({
           alert,
-          lat: alert._centroidLat,
-          lng: alert._centroidLng,
+          lat: alert.centroidLat,
+          lng: alert.centroidLng,
         });
       }
       if (floodAlerts.length >= MAX_PRECIP_LOCATIONS) break;
@@ -261,14 +264,6 @@ async function enrichFloodAlertsWithPrecip(
     next();
   });
 
-  // Clean up temporary centroid fields
-  for (const entry of Object.values(alertsByState)) {
-    for (const alert of entry.alerts) {
-      delete (alert as any)._centroidLat;
-      delete (alert as any)._centroidLng;
-    }
-  }
-
   return enriched;
 }
 
@@ -308,7 +303,7 @@ export async function GET(request: NextRequest) {
         };
         totalAlerts += alerts.length;
         if (alerts.length > 0) {
-          console.log(`[NWS Cron] ${state}: ${alerts.length} water alerts`);
+          console.log(`[NWS Cron] ${state}: ${alerts.length} alerts`);
         }
       } catch (err: any) {
         console.warn(`[NWS Cron] ${state} failed: ${err.message}`);
@@ -346,7 +341,7 @@ export async function GET(request: NextRequest) {
     // Enrich flood alerts with precipitation forecast data
     let precipEnriched = 0;
     try {
-      precipEnriched = await enrichFloodAlertsWithPrecip(alertsByState as any);
+      precipEnriched = await enrichFloodAlertsWithPrecip(alertsByState);
       if (precipEnriched > 0) {
         console.log(`[NWS Cron] Precip enrichment: ${precipEnriched} flood alerts enriched`);
       }
@@ -357,7 +352,7 @@ export async function GET(request: NextRequest) {
     await setNwsAlertCache(alertsByState);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log(`[NWS Cron] Complete in ${elapsed}s — ${totalAlerts} water alerts across ${Object.keys(alertsByState).length} states`);
+    console.log(`[NWS Cron] Complete in ${elapsed}s — ${totalAlerts} alerts across ${Object.keys(alertsByState).length} states`);
 
     recordCronRun('rebuild-nws-alerts', 'success', Date.now() - startTime);
 

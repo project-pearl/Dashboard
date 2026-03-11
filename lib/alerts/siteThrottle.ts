@@ -107,6 +107,20 @@ export function extractSiteKey(dedupKey: string): string {
     return dedupKey;
   }
 
+  // nws_weather:PATTERN:INSTALLATION:severity → nws_weather:PATTERN:INSTALLATION
+  if (dedupKey.startsWith('nws_weather:')) {
+    const parts = dedupKey.split(':');
+    if (parts.length >= 4) return parts.slice(0, 3).join(':');
+    return dedupKey;
+  }
+
+  // firms|PATTERN|REGION|severity → firms|PATTERN|REGION
+  if (dedupKey.startsWith('firms|')) {
+    const parts = dedupKey.split('|');
+    if (parts.length >= 4) return parts.slice(0, 3).join('|');
+    return dedupKey;
+  }
+
   // coordination-HUC6-TIMEBIN → coordination-HUC6
   if (dedupKey.startsWith('coordination-')) {
     const parts = dedupKey.split('-');

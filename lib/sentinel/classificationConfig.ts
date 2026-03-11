@@ -56,6 +56,13 @@ export const CONFOUNDER_RULES: ConfounderRule[] = [
     affectedParamCds: ['00300', '00010'], // temp↔DO naturally correlated
     description: 'Naturally correlated parameters — don\'t double-count',
   },
+  {
+    id: 'SEVERE_WEATHER_CONFOUNDER',
+    name: 'Active Severe Weather',
+    reductionMagnitude: 0.35,
+    affectedParamCds: [], // affects all parameters
+    description: 'Active NWS severe weather warning — anomalies likely weather-driven',
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -98,6 +105,14 @@ export const ATTACK_SIGNALS: AttackSignal[] = [
     paramCds: ['00300', '63680'], // DO crash + turbidity spike
     minDeviations: 2,
     description: 'DO crash with turbidity spike indicates biological contamination event',
+  },
+  {
+    id: 'CLEAR_WEATHER_CONFIDENCE',
+    name: 'Clear Weather Confirmation',
+    boostMagnitude: 0.1,
+    paramCds: [],
+    minDeviations: 0,
+    description: 'No active weather alerts — anomalies less likely weather-driven',
   },
 ];
 

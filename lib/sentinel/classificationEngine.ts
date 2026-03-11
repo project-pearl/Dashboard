@@ -19,6 +19,7 @@ import {
 } from './classificationConfig';
 import { getEventsForHuc } from './eventQueue';
 import { getWatershedContext } from './indexLookup';
+import { getStateForHuc } from './hucAdjacency';
 
 /* ------------------------------------------------------------------ */
 /*  Main Classification                                               */
@@ -100,9 +101,31 @@ export function classifyEvent(
       // (this is boosted externally by coordination engine)
       continue;
     }
+    if (signal.id === 'CLEAR_WEATHER_CONFIDENCE') {
+      // Handled separately below with weather confounder check
+      continue;
+    }
 
     const matchingParams = signal.paramCds.filter(p => eventParamCds.has(p));
     if (matchingParams.length >= signal.minDeviations) {
+      threatScore += signal.boostMagnitude;
+      reasoning.push({
+        rule: signal.id,
+        effect: 'boost',
+        magnitude: signal.boostMagnitude,
+        detail: `${signal.name}: ${signal.description}`,
+      });
+    }
+  }
+
+  // Clear weather confirmation: if NO weather confounders matched and level is CRITICAL,
+  // add a small confidence boost (absence of weather strengthens threat classification)
+  const noWeatherConfounders = !confounders.find(c =>
+    (c.rule === 'FLOOD_CONFOUNDER' || c.rule === 'SEVERE_WEATHER_CONFOUNDER') && c.matched,
+  );
+  if (noWeatherConfounders && huc.level === 'CRITICAL') {
+    const signal = ATTACK_SIGNALS.find(s => s.id === 'CLEAR_WEATHER_CONFIDENCE');
+    if (signal) {
       threatScore += signal.boostMagnitude;
       reasoning.push({
         rule: signal.id,
@@ -201,6 +224,25 @@ export function gatherConfounders(
     detail: hasDO && hasTemp
       ? 'Temperature and DO co-occurring — natural covariance possible'
       : 'No natural covariance detected',
+  });
+
+  // 5. Severe weather confounder — tornado/thunderstorm/hurricane warnings
+  const severeWeatherTypes = ['tornado', 'severe thunderstorm', 'hurricane', 'tropical storm', 'derecho'];
+  const hucState = getStateForHuc(huc8);
+  const severeWeatherEvents = allEvents.filter(
+    e => e.source === 'NWS_ALERTS' &&
+      (e.geography.huc8 === huc8 || (hucState && e.geography.stateAbbr === hucState)) &&
+      isRecent(e.detectedAt, 24) &&
+      severeWeatherTypes.some(t =>
+        ((e.payload as Record<string, unknown>).event as string || '').toLowerCase().includes(t),
+      ),
+  );
+  checks.push({
+    rule: 'SEVERE_WEATHER_CONFOUNDER',
+    matched: severeWeatherEvents.length > 0,
+    detail: severeWeatherEvents.length > 0
+      ? `${severeWeatherEvents.length} active severe weather warning(s)`
+      : 'No active severe weather warnings',
   });
 
   return checks;

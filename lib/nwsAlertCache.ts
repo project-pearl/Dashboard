@@ -1,13 +1,14 @@
 /**
- * NWS Alert Cache — stores National Weather Service alerts filtered to water-relevant events.
+ * NWS Alert Cache — stores National Weather Service alerts (all event types).
  *
  * State-keyed cache (like usgsAlertCache pattern — NOT grid-based).
- * Populated by /api/cron/rebuild-nws-alerts (every 30 min).
+ * Populated by /api/cron/rebuild-nws-alerts (every 10 min).
  * Persisted to disk + Vercel Blob for cold-start survival.
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
 import { computeCacheDelta, type CacheDelta } from './cacheUtils';
+import { haversineMi } from './geoUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -25,6 +26,9 @@ export interface NwsAlert {
   senderName: string;
   affectedZones: string[];
   precipForecast: { total6hr: number | null; total24hr: number | null } | null;
+  geometry: { type: string; coordinates: any } | null;
+  centroidLat: number | null;
+  centroidLng: number | null;
 }
 
 interface NwsAlertCacheData {
@@ -139,6 +143,30 @@ export function getNwsAlertsByState(): Map<string, NwsAlert[]> {
     if (active.length > 0) result.set(state, active);
   }
   return result;
+}
+
+/** Get all non-expired alerts with centroid within radiusMi of a point. */
+export function getAlertsNearPoint(lat: number, lng: number, radiusMi: number): NwsAlert[] {
+  const all = getNwsAlertsAll();
+  return all.filter(a => {
+    if (a.centroidLat == null || a.centroidLng == null) return false;
+    return haversineMi(lat, lng, a.centroidLat, a.centroidLng) <= radiusMi;
+  });
+}
+
+/** Severe weather event types for getSevereWeatherAlerts(). */
+const SEVERE_WEATHER_TYPES = [
+  'tornado', 'severe thunderstorm', 'hurricane', 'tropical storm',
+  'derecho', 'extreme wind', 'high wind',
+];
+
+/** Get all non-expired alerts matching severe weather event types. */
+export function getSevereWeatherAlerts(): NwsAlert[] {
+  const all = getNwsAlertsAll();
+  return all.filter(a => {
+    const lower = a.event.toLowerCase();
+    return SEVERE_WEATHER_TYPES.some(t => lower.includes(t));
+  });
 }
 
 /** Bulk-set alerts for all states (single blob write). */

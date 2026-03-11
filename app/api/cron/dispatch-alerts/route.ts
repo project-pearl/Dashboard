@@ -18,6 +18,7 @@ import { evaluateBeaconAlerts } from '@/lib/alerts/triggers/beaconTrigger';
 import { evaluateFusionAlerts } from '@/lib/alerts/triggers/fusionTrigger';
 import { evaluateFirmsAlerts } from '@/lib/alerts/triggers/firmsTrigger';
 import { evaluateAttainsAlerts } from '@/lib/alerts/triggers/attainsTrigger';
+import { evaluateNwsWeatherAlerts } from '@/lib/alerts/triggers/nwsWeatherTrigger';
 import { loadRules, evaluateRules } from '@/lib/alerts/rules';
 import type { AlertEvent } from '@/lib/alerts/types';
 import { isCronAuthorized } from '@/lib/apiAuth';
@@ -177,7 +178,16 @@ export async function GET(request: NextRequest) {
       console.warn(`[dispatch-alerts] ATTAINS trigger error: ${err.message}`);
     }
 
-    // 12. Custom rules
+    // 12. NWS Weather trigger (tornado, flash flood near installations)
+    try {
+      const nwsWeatherEvents = await evaluateNwsWeatherAlerts();
+      candidates.push(...nwsWeatherEvents);
+      console.warn(`[dispatch-alerts] NWS Weather: ${nwsWeatherEvents.length} candidates`);
+    } catch (err: any) {
+      console.warn(`[dispatch-alerts] NWS Weather trigger error: ${err.message}`);
+    }
+
+    // 13. Custom rules
     try {
       const rules = await loadRules();
       if (rules.length > 0) {
@@ -189,7 +199,7 @@ export async function GET(request: NextRequest) {
       console.warn(`[dispatch-alerts] Rules engine error: ${err.message}`);
     }
 
-    // 13. Dispatch all candidates
+    // 14. Dispatch all candidates
     const result = await dispatchAlerts(candidates);
     const durationMs = Date.now() - _buildStartedAt;
 
