@@ -463,6 +463,20 @@ export const SECTION_KB: Record<string, SectionKB> = {
     faq: [],
   },
 
+  'ntas-status': {
+    explanation: 'Displays the current National Terrorism Advisory System (NTAS) threat level from the Department of Homeland Security. NTAS replaced the old color-coded Homeland Security Advisory System in 2011. It issues Bulletins (general awareness), Elevated alerts (credible threat), or Imminent alerts (specific, impending threat) when warranted — otherwise it shows "No Active Advisory."',
+    lookFor: 'The color-coded status indicator: green means no active advisory, blue means an informational bulletin is in effect, amber means an elevated threat level, and red means an imminent threat. Click to expand for advisory details including issue date, expiration, and a link to the full DHS advisory.',
+    action: 'During an active advisory, review the details and coordinate with installation security and force protection offices. Share the advisory status with your chain of command and adjust facility readiness posture as appropriate.',
+    faq: [
+      { q: 'What is NTAS?', keywords: ['ntas', 'what', 'stand', 'mean', 'acronym'],
+        a: 'NTAS stands for the National Terrorism Advisory System. It is run by the Department of Homeland Security (DHS) and communicates terrorism threat information to the public. It uses three levels: Bulletin (general trends or context), Elevated (credible threat exists), and Imminent (credible, specific, and impending threat). When no advisory is active, the system shows a baseline "No Active Advisory" status.' },
+      { q: 'How often does it update?', keywords: ['update', 'often', 'refresh', 'frequency', 'change'],
+        a: 'NTAS advisories are issued only when DHS determines there is a credible threat — this can be months or even years apart. The dashboard checks the DHS feed every 30 minutes, so any new advisory will appear within half an hour of publication.' },
+      { q: 'What do the colors mean?', keywords: ['color', 'colors', 'green', 'red', 'amber', 'blue'],
+        a: 'Green = no active advisory (baseline). Blue = an NTAS Bulletin is in effect (informational, general awareness). Amber = Elevated threat (credible threat against the US). Red = Imminent threat (credible, specific, and impending threat requiring immediate protective action).' },
+    ],
+  },
+
   'military-installations': {
     explanation: 'Water quality monitoring data for military installations, including PFAS contamination tracking, groundwater status, and compliance with DoD environmental requirements.',
     lookFor: 'Installations with active PFAS plumes or expanding contamination. Facilities not meeting cleanup milestones.',
