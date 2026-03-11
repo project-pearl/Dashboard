@@ -200,7 +200,7 @@
   --domain-border-coast:  rgba(14, 165, 233, 0.20);
 }
 
-[data-theme="dark"] {
+.dark {
   --bg-base: #0A1128;
   --bg-surface: rgba(14, 22, 45, 0.85);
   --bg-card: rgba(16, 26, 52, 0.72);
@@ -265,7 +265,7 @@
   --accent-copper: #1D4ED8;
   --accent-copper-glow: rgba(29, 78, 216, 0.08);
 }
-[data-accent="sapphire"][data-theme="dark"] {
+[data-accent="sapphire"].dark {
   --accent-teal: #60A5FA;
   --accent-teal-glow: rgba(96, 165, 250, 0.12);
   --accent-copper: #93C5FD;
@@ -279,7 +279,7 @@
   --accent-copper: #4338CA;
   --accent-copper-glow: rgba(67, 56, 202, 0.08);
 }
-[data-accent="indigo"][data-theme="dark"] {
+[data-accent="indigo"].dark {
   --accent-teal: #818CF8;
   --accent-teal-glow: rgba(129, 140, 248, 0.12);
   --accent-copper: #A5B4FC;
@@ -293,7 +293,7 @@
   --accent-copper: #047857;
   --accent-copper-glow: rgba(4, 120, 87, 0.08);
 }
-[data-accent="emerald"][data-theme="dark"] {
+[data-accent="emerald"].dark {
   --accent-teal: #34D399;
   --accent-teal-glow: rgba(52, 211, 153, 0.12);
   --accent-copper: #6EE7B7;
@@ -307,7 +307,7 @@
   --accent-copper: #92400E;
   --accent-copper-glow: rgba(146, 64, 14, 0.08);
 }
-[data-accent="copper"][data-theme="dark"] {
+[data-accent="copper"].dark {
   --accent-teal: #F59E0B;
   --accent-teal-glow: rgba(245, 158, 11, 0.12);
   --accent-copper: #FBBF24;
@@ -491,8 +491,8 @@ canvas, video, iframe, .no-theme-transition {
 .dark .border-emerald-200 { border-color: rgba(16, 185, 129, 0.2) !important; }
 
 /* ── Card token layer (applies to all cards globally) ── */
-[data-theme="dark"] .bg-white,
-[data-theme="dark"] [class*="bg-card"] {
+.dark .bg-white,
+.dark [class*="bg-card"] {
   background: var(--bg-surface) !important;
   border-color: var(--border-default);
   box-shadow: var(--shadow-card);
@@ -506,7 +506,7 @@ canvas, video, iframe, .no-theme-transition {
 .bg-card[class*="bg-gradient"] {
   background: hsl(var(--card)) !important;
 }
-[data-theme="dark"] .bg-card[class*="bg-gradient"] {
+.dark .bg-card[class*="bg-gradient"] {
   background: var(--bg-surface) !important;
 }
 
@@ -585,7 +585,7 @@ canvas, video, iframe, .no-theme-transition {
     border: 1px solid var(--border-subtle);
     box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
   }
-  [data-theme="dark"] .pin-card-inset {
+  .dark .pin-card-inset {
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.15);
   }
 
@@ -639,6 +639,32 @@ canvas, video, iframe, .no-theme-transition {
     padding: 12px 8px;
     background: var(--bg-surface);
     border: 1px solid var(--border-subtle);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PIN Accessibility — Focus & Motion
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Visible focus ring for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid var(--accent-teal, #1A9A8E);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Remove default focus outline (focus-visible handles keyboard) */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Respect OS-level reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 

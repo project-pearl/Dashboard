@@ -50,6 +50,7 @@ export function AlertsBanner({ alerts, dismissedAlerts, onDismiss }: AlertsBanne
             </div>
             <button
               onClick={() => onDismiss(alert.id)}
+              aria-label={`Dismiss alert: ${alert.title}`}
               className={`flex-shrink-0 p-0.5 rounded hover:bg-black/10 ${textColor}`}
             >
               <X className="h-4 w-4" />

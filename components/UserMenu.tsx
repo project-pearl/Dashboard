@@ -1,7 +1,7 @@
 // components/UserMenu.tsx
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
 
@@ -11,15 +11,24 @@ export default function UserMenu() {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Close on outside click
+  // Close on outside click or Escape key
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     }
-    if (open) document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false);
+    }
+    if (open) {
+      document.addEventListener('mousedown', handleClick);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, [open]);
 
   if (!user) return null;
@@ -29,6 +38,9 @@ export default function UserMenu() {
       {/* Avatar button */}
       <button
         onClick={() => setOpen(!open)}
+        aria-haspopup="true"
+        aria-expanded={open}
+        aria-label={`User menu — signed in as ${user.name}`}
         className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
         title={`Signed in as ${user.name}`}
       >
@@ -40,6 +52,7 @@ export default function UserMenu() {
           <div className="text-2xs text-slate-400 leading-tight">{user.role}</div>
         </div>
         <svg
+          aria-hidden="true"
           className={`w-3.5 h-3.5 text-slate-400 transition-transform hidden sm:block ${open ? 'rotate-180' : ''}`}
           fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
         >
@@ -49,7 +62,7 @@ export default function UserMenu() {
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute right-0 top-full mt-1.5 w-72 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
+        <div role="menu" aria-label="User menu" className="absolute right-0 top-full mt-1.5 w-72 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
           {/* User info header */}
           <div className="p-4 border-b border-slate-100 bg-slate-50">
             <div className="flex items-center gap-3">
@@ -87,6 +100,7 @@ export default function UserMenu() {
           {/* Actions */}
           <div className="p-2 space-y-0.5">
             <button
+              role="menuitem"
               onClick={() => {
                 setOpen(false);
                 router.push('/account');
@@ -99,6 +113,7 @@ export default function UserMenu() {
               My Account
             </button>
             <button
+              role="menuitem"
               onClick={() => {
                 setOpen(false);
                 logout();

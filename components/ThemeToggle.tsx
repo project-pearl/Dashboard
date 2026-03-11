@@ -10,7 +10,12 @@ export function ThemeToggle() {
 
   useEffect(() => setMounted(true), []);
 
-  if (!mounted) return <div className="w-[140px]" />; // prevent layout shift
+  if (!mounted) return (
+    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide bg-slate-100 border border-slate-200 invisible" aria-hidden="true">
+      <Sun className="w-3.5 h-3.5" />
+      STANDARD
+    </div>
+  );
 
   const isDark = theme === 'dark';
 

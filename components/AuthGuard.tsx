@@ -10,7 +10,7 @@ import Image from 'next/image';
 const PublicLanding = dynamic(
   () => import('@/components/PublicLanding').then((mod) => mod.PublicLanding),
   { ssr: false, loading: () => (
-    <div className="min-h-screen flex items-center justify-center bg-gray-950">
+    <div className="min-h-screen flex items-center justify-center bg-[#0A1128]">
       <div className="w-12 h-12 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
     </div>
   )}
@@ -37,7 +37,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-950">
+      <div className="min-h-screen flex items-center justify-center bg-[#0A1128]">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
           <p className="text-cyan-300/70 text-sm tracking-wide">Loading PIN Platform...</p>
@@ -139,7 +139,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   // Show spinner while redirect is in flight
   if (isUnauthorizedRoute) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-950">
+      <div className="min-h-screen flex items-center justify-center bg-[#0A1128]">
         <div className="w-12 h-12 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
       </div>
     );

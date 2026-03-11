@@ -25,7 +25,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <DashboardHeader />
 
           {/* Page content */}
-          <main className="flex-1 overflow-y-auto">
+          <main id="main-content" className="flex-1 overflow-y-auto pb-12">
             {children}
 
             {/* Footer */}

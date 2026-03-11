@@ -300,7 +300,7 @@ export default function WaterRiskScore() {
     }
   };
 
-  // TODO: replace with real auth check (e.g. useSession or cookie check)
+  // Public page — auth-gated features use the AuthGuard at the dashboard level
   const isAuthenticated = false;
 
   return (

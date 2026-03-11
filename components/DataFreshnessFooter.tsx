@@ -29,7 +29,7 @@ export function DataFreshnessFooter() {
 
   // Also show the response timestamp as an absolute time
   const responseTime = data?.timestamp
-    ? new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    ? new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })
     : null;
   const responseDate = data?.timestamp
     ? new Date(data.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -44,7 +44,7 @@ export function DataFreshnessFooter() {
     <div className="flex items-center justify-center gap-2 py-3 text-xs text-slate-400">
       <Clock className="w-3 h-3" />
       <span>
-        Data as of {responseDate} {responseTime} EST
+        Data as of {responseDate} {responseTime}
         {mostRecentLabel && <> · Last pipeline refresh: {mostRecentLabel}</>}
         {total > 0 && <> · {loaded}/{total} sources active</>}
       </span>

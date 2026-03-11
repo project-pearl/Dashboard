@@ -632,6 +632,7 @@ export function DashboardSidebar() {
       {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen(true)}
+        aria-label="Open navigation menu"
         className="lg:hidden fixed top-3 left-3 z-50 p-2 rounded-lg bg-white dark:bg-[#0D1526] shadow-md border border-slate-200 dark:border-[rgba(58,189,176,0.12)]"
       >
         <Menu className="w-5 h-5 text-slate-700" />
@@ -644,6 +645,7 @@ export function DashboardSidebar() {
           <div className="relative z-10 h-full shadow-2xl">
             <button
               onClick={() => setMobileOpen(false)}
+              aria-label="Close navigation menu"
               className="absolute top-4 right-4 z-20 p-1 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200"
             >
               <X className="w-4 h-4" />
