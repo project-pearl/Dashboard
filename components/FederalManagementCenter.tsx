@@ -260,7 +260,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: true, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: true, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'data-latency', 'sentinel-briefing', 'air-quality-briefing', 'fire-detection', 'flood-status', 'flood-risk-summary', 'delta-changelog']),
+    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'data-latency', 'sentinel-briefing', 'air-quality-briefing', 'fire-detection', 'flood-status', 'flood-risk-summary', 'weather-alerts', 'delta-changelog']),
   },
   'sentinel-monitoring': {
     label: 'Sentinel Monitoring',
@@ -270,7 +270,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['sentinel-briefing', 'air-quality-briefing', 'flood-status', 'flood-risk-summary', 'sentinel-alerts-placeholder']),
+    sections: new Set(['sentinel-briefing', 'air-quality-briefing', 'flood-status', 'flood-risk-summary', 'weather-alerts', 'sentinel-alerts-placeholder']),
   },
   trends: {
     label: 'Trends & Projections',
@@ -6322,7 +6322,7 @@ export function FederalManagementCenter(props: Props) {
         );
 
         case 'weather-alerts': return DS(
-          <WeatherAlertsSection />
+          <WeatherAlertsSection userState={federalMode ? undefined : selectedState} />
         );
 
         case 'fire-health-advisory': return DS(

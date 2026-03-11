@@ -33,6 +33,7 @@ import { useFloodForecast } from '@/hooks/useFloodForecast';
 import { useFloodRiskOverview } from '@/hooks/useFloodRiskOverview';
 import { FloodForecastCard, FloodStatusSummary } from './FloodForecastCard';
 import { FloodRiskOverviewCard, FloodRiskSummary } from './FloodRiskOverviewCard';
+import { WeatherAlertsSection } from './WeatherAlertsSection';
 import { WaterbodyDetailCard } from '@/components/WaterbodyDetailCard';
 import { scoreToGrade, alertLevelAvgScore, ALERT_LEVEL_SCORES, ecoScoreStyle, ejScoreStyle } from '@/lib/scoringUtils';
 import { getEcoScore, getEcoData, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
@@ -210,7 +211,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Monitoring',
     description: 'State monitoring network, data management, and optimization',
     defaultOverlay: 'coverage',
-    sections: new Set(['groundwater', 'mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'mon-air-quality', 'mon-latency', 'mon-report-card', 'mon-source-health', 'flood-status', 'flood-risk-summary', 'disclaimer']),
+    sections: new Set(['groundwater', 'mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'mon-air-quality', 'mon-latency', 'mon-report-card', 'mon-source-health', 'flood-status', 'flood-risk-summary', 'weather-alerts', 'disclaimer']),
   },
   disaster: {
     label: 'Disaster & Emergency Response',
@@ -4214,6 +4215,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                 isLoading={floodRisk.isLoading}
                 onViewDetails={() => setViewLens('disaster' as ViewLens)}
               />
+            );
+
+            case 'weather-alerts': return DS(
+              <WeatherAlertsSection userState={stateAbbr} />
             );
 
             // ── Disaster sections ──────────────────────────────────────────

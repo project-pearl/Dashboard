@@ -156,6 +156,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'mon-source-health',   label: 'Source Health Registry',       order: 58, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'flood-status',        label: 'River Flood Status',           order: 58.5, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'flood-risk-summary', label: 'Flood Risk by Watershed',       order: 58.6, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'weather-alerts',    label: 'Severe Weather Alerts',         order: 58.7, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Disaster (View 13) ──
     { id: 'disaster-active',     label: 'Active Incidents',             order: 58, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'disaster-response',   label: 'State Response Operations',    order: 59, visible: true, defaultExpanded: true,  lensControlled: true },
@@ -325,6 +326,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'nutrientcredits',     label: 'Nutrient Credit Tracking',         order: 81, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'wqt',                  label: 'Water Quality Trading',            order: 81.5, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'stormsim',            label: 'Storm Event Simulations',          order: 82, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'weather-alerts',      label: 'Severe Weather Alerts',            order: 82.5, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'economics',           label: 'Compliance Economics',             order: 83, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'mdeexport',           label: 'MDE Annual Reporting',             order: 84, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'provenance',          label: 'Data Provenance & Chain of Custody', order: 85, visible: true, defaultExpanded: true, lensControlled: true },

@@ -98,6 +98,7 @@ import { MDEExportTool } from '@/components/MDEExportTool';
 import LocationReportCard from '@/components/LocationReportCard';
 import { getEpaRegionForState } from '@/lib/epa-regions';
 import { UserManagementPanel } from './UserManagementPanel';
+import { WeatherAlertsSection } from './WeatherAlertsSection';
 import { getInvitableRoles } from '@/lib/adminHierarchy';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -207,7 +208,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Monitoring',
     description: 'Monitoring network, data management, and optimization',
     defaultOverlay: 'coverage',
-    sections: new Set(['mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'stormsim', 'provenance', 'disclaimer']),
+    sections: new Set(['mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'stormsim', 'weather-alerts', 'provenance', 'disclaimer']),
   },
   disaster: {
     label: 'Disaster & Emergency Response',
@@ -3117,6 +3118,10 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
             </div>
           </CardContent>
         </Card>
+            );
+
+            case 'weather-alerts': return DS(
+              <WeatherAlertsSection userState={stateAbbr} />
             );
 
             case 'provenance': return DS(

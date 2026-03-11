@@ -12,9 +12,21 @@ import {
   getSevereWeatherAlerts,
   getAlertsNearPoint,
   getNwsAlertsAll,
+  getNwsAlerts,
 } from '@/lib/nwsAlertCache';
 
 import installationsJson from '@/data/military-installations.json';
+
+/** Severe weather event keywords for filtering. */
+const SEVERE_KEYWORDS = [
+  'tornado', 'severe thunderstorm', 'hurricane', 'tropical storm',
+  'derecho', 'extreme wind', 'high wind', 'flash flood',
+];
+
+function isSevere(a: { event: string }) {
+  const lower = a.event.toLowerCase();
+  return SEVERE_KEYWORDS.some(k => lower.includes(k));
+}
 
 interface Installation {
   id: string;
@@ -33,15 +45,23 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const severe = searchParams.get('severe');
+  const stateParam = searchParams.get('state');
   const installationId = searchParams.get('installation');
   const radius = parseFloat(searchParams.get('radius') || '25');
 
-  // Mode 1: Severe weather alerts
+  // Mode 1: Severe weather alerts (optionally filtered by state)
   if (severe === 'true') {
-    const alerts = getSevereWeatherAlerts();
+    let alerts;
+    if (stateParam) {
+      const stateAlerts = getNwsAlerts(stateParam) ?? [];
+      alerts = stateAlerts.filter(isSevere);
+    } else {
+      alerts = getSevereWeatherAlerts();
+    }
     return NextResponse.json({
       alerts,
       count: alerts.length,
+      state: stateParam || null,
       fetchedAt: new Date().toISOString(),
     });
   }
@@ -61,6 +81,17 @@ export async function GET(request: NextRequest) {
       alerts,
       count: alerts.length,
       radiusMi: radius,
+      fetchedAt: new Date().toISOString(),
+    });
+  }
+
+  // Mode 3: All alerts for a single state
+  if (stateParam) {
+    const alerts = getNwsAlerts(stateParam) ?? [];
+    return NextResponse.json({
+      alerts,
+      count: alerts.length,
+      state: stateParam,
       fetchedAt: new Date().toISOString(),
     });
   }
