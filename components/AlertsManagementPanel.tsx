@@ -24,6 +24,7 @@ import { CappedList } from '@/components/CappedList';
 type SubTab = 'history' | 'recipients' | 'rules' | 'suppressions' | 'test';
 
 const SEVERITY_COLORS: Record<AlertSeverity, { bg: string; border: string; text: string; icon: typeof AlertCircle }> = {
+  anomaly:  { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-800', icon: AlertTriangle },
   critical: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-800', icon: XCircle },
   warning:  { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-800', icon: AlertTriangle },
   info:     { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800', icon: Info },
@@ -50,10 +51,10 @@ for (const [region, states] of Object.entries(EPA_REGIONS)) {
 type DatePreset = 'all' | 'today' | 'week' | 'lastWeek' | 'custom';
 type SortOption = 'newest' | 'oldest' | 'region' | 'severity' | 'state';
 
-const SEVERITY_RANK: Record<string, number> = { critical: 0, warning: 1, info: 2 };
+const SEVERITY_RANK: Record<string, number> = { anomaly: 0, critical: 1, warning: 2, info: 3 };
 
 const TRIGGER_TYPES: AlertTriggerType[] = ['sentinel', 'usgs', 'delta', 'attains', 'nwss', 'coordination', 'fusion', 'flood_forecast', 'deployment', 'custom'];
-const SEVERITIES: AlertSeverity[] = ['critical', 'warning', 'info'];
+const SEVERITIES: AlertSeverity[] = ['anomaly', 'critical', 'warning', 'info'];
 const OPERATORS = [
   { value: 'gt', label: '>' },
   { value: 'lt', label: '<' },

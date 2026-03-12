@@ -132,7 +132,7 @@ export async function evaluateSentinelAlerts(): Promise<AlertEvent[]> {
   const systemWarming = allEvents.length === 0 || queueAgeHours < 24;
 
   for (const huc of scoredHucs) {
-    if (huc.level !== 'WATCH' && huc.level !== 'CRITICAL') continue;
+    if (huc.level !== 'WATCH' && huc.level !== 'CRITICAL' && huc.level !== 'ANOMALY') continue;
 
     const confounders = gatherConfounders(huc.huc8, allEvents);
     const classification = classifyEvent(huc, confounders);
@@ -142,7 +142,7 @@ export async function evaluateSentinelAlerts(): Promise<AlertEvent[]> {
     const confidence = classification.threatScore;
     const corroborated = huc.events.length >= 2 || huc.activePatterns.length >= 1;
     const persistent = nextRuns >= 2;
-    const hardCritical = huc.level === 'CRITICAL' && confidence >= 0.8;
+    const hardCritical = (huc.level === 'CRITICAL' || huc.level === 'ANOMALY') && confidence >= 0.8;
 
     const rationale: string[] = [];
     if (classification.classification === 'likely_benign') rationale.push('Confounder model indicates likely benign/natural signal.');
@@ -223,7 +223,7 @@ export async function evaluateSentinelAlerts(): Promise<AlertEvent[]> {
 
     if (!externalEligible) continue;
 
-    const severity: AlertEvent['severity'] = (hardCritical && huc.activePatterns.length > 0) ? 'critical' : 'warning';
+    const severity: AlertEvent['severity'] = huc.level === 'ANOMALY' ? 'anomaly' : (hardCritical && huc.activePatterns.length > 0) ? 'critical' : 'warning';
     events.push(makeHucAlert(huc, severity, stage, confidence, rationale, now, classification.cbrnIndicators, downgradeReason));
   }
 

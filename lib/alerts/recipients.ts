@@ -47,6 +47,7 @@ const SEVERITY_RANK: Record<AlertSeverity, number> = {
   info: 0,
   warning: 1,
   critical: 2,
+  anomaly: 3,
 };
 
 export function getRecipientsForAlert(

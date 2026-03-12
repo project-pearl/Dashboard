@@ -23,6 +23,7 @@ import { PATTERN_LABELS } from '@/lib/alerts/triggers/sentinelTrigger';
 import type { AlertEvent, AlertSeverity } from '@/lib/alerts/types';
 
 const SEV_STYLE: Record<AlertSeverity, { bg: string; text: string; icon: typeof XCircle }> = {
+  anomaly: { bg: 'bg-purple-100', text: 'text-purple-700', icon: AlertTriangle },
   critical: { bg: 'bg-red-100', text: 'text-red-700', icon: XCircle },
   warning: { bg: 'bg-amber-100', text: 'text-amber-700', icon: AlertTriangle },
   info: { bg: 'bg-blue-100', text: 'text-blue-700', icon: Info },

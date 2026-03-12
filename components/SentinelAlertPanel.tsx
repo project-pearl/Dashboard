@@ -119,6 +119,13 @@ export function SentinelAlertPanel({
             )}
 
             {/* Tier-specific content */}
+            {level === 'ANOMALY' && (
+              <div className="text-xs p-2 rounded" style={{ background: 'rgba(123,31,162,0.08)' }}>
+                <span className="font-medium">Anomalous activity: </span>
+                Composite score exceeds 300 — multiple compound patterns active
+              </div>
+            )}
+
             {level === 'CRITICAL' && (
               <div className="pt-1">
                 <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>

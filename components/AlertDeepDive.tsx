@@ -69,6 +69,7 @@ interface AlertDeepDiveProps {
 /* ------------------------------------------------------------------ */
 
 const SEV_CONFIG: Record<AlertSeverity, { bg: string; border: string; text: string; icon: typeof XCircle; label: string }> = {
+  anomaly:  { bg: 'bg-purple-50', border: 'border-purple-300', text: 'text-purple-800', icon: AlertTriangle, label: 'Anomaly' },
   critical: { bg: 'bg-red-50', border: 'border-red-300', text: 'text-red-800', icon: XCircle, label: 'Critical' },
   warning:  { bg: 'bg-amber-50', border: 'border-amber-300', text: 'text-amber-800', icon: AlertTriangle, label: 'Warning' },
   info:     { bg: 'bg-blue-50', border: 'border-blue-300', text: 'text-blue-800', icon: Info, label: 'Info' },

@@ -759,6 +759,9 @@ summary,
   cursor: pointer;
   box-shadow: 0 1px 4px rgba(0,0,0,0.3);
 }
+.sentinel-score-badge[data-level="ANOMALY"] {
+  background: #7B1FA2;
+}
 .sentinel-score-badge[data-level="CRITICAL"] {
   background: #D32F2F;
 }

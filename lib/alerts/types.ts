@@ -6,7 +6,7 @@
  */
 
 /** Alert severity levels, ordered from most to least urgent. */
-export type AlertSeverity = 'critical' | 'warning' | 'info';
+export type AlertSeverity = 'anomaly' | 'critical' | 'warning' | 'info';
 
 /** Supported alert delivery channels. Currently email only. */
 export type AlertChannel = 'email';

@@ -1297,8 +1297,8 @@ export function FederalManagementCenter(props: Props) {
 
   // ── Sentinel Alert System ──
   const sentinel = useSentinelAlerts();
-  const liveSentinelAlertCount = sentinel.criticalHucs.length + sentinel.watchHucs.length + sentinel.advisoryHucs.length;
-  const liveSentinelSevereCount = sentinel.criticalHucs.length;
+  const liveSentinelAlertCount = sentinel.anomalyHucs.length + sentinel.criticalHucs.length + sentinel.watchHucs.length + sentinel.advisoryHucs.length;
+  const liveSentinelSevereCount = sentinel.anomalyHucs.length + sentinel.criticalHucs.length;
   const floodForecast = useFloodForecast();
   const floodRisk = useFloodRiskOverview();
   const amsSummary = useAlertSummary();
@@ -4887,6 +4887,7 @@ export function FederalManagementCenter(props: Props) {
 
         case 'sentinel-briefing': return DS(
           <SentinelBriefingCard
+            anomalyHucs={sentinel.anomalyHucs}
             criticalHucs={sentinel.criticalHucs}
             watchHucs={sentinel.watchHucs}
             recentResolutions={sentinel.recentResolutions}

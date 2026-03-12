@@ -14,6 +14,7 @@ const HUC8_TILESET_ID = 'mapbox://mapbox.mapbox-terrain-v2'; // placeholder
 const HUC8_SOURCE_LAYER = 'landcover'; // placeholder — update with actual layer
 
 interface SentinelAlertLayerProps {
+  anomalyHucs?: ScoredHucClient[];
   criticalHucs: ScoredHucClient[];
   watchHucs: ScoredHucClient[];
   advisoryHucs: ScoredHucClient[];
@@ -27,6 +28,7 @@ interface SentinelAlertLayerProps {
 const MAX_ANIMATED_MARKERS = 10;
 
 export function SentinelAlertLayer({
+  anomalyHucs = [],
   criticalHucs,
   watchHucs,
   advisoryHucs,
@@ -78,6 +80,39 @@ export function SentinelAlertLayer({
           }}
         />
       </Source>
+
+      {/* ── ANOMALY score badges + pulse markers (purple) ── */}
+      {anomalyHucs.slice(0, MAX_ANIMATED_MARKERS).map(h => {
+        const c = centroids[h.huc8];
+        if (!c) return null;
+        return (
+          <Marker
+            key={`sentinel-anomaly-${h.huc8}`}
+            longitude={c.lng}
+            latitude={c.lat}
+            anchor="center"
+            onClick={e => {
+              e.originalEvent.stopPropagation();
+              onHucClick?.(h.huc8, 'ANOMALY');
+            }}
+          >
+            <div className="relative flex items-center justify-center">
+              <div
+                className={`absolute w-14 h-14 rounded-full bg-purple-700 ${
+                  reducedMotion ? 'opacity-25' : 'sentinel-pulse'
+                }`}
+              />
+              <div
+                className="sentinel-score-badge relative z-10"
+                data-level="ANOMALY"
+                title={`${hucNames[h.huc8] ?? h.huc8} — Score: ${h.score}`}
+              >
+                {Math.round(h.score)}
+              </div>
+            </div>
+          </Marker>
+        );
+      })}
 
       {/* ── CRITICAL score badges + pulse markers (HTML overlay) ── */}
       {animatedCritical.map(h => {

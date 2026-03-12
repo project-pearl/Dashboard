@@ -58,6 +58,7 @@ export interface NationalMapSectionProps {
     systemStatus: 'active' | 'degraded' | 'offline';
     lastFetched: string | null;
     sources: any;
+    anomalyHucs: any[];
     criticalHucs: any[];
     watchHucs: any[];
     advisoryHucs: any[];
@@ -235,6 +236,7 @@ export default function NationalMapSection(props: NationalMapSectionProps) {
                         systemStatus={sentinel.systemStatus}
                         lastFetched={sentinel.lastFetched}
                         sources={sentinel.sources}
+                        anomalyCount={sentinel.anomalyHucs.length}
                         criticalCount={sentinel.criticalHucs.length}
                         watchCount={sentinel.watchHucs.length}
                       />
@@ -277,6 +279,7 @@ export default function NationalMapSection(props: NationalMapSectionProps) {
                         fillOpacity={0.65}
                       />
                       <SentinelAlertLayer
+                        anomalyHucs={sentinel.anomalyHucs}
                         criticalHucs={sentinel.criticalHucs}
                         watchHucs={sentinel.watchHucs}
                         advisoryHucs={sentinel.advisoryHucs}
@@ -290,7 +293,7 @@ export default function NationalMapSection(props: NationalMapSectionProps) {
                           alertDetailReturnRef.current = 'alerts';
                           setSideCardMode('alert-detail');
                           // Look up state from scored HUCs and set selectedState
-                          const scoredHuc = [...sentinel.criticalHucs, ...sentinel.watchHucs, ...sentinel.advisoryHucs].find(h => h.huc8 === huc8);
+                          const scoredHuc = [...sentinel.anomalyHucs, ...sentinel.criticalHucs, ...sentinel.watchHucs, ...sentinel.advisoryHucs].find(h => h.huc8 === huc8);
                           if (scoredHuc?.stateAbbr) setSelectedState(scoredHuc.stateAbbr);
                           const c = centroids[huc8];
                           if (c && mapRef.current) {

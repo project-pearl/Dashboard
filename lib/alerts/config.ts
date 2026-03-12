@@ -35,6 +35,7 @@ export const ALERT_FROM_NAME = 'PIN Dashboard Alerts';
 
 /** Per-severity cooldown windows (ms) before the same dedupKey can fire again. */
 export const COOLDOWNS: Record<AlertSeverity, number> = {
+  anomaly:   5 * 60_000,   // 5 min
   critical: 15 * 60_000,   // 15 min
   warning:  60 * 60_000,   // 1 hr
   info:    240 * 60_000,   // 4 hr

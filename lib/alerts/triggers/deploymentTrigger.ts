@@ -335,7 +335,7 @@ export async function evaluateDeploymentAlerts(
       const prevSeverity = prevStates[stateKey];
       newStates[stateKey] = anomaly.severity;
 
-      const severityRank = { info: 0, warning: 1, critical: 2 };
+      const severityRank: Record<string, number> = { info: 0, warning: 1, critical: 2, anomaly: 3 };
       const isNew = !prevSeverity;
       const isEscalation = prevSeverity && severityRank[anomaly.severity] > severityRank[prevSeverity];
       const shouldEmit = classification.externalEligible || (anomaly.severity === 'critical' && classification.hasHardCriticalSignal);

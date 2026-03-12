@@ -22,6 +22,7 @@ import type { ScoredHucClient, ResolvedHuc, SentinelSourceState } from '@/lib/se
 import type { SystemStatus } from '@/hooks/useSentinelAlerts';
 
 interface SentinelBriefingCardProps {
+  anomalyHucs?: ScoredHucClient[];
   criticalHucs: ScoredHucClient[];
   watchHucs: ScoredHucClient[];
   recentResolutions: ResolvedHuc[];
@@ -55,6 +56,7 @@ function hucStateAbbr(huc8: string): string {
 }
 
 const LEVEL_BORDER: Record<string, string> = {
+  ANOMALY: '#7B1FA2',
   CRITICAL: '#D32F2F',
   WATCH: '#F9A825',
 };
@@ -173,6 +175,7 @@ function ResolutionRow({ r, hucNames }: { r: ResolvedHuc; hucNames: Record<strin
 }
 
 export function SentinelBriefingCard({
+  anomalyHucs = [],
   criticalHucs,
   watchHucs,
   recentResolutions,
@@ -182,7 +185,7 @@ export function SentinelBriefingCard({
   lastFetched,
   children,
 }: SentinelBriefingCardProps) {
-  const allActiveEvents = [...criticalHucs, ...watchHucs].sort((a, b) => b.score - a.score);
+  const allActiveEvents = [...anomalyHucs, ...criticalHucs, ...watchHucs].sort((a, b) => b.score - a.score);
   const healthySources = sources.filter(s => s.status === 'HEALTHY').length;
 
   const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set());
