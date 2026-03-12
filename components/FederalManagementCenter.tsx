@@ -1239,8 +1239,34 @@ export function FederalManagementCenter(props: Props) {
           return;
         }
 
-        // Cache has data — fetch it
-        console.log(`[ATTAINS] Cache ${cacheStatus}, ${loadedCount} states — fetching...`);
+        // Phase 1: Fetch lightweight summary (~5KB) for instant scoring
+        console.log(`[ATTAINS] Cache ${cacheStatus}, ${loadedCount} states — fetching summary...`);
+        const summaryRes = await fetch('/api/water-data?action=attains-national-summary');
+        if (summaryRes.ok) {
+          const summaryJson = await summaryRes.json();
+          const summaryStates = summaryJson.states;
+          if (summaryStates && Object.keys(summaryStates).length > 0) {
+            const counts: Record<string, { high: number; medium: number; low: number; none: number; total: number }> = {};
+            for (const [st, summary] of Object.entries(summaryStates) as [string, any][]) {
+              if (summary.high != null || summary.medium != null) {
+                counts[st] = {
+                  high: summary.high || 0,
+                  medium: summary.medium || 0,
+                  low: summary.low || 0,
+                  none: summary.none || 0,
+                  total: summary.total || summary.fetched || 0,
+                };
+              }
+            }
+            if (!cancelled && Object.keys(counts).length > 0) {
+              setAttainsCounts(counts);
+              console.log(`[ATTAINS] Summary loaded: raw counts for ${Object.keys(counts).length} states (scores ready)`);
+            }
+          }
+        }
+
+        // Phase 2: Fetch full waterbody data for map merge (larger payload, background)
+        console.log(`[ATTAINS] Fetching full waterbody data for map...`);
         const r = await fetch('/api/water-data?action=attains-national-cache');
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const json = await r.json();
@@ -1249,7 +1275,6 @@ export function FederalManagementCenter(props: Props) {
         if (states && Object.keys(states).length > 0) {
           const bulk: Record<string, Array<{ name: string; category: string; alertLevel: AlertLevel; causes: string[]; cycle: string }>> = {};
           const loaded = new Set<string>();
-          const counts: Record<string, { high: number; medium: number; low: number; none: number; total: number }> = {};
 
           for (const [st, summary] of Object.entries(states) as [string, any][]) {
             const waterbodies = (summary.waterbodies || []).map((wb: any) => ({
@@ -1265,16 +1290,6 @@ export function FederalManagementCenter(props: Props) {
               bulk[st] = waterbodies;
               loaded.add(st);
             }
-            // Store raw counts from cache (computed before capping)
-            if (summary.high != null || summary.medium != null) {
-              counts[st] = {
-                high: summary.high || 0,
-                medium: summary.medium || 0,
-                low: summary.low || 0,
-                none: summary.none || 0,
-                total: summary.total || summary.fetched || 0,
-              };
-            }
           }
 
           const hydrated = await fillMissingAttainsStates(bulk, loaded);
@@ -1282,9 +1297,8 @@ export function FederalManagementCenter(props: Props) {
           if (!cancelled) {
             setAttainsBulk(hydrated.bulk);
             setAttainsBulkLoaded(hydrated.loaded);
-            setAttainsCounts(counts);
             setAttainsBulkLoading(new Set(allStates.filter(s => !hydrated.loaded.has(s))));
-            console.log(`[ATTAINS] Loaded ${hydrated.loaded.size} states into UI (with raw counts for ${Object.keys(counts).length} states)`);
+            console.log(`[ATTAINS] Full load: ${hydrated.loaded.size} states with waterbodies`);
           }
         }
 
@@ -2023,19 +2037,30 @@ export function FederalManagementCenter(props: Props) {
       const attainsTotal = stateAttains.length;
       const realWaterbodyCount = Math.max(regions.length, attainsTotal);
 
-      // Primary: 14-layer composite index score (already incorporates flow + all data layers)
-      // Fallback: ATTAINS alert-level score blended with flow vulnerability (15%)
+      // Primary: ATTAINS water quality score (higher = better, matches scoreToGrade scale)
+      // Secondary: composite risk index (0=best, 100=worst — INVERTED for quality scale)
+      // Tertiary: flow vulnerability blend
       const compositeData = stateCompositeScores[abbr];
       const flowData = nationalSummary?.flowScores?.[abbr];
       let finalScore: number;
       let finalDataSource = dataSource;
 
-      if (compositeData && compositeData.hucCount > 0) {
-        finalScore = compositeData.score;
+      if (canGradeState && score >= 0) {
+        // ATTAINS water quality is primary; blend composite risk (inverted) as 15% factor
+        if (compositeData && compositeData.hucCount > 0) {
+          const compositeQuality = 100 - compositeData.score; // invert: risk → quality
+          finalScore = Math.round(score * 0.85 + compositeQuality * 0.15);
+        } else if (flowData) {
+          finalScore = Math.round(score * 0.85 + flowData.score * 0.15);
+        } else {
+          finalScore = score;
+        }
+        finalDataSource = dataSource;
+      } else if (compositeData && compositeData.hucCount > 0) {
+        // No ATTAINS data — use inverted composite as fallback
+        finalScore = 100 - compositeData.score;
         canGradeState = true;
-        finalDataSource = 'per-waterbody'; // composite is derived from per-HUC real data
-      } else if (canGradeState && score >= 0 && flowData) {
-        finalScore = Math.round(score * 0.85 + flowData.score * 0.15);
+        finalDataSource = 'per-waterbody';
       } else {
         finalScore = score;
       }
