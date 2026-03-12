@@ -39,13 +39,14 @@ export function middleware(request: NextRequest) {
   // ── CSP policy ──────────────────────────────────────────────────────────
   const csp = [
     `default-src 'self'`,
-    `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' blob:`,
-    `style-src 'self' 'unsafe-inline'`,
+    `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' 'unsafe-inline' blob:`,
+    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
     `img-src 'self' data: blob: https://*.mapbox.com https://*.tiles.mapbox.com`,
     `connect-src 'self' https://*.supabase.co https://api.openai.com https://*.mapbox.com https://*.tiles.mapbox.com https://events.mapbox.com https://*.sentry.io https://va.vercel-scripts.com blob:`,
+    `media-src 'self' https://*.public.blob.vercel-storage.com`,
     `worker-src blob:`,
     `child-src blob:`,
-    `font-src 'self' https://*.mapbox.com`,
+    `font-src 'self' https://*.mapbox.com https://fonts.gstatic.com`,
     `frame-ancestors 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,
