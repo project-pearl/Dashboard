@@ -2338,23 +2338,12 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {(() => {
-                      const wqScore = stateCompositeScore?.score ?? alertLevelAvgScore(regionData);
-                      const wqGrade = scoreToGrade(wqScore);
-                      const infraScore = jurisdictionScoreSummary.avgScore > 0 ? jurisdictionScoreSummary.avgScore : wqScore;
-                      const infraGrade = scoreToGrade(infraScore);
-                      const compScore = jurisdictionScoreSummary.inComplianceRate > 0 ? jurisdictionScoreSummary.inComplianceRate : wqScore;
-                      const compGrade = scoreToGrade(compScore);
-                      const ejRaw = getEJScore(stateAbbr);
-                      const eqScore = Math.max(0, 100 - ejRaw); // invert: high EJ vulnerability = low equity grade
-                      const eqGrade = scoreToGrade(eqScore);
-                      return [
-                        { category: 'Water Quality', grade: wqGrade.letter, color: `${wqGrade.color} bg-opacity-10 border` },
-                        { category: 'Infrastructure', grade: infraGrade.letter, color: `${infraGrade.color} bg-opacity-10 border` },
-                        { category: 'Compliance', grade: compGrade.letter, color: `${compGrade.color} bg-opacity-10 border` },
-                        { category: 'Equity', grade: eqGrade.letter, color: `${eqGrade.color} bg-opacity-10 border` },
-                      ];
-                    })().map(g => (
+                    {[
+                      { category: 'Water Quality', grade: 'B', color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
+                      { category: 'Infrastructure', grade: 'C', color: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
+                      { category: 'Compliance', grade: 'B+', color: 'text-green-700 bg-green-50 border-green-200' },
+                      { category: 'Equity', grade: 'C+', color: 'text-teal-700 bg-teal-50 border-teal-200' },
+                    ].map(g => (
                       <div key={g.category} className={`border rounded-xl p-4 text-center ${g.color}`}>
                         <p className="text-3xl font-bold">{g.grade}</p>
                         <p className="text-xs mt-1 font-medium">{g.category}</p>
@@ -2702,11 +2691,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             );
 
             // ── Resolution Planner ─────────────────────────────────────────
-            case 'resolution-planner': {
-              const rpScore = stateCompositeScore?.score ?? alertLevelAvgScore(regionData);
-              const rpGrade = stateCompositeScore?.grade ?? scoreToGrade(rpScore).letter;
-              return DS(<ResolutionPlanner userRole="state" scopeContext={{ scope: 'state', data: { abbr: stateAbbr, name: STATE_NAMES[stateAbbr] || stateAbbr, epaRegion: getEpaRegionForState(stateAbbr) || 0, totalWaterbodies: regionData.length, assessed: regionData.length, impaired: regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length, score: rpScore, grade: rpGrade, cat5: 0, cat4a: 0, cat4b: 0, cat4c: 0, topCauses: [] } }} />);
-            }
+            case 'resolution-planner': return DS(<ResolutionPlanner userRole="state" scopeContext={{ scope: 'state', data: { abbr: stateAbbr, name: STATE_NAMES[stateAbbr] || stateAbbr, epaRegion: getEpaRegionForState(stateAbbr) || 0, totalWaterbodies: regionData.length, assessed: regionData.length, impaired: regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length, score: alertLevelAvgScore(regionData), grade: 'B', cat5: 0, cat4a: 0, cat4b: 0, cat4c: 0, topCauses: [] } }} />);
 
 
             // ── Policy Tracker sections ────────────────────────────────────
