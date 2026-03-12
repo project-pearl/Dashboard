@@ -61,6 +61,7 @@ import { getUsbrCacheStatus, ensureWarmed as warmUsbr } from '@/lib/usbrCache';
 import { getEchoEffluentCacheStatus, ensureWarmed as warmEchoEffluent } from '@/lib/echoEffluentCache';
 import { getRcraCacheStatus, ensureWarmed as warmRcra } from '@/lib/rcraCache';
 import { getSemsCacheStatus, ensureWarmed as warmSems } from '@/lib/semsCache';
+import { getAdvocacyCacheStatus, ensureWarmed as warmAdvocacy } from '@/lib/advocacyCache';
 import { getHealthSummary, ensureWarmed as warmSentinelHealth } from '@/lib/sentinel/sentinelHealth';
 import { getQueueStats, ensureWarmed as warmSentinelQueue } from '@/lib/sentinel/eventQueue';
 import { getScoredHucsSummary, ensureWarmed as warmSentinelScores } from '@/lib/sentinel/scoringEngine';
@@ -87,7 +88,7 @@ export async function GET(request: NextRequest) {
     [warmTri, warmUSAs, warmGrantsGov, warmSam, warmSentinelHealth, warmSentinelQueue, warmSentinelScores],
     [warmFema, warmSuperfund, warmUsdm, warmUsgsDv, warmCoopsDerived, warmErddapSat],
     [warmNasaStream, warmNwm, warmIpac, warmNcei, warmHabsos, warmGlerl, warmHefs, warmBeacon, warmSsoCso, warmFirms, warmSeismic, warmDam, warmEmbassyAqi],
-    [warmNfipClaims, warmHazMit, warmUsbr, warmEchoEffluent, warmRcra, warmSems],
+    [warmNfipClaims, warmHazMit, warmUsbr, warmEchoEffluent, warmRcra, warmSems, warmAdvocacy],
   ];
   for (const batch of warmBatches) {
     await Promise.allSettled(batch.map(fn => fn()));
@@ -147,6 +148,7 @@ export async function GET(request: NextRequest) {
   const echoEffluent = getEchoEffluentCacheStatus();
   const rcra = getRcraCacheStatus();
   const sems = getSemsCacheStatus();
+  const advocacy = getAdvocacyCacheStatus();
 
   const caches = {
     wqp: {
@@ -369,6 +371,10 @@ export async function GET(request: NextRequest) {
     sems: {
       ...sems,
       ...staleness(sems.loaded ? (sems as any).built : null),
+    },
+    advocacy: {
+      ...advocacy,
+      ...staleness(advocacy.loaded ? (advocacy as any).built : null),
     },
   };
 

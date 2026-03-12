@@ -17,6 +17,10 @@
       "schedule": "0 4 * * *"
     },
     {
+      "path": "/api/cron/rebuild-advocacy",
+      "schedule": "30 4 * * *"
+    },
+    {
       "path": "/api/cron/rebuild-wqp",
       "schedule": "0 5 * * *"
     },

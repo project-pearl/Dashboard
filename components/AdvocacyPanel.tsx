@@ -1,10 +1,9 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { MockDataBadge } from './MockDataBadge';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Scale, AlertTriangle, FileText, Calendar, Megaphone, Shield } from 'lucide-react';
+import { Scale, AlertTriangle, FileText, Calendar, Megaphone, Shield, ExternalLink, Loader2 } from 'lucide-react';
 import { CappedList } from '@/components/CappedList';
 
 // ── Props ───────────────────────────────────────────────────────────────────
@@ -32,7 +31,10 @@ interface CommentPeriod {
   title: string;
   agency: string;
   daysRemaining: number;
+  closeDate?: string;
+  docketId?: string;
   type: string;
+  url?: string;
 }
 
 interface BillTracker {
@@ -41,7 +43,9 @@ interface BillTracker {
   title: string;
   chamber: string;
   status: string;
+  statusDate?: string;
   relevance: 'high' | 'medium' | 'low';
+  url?: string;
 }
 
 interface Hearing {
@@ -50,37 +54,18 @@ interface Hearing {
   date: string;
   location: string;
   type: string;
+  committee?: string;
+  url?: string;
 }
 
-// ── Mock Data ───────────────────────────────────────────────────────────────
-
-const VIOLATION_ALERTS: ViolationAlert[] = [
-  { id: 'V-001', facility: 'Riverview Industrial WWTP', state: 'PA', violation: 'Effluent Limit Exceedance — Total Phosphorus', priority: 'critical', daysSinceDetection: 3, permit: 'PA0027511' },
-  { id: 'V-002', facility: 'Clearwater Municipal STP', state: 'MD', violation: 'Reporting Violation — DMR Non-submission', priority: 'high', daysSinceDetection: 14, permit: 'MD0021601' },
-  { id: 'V-003', facility: 'Valley Processing Plant', state: 'VA', violation: 'Unpermitted Discharge — Storm Event Bypass', priority: 'critical', daysSinceDetection: 7, permit: 'VA0089541' },
-  { id: 'V-004', facility: 'Oakdale POTW', state: 'OH', violation: 'Effluent Limit — Fecal Coliform', priority: 'medium', daysSinceDetection: 21, permit: 'OH0034207' },
-  { id: 'V-005', facility: 'Lakeside Chemical Corp', state: 'NY', violation: 'Pretreatment Violation — pH Exceedance', priority: 'high', daysSinceDetection: 10, permit: 'NY0108456' },
-];
-
-const COMMENT_PERIODS: CommentPeriod[] = [
-  { id: 'CP-001', title: 'Revised Effluent Limitations for Nutrient Discharges', agency: 'EPA Region 3', daysRemaining: 12, type: 'Rulemaking' },
-  { id: 'CP-002', title: 'Draft NPDES General Permit for Stormwater', agency: 'EPA HQ', daysRemaining: 28, type: 'Permit' },
-  { id: 'CP-003', title: 'TMDL Revision — Chesapeake Bay Watershed', agency: 'EPA Region 3', daysRemaining: 5, type: 'TMDL' },
-  { id: 'CP-004', title: 'PFAS Drinking Water Standards Update', agency: 'EPA OGWDW', daysRemaining: 45, type: 'Rulemaking' },
-];
-
-const BILLS: BillTracker[] = [
-  { id: 'B-001', bill: 'S. 1247', title: 'Clean Water Infrastructure Act', chamber: 'Senate', status: 'Committee', relevance: 'high' },
-  { id: 'B-002', bill: 'H.R. 3891', title: 'PFAS Accountability Act', chamber: 'House', status: 'Floor Vote', relevance: 'high' },
-  { id: 'B-003', bill: 'S. 892', title: 'Watershed Restoration Funding Act', chamber: 'Senate', status: 'Introduced', relevance: 'medium' },
-  { id: 'B-004', bill: 'H.R. 2104', title: 'Rural Water Quality Improvement Act', chamber: 'House', status: 'Committee', relevance: 'medium' },
-];
-
-const HEARINGS: Hearing[] = [
-  { id: 'H-001', title: 'Public Hearing — Nutrient TMDL Implementation', date: '2026-03-12', location: 'Harrisburg, PA', type: 'TMDL' },
-  { id: 'H-002', title: 'EPA Stakeholder Meeting — CWA §316(b)', date: '2026-03-18', location: 'Virtual', type: 'Rulemaking' },
-  { id: 'H-003', title: 'State Water Board — NPDES Permit Renewal', date: '2026-04-02', location: 'Richmond, VA', type: 'Permit' },
-];
+interface AdvocacyData {
+  violations: ViolationAlert[];
+  commentPeriods: CommentPeriod[];
+  bills: BillTracker[];
+  hearings: Hearing[];
+  meta: { built: string; billCount: number; hearingCount: number; commentCount: number } | null;
+  fetchedAt: string;
+}
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -111,19 +96,51 @@ function urgencyColor(days: number): string {
   return 'text-amber-700';
 }
 
+function EmptyState({ message }: { message: string }) {
+  return (
+    <div className="text-center py-6 text-xs text-slate-400">
+      {message}
+    </div>
+  );
+}
+
 // ── Component ───────────────────────────────────────────────────────────────
 
 export function AdvocacyPanel({ stateAbbr }: AdvocacyPanelProps) {
   const [showAllViolations, setShowAllViolations] = useState(false);
+  const [data, setData] = useState<AdvocacyData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/advocacy');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        if (!cancelled) setData(json);
+      } catch (e) {
+        console.warn('[AdvocacyPanel] Failed to fetch advocacy data:', e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const violations = data?.violations || [];
+  const commentPeriods = data?.commentPeriods || [];
+  const bills = data?.bills || [];
+  const hearings = data?.hearings || [];
 
   const filteredViolations = useMemo(() => {
-    let list = VIOLATION_ALERTS;
+    let list = violations;
     if (stateAbbr) {
       const stateSpecific = list.filter((v) => v.state.toUpperCase() === stateAbbr.toUpperCase());
       if (stateSpecific.length > 0) list = stateSpecific;
     }
     return showAllViolations ? list : list.slice(0, 3);
-  }, [stateAbbr, showAllViolations]);
+  }, [violations, stateAbbr, showAllViolations]);
 
   const interventionStats = useMemo(() => ({
     totalInterventions: 47,
@@ -131,6 +148,15 @@ export function AdvocacyPanel({ stateAbbr }: AdvocacyPanelProps) {
     pendingActions: 9,
     successRate: 80.9,
   }), []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12 text-slate-400 gap-2">
+        <Loader2 size={16} className="animate-spin" />
+        <span className="text-xs">Loading advocacy data...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -140,16 +166,20 @@ export function AdvocacyPanel({ stateAbbr }: AdvocacyPanelProps) {
         <span>
           Policy Advocacy Intelligence — Regulatory &amp; Legislative Tracker
           {stateAbbr ? ` (${stateAbbr})` : ' (National)'}
-          <MockDataBadge />
+          {data?.meta?.built && (
+            <span className="ml-2 text-slate-300" title={`Cache built: ${data.meta.built}`}>
+              Updated {fmtDate(data.meta.built)}
+            </span>
+          )}
         </span>
       </div>
 
       {/* ── Section 1: Hero Stats ────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {([
-          { label: 'Active Violations', value: VIOLATION_ALERTS.length, Icon: AlertTriangle, iconBg: 'bg-red-50 border-red-200', iconColor: 'text-red-600', valueColor: 'text-red-700' },
-          { label: 'Comment Periods', value: COMMENT_PERIODS.length, Icon: FileText, iconBg: 'bg-blue-50 border-blue-200', iconColor: 'text-blue-600', valueColor: 'text-blue-700' },
-          { label: 'Bills Tracked', value: BILLS.length, Icon: Scale, iconBg: 'bg-purple-50 border-purple-200', iconColor: 'text-purple-600', valueColor: 'text-purple-700' },
+          { label: 'Active Violations', value: violations.length, Icon: AlertTriangle, iconBg: 'bg-red-50 border-red-200', iconColor: 'text-red-600', valueColor: 'text-red-700' },
+          { label: 'Comment Periods', value: commentPeriods.length, Icon: FileText, iconBg: 'bg-blue-50 border-blue-200', iconColor: 'text-blue-600', valueColor: 'text-blue-700' },
+          { label: 'Bills Tracked', value: bills.length, Icon: Scale, iconBg: 'bg-purple-50 border-purple-200', iconColor: 'text-purple-600', valueColor: 'text-purple-700' },
           { label: 'Success Rate', value: `${interventionStats.successRate}%`, Icon: Shield, iconBg: 'bg-emerald-50 border-emerald-200', iconColor: 'text-emerald-600', valueColor: 'text-emerald-700' },
         ] as const).map((stat) => (
           <Card key={stat.label}>
@@ -174,46 +204,54 @@ export function AdvocacyPanel({ stateAbbr }: AdvocacyPanelProps) {
           <CardTitle className="flex items-center gap-2 text-base">
             <AlertTriangle size={16} className="text-red-600" />
             Violation Alerts Requiring Advocacy
-            <Badge className="ml-1 text-2xs bg-red-100 text-red-700">
-              {VIOLATION_ALERTS.filter((v) => v.priority === 'critical').length} critical
-            </Badge>
+            {violations.length > 0 && (
+              <Badge className="ml-1 text-2xs bg-red-100 text-red-700">
+                {violations.filter((v) => v.priority === 'critical').length} critical
+              </Badge>
+            )}
           </CardTitle>
           <CardDescription>
             Active CWA/NPDES violations requiring NGO intervention or public comment
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            {filteredViolations.map((v) => {
-              const cfg = PRIORITY_CONFIG[v.priority];
-              return (
-                <div key={v.id} className={`rounded-lg border p-3 transition-colors ${cfg.border}`}>
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <AlertTriangle size={14} className={v.priority === 'critical' ? 'text-red-600 shrink-0' : 'text-amber-600 shrink-0'} />
-                      <span className="text-xs font-semibold text-slate-800 truncate">{v.facility}</span>
-                      <Badge variant="secondary" className="text-2xs shrink-0">{v.state}</Badge>
+          {violations.length === 0 ? (
+            <EmptyState message="No active violations in ECHO data" />
+          ) : (
+            <>
+              <div className="space-y-2">
+                {filteredViolations.map((v) => {
+                  const cfg = PRIORITY_CONFIG[v.priority];
+                  return (
+                    <div key={v.id} className={`rounded-lg border p-3 transition-colors ${cfg.border}`}>
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <AlertTriangle size={14} className={v.priority === 'critical' ? 'text-red-600 shrink-0' : 'text-amber-600 shrink-0'} />
+                          <span className="text-xs font-semibold text-slate-800 truncate">{v.facility}</span>
+                          <Badge variant="secondary" className="text-2xs shrink-0">{v.state}</Badge>
+                        </div>
+                        <Badge className={`text-2xs ${cfg.badge}`}>{cfg.label}</Badge>
+                      </div>
+                      <p className="text-xs text-slate-600 ml-5 mb-1">{v.violation}</p>
+                      <div className="flex items-center gap-4 text-2xs text-slate-500 ml-5">
+                        <span className="font-mono">{v.permit}</span>
+                        <span className={urgencyColor(v.daysSinceDetection)}>
+                          {v.daysSinceDetection}d since detection
+                        </span>
+                      </div>
                     </div>
-                    <Badge className={`text-2xs ${cfg.badge}`}>{cfg.label}</Badge>
-                  </div>
-                  <p className="text-xs text-slate-600 ml-5 mb-1">{v.violation}</p>
-                  <div className="flex items-center gap-4 text-2xs text-slate-500 ml-5">
-                    <span className="font-mono">{v.permit}</span>
-                    <span className={urgencyColor(v.daysSinceDetection)}>
-                      {v.daysSinceDetection}d since detection
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          {VIOLATION_ALERTS.length > 3 && (
-            <button
-              onClick={() => setShowAllViolations((p) => !p)}
-              className="mt-3 w-full text-center text-xs text-blue-600 hover:text-blue-800 font-medium py-1.5 rounded-md hover:bg-blue-50 transition-colors"
-            >
-              {showAllViolations ? 'Show fewer' : `Show all ${VIOLATION_ALERTS.length} violations`}
-            </button>
+                  );
+                })}
+              </div>
+              {violations.length > 3 && (
+                <button
+                  onClick={() => setShowAllViolations((p) => !p)}
+                  className="mt-3 w-full text-center text-xs text-blue-600 hover:text-blue-800 font-medium py-1.5 rounded-md hover:bg-blue-50 transition-colors"
+                >
+                  {showAllViolations ? 'Show fewer' : `Show all ${violations.length} violations`}
+                </button>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
@@ -225,7 +263,7 @@ export function AdvocacyPanel({ stateAbbr }: AdvocacyPanelProps) {
             <FileText size={16} className="text-blue-600" />
             Regulatory Comment Periods
             <Badge variant="secondary" className="ml-1 text-2xs">
-              {COMMENT_PERIODS.length} open
+              {commentPeriods.length} open
             </Badge>
           </CardTitle>
           <CardDescription>
@@ -233,30 +271,41 @@ export function AdvocacyPanel({ stateAbbr }: AdvocacyPanelProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="max-h-[320px] overflow-y-auto overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead className="sticky top-0 bg-white dark:bg-slate-900 z-10">
-                <tr className="text-left text-slate-500 border-b border-slate-200">
-                  <th className="pb-2 font-semibold">Rulemaking / Permit</th>
-                  <th className="pb-2 font-semibold">Agency</th>
-                  <th className="pb-2 font-semibold">Type</th>
-                  <th className="pb-2 font-semibold text-right">Days Left</th>
-                </tr>
-              </thead>
-              <tbody>
-                {COMMENT_PERIODS.map((cp) => (
-                  <tr key={cp.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                    <td className="py-2 font-medium text-slate-700 max-w-[280px] truncate" title={cp.title}>{cp.title}</td>
-                    <td className="py-2 text-slate-600">{cp.agency}</td>
-                    <td className="py-2"><Badge variant="secondary" className="text-2xs">{cp.type}</Badge></td>
-                    <td className="py-2 text-right">
-                      <span className={urgencyColor(cp.daysRemaining)}>{cp.daysRemaining}d</span>
-                    </td>
+          {commentPeriods.length === 0 ? (
+            <EmptyState message="No open comment periods" />
+          ) : (
+            <div className="max-h-[320px] overflow-y-auto overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead className="sticky top-0 bg-white dark:bg-slate-900 z-10">
+                  <tr className="text-left text-slate-500 border-b border-slate-200">
+                    <th className="pb-2 font-semibold">Rulemaking / Permit</th>
+                    <th className="pb-2 font-semibold">Agency</th>
+                    <th className="pb-2 font-semibold">Type</th>
+                    <th className="pb-2 font-semibold text-right">Days Left</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {commentPeriods.map((cp) => (
+                    <tr key={cp.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                      <td className="py-2 font-medium text-slate-700 max-w-[280px] truncate" title={cp.title}>
+                        {cp.url ? (
+                          <a href={cp.url} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 inline-flex items-center gap-1">
+                            {cp.title}
+                            <ExternalLink size={10} className="shrink-0 text-slate-400" />
+                          </a>
+                        ) : cp.title}
+                      </td>
+                      <td className="py-2 text-slate-600">{cp.agency}</td>
+                      <td className="py-2"><Badge variant="secondary" className="text-2xs">{cp.type}</Badge></td>
+                      <td className="py-2 text-right">
+                        <span className={urgencyColor(cp.daysRemaining)}>{cp.daysRemaining}d</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -272,33 +321,44 @@ export function AdvocacyPanel({ stateAbbr }: AdvocacyPanelProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <CappedList
-            items={BILLS}
-            maxVisible={5}
-            searchable={BILLS.length > 5}
-            searchPlaceholder="Search bills..."
-            getSearchText={(b) => `${b.bill} ${b.title} ${b.chamber}`}
-            getKey={(b) => b.id}
-            className="space-y-2"
-            renderItem={(b) => (
-              <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3 hover:bg-slate-50 transition-colors">
-                <div className="flex items-center gap-3 min-w-0">
-                  <Scale size={14} className="text-purple-500 shrink-0" />
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-slate-800">{b.bill}</span>
-                      <Badge variant="secondary" className="text-2xs">{b.chamber}</Badge>
+          {bills.length === 0 ? (
+            <EmptyState message="No water-related bills tracked" />
+          ) : (
+            <CappedList
+              items={bills}
+              maxVisible={5}
+              searchable={bills.length > 5}
+              searchPlaceholder="Search bills..."
+              getSearchText={(b) => `${b.bill} ${b.title} ${b.chamber}`}
+              getKey={(b) => b.id}
+              className="space-y-2"
+              renderItem={(b) => (
+                <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3 hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Scale size={14} className="text-purple-500 shrink-0" />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        {b.url ? (
+                          <a href={b.url} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-slate-800 hover:text-purple-600 inline-flex items-center gap-1">
+                            {b.bill}
+                            <ExternalLink size={10} className="shrink-0 text-slate-400" />
+                          </a>
+                        ) : (
+                          <span className="text-xs font-bold text-slate-800">{b.bill}</span>
+                        )}
+                        <Badge variant="secondary" className="text-2xs">{b.chamber}</Badge>
+                      </div>
+                      <p className="text-xs text-slate-600 truncate">{b.title}</p>
                     </div>
-                    <p className="text-xs text-slate-600 truncate">{b.title}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0 ml-3">
+                    <span className="text-2xs text-slate-500">{b.status}</span>
+                    <Badge className={`text-2xs ${RELEVANCE_BADGE[b.relevance]}`}>{b.relevance}</Badge>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0 ml-3">
-                  <span className="text-2xs text-slate-500">{b.status}</span>
-                  <Badge className={`text-2xs ${RELEVANCE_BADGE[b.relevance]}`}>{b.relevance}</Badge>
-                </div>
-              </div>
-            )}
-          />
+              )}
+            />
+          )}
         </CardContent>
       </Card>
 
@@ -314,30 +374,41 @@ export function AdvocacyPanel({ stateAbbr }: AdvocacyPanelProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <CappedList
-            items={HEARINGS}
-            maxVisible={5}
-            searchable={HEARINGS.length > 5}
-            searchPlaceholder="Search hearings..."
-            getSearchText={(h) => `${h.title} ${h.location} ${h.type}`}
-            getKey={(h) => h.id}
-            className="space-y-2"
-            renderItem={(h) => (
-              <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3 hover:bg-slate-50 transition-colors">
-                <div className="flex items-center gap-3 min-w-0">
-                  <Calendar size={14} className="text-slate-500 shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-slate-700 truncate">{h.title}</p>
-                    <p className="text-2xs text-slate-500">{h.location}</p>
+          {hearings.length === 0 ? (
+            <EmptyState message="No upcoming hearings scheduled" />
+          ) : (
+            <CappedList
+              items={hearings}
+              maxVisible={5}
+              searchable={hearings.length > 5}
+              searchPlaceholder="Search hearings..."
+              getSearchText={(h) => `${h.title} ${h.location} ${h.type}`}
+              getKey={(h) => h.id}
+              className="space-y-2"
+              renderItem={(h) => (
+                <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3 hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Calendar size={14} className="text-slate-500 shrink-0" />
+                    <div className="min-w-0">
+                      {h.url ? (
+                        <a href={h.url} target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-slate-700 truncate hover:text-blue-600 flex items-center gap-1">
+                          {h.title}
+                          <ExternalLink size={10} className="shrink-0 text-slate-400" />
+                        </a>
+                      ) : (
+                        <p className="text-xs font-medium text-slate-700 truncate">{h.title}</p>
+                      )}
+                      <p className="text-2xs text-slate-500">{h.location}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0 ml-3">
+                    <span className="text-xs font-semibold text-slate-700">{fmtDate(h.date)}</span>
+                    <Badge variant="secondary" className="text-2xs">{h.type}</Badge>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0 ml-3">
-                  <span className="text-xs font-semibold text-slate-700">{fmtDate(h.date)}</span>
-                  <Badge variant="secondary" className="text-2xs">{h.type}</Badge>
-                </div>
-              </div>
-            )}
-          />
+              )}
+            />
+          )}
           <p className="text-2xs text-slate-400 mt-3 flex items-center gap-1">
             <Shield size={10} />
             Successful interventions: {interventionStats.totalInterventions} total,{' '}
