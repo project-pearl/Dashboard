@@ -50,6 +50,8 @@ const MD_WATERWAYS: WaterwayCentroid[] = [
   { lat: 39.6230, lon: -76.7430, keywords: ['prettyboy'] },
   { lat: 39.4390, lon: -76.3070, keywords: ['winters run'] },
   { lat: 39.3850, lon: -76.3550, keywords: ['bird river'] },
+  { lat: 39.4617, lon: -76.1653, keywords: ['bush river'] },
+  { lat: 39.4300, lon: -76.1500, keywords: ['bshoh', 'bush river oligohaline'] },
 
   // ── Potomac mainstem & major tribs ──
   { lat: 38.9500, lon: -77.0600, keywords: ['potomac'] },
@@ -189,6 +191,7 @@ const MD_WATERWAYS: WaterwayCentroid[] = [
   { lat: 39.5200, lon: -76.8200, keywords: ['beaver run'] },
   { lat: 39.3000, lon: -77.2000, keywords: ['bennett creek'] },
   { lat: 39.3200, lon: -76.9800, keywords: ['gillis falls'] },
+  { lat: 39.2584, lon: -77.1847, keywords: ['timber run'] },
 
   // ── Susquehanna direct tribs (Harford, Cecil) ──
   { lat: 39.5700, lon: -76.0800, keywords: ['susquehanna'] },
@@ -423,6 +426,7 @@ const STATE_CENTERS: Record<string, { lat: number; lon: number }> = {
 /**
  * Resolve approximate coordinates for a waterbody.
  * Priority: (1) keyword match → (2) HUC-8 from attainsId → (3) state center with jitter
+ * Maryland waterways have been enhanced with specific coordinate fixes.
  */
 export function resolveWaterbodyCoordinates(
   name: string,
@@ -432,7 +436,7 @@ export function resolveWaterbodyCoordinates(
   const waterways = STATE_WATERWAYS[stateAbbr];
   const hash = simpleHash(name);
 
-  // ── Tier 1: keyword match ──
+  // ── Tier 1: keyword match (includes Maryland waterway fixes) ──
   if (waterways) {
     const lower = name.toLowerCase();
     for (const ww of waterways) {

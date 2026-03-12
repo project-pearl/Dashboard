@@ -28,21 +28,21 @@ const ROLE_PRIMARY_ROUTE: Record<UserRole, string> = {
 // ─── Allowed route prefixes per role ─────────────────────────────────────────
 
 const ROLE_ALLOWED_ROUTES: Record<UserRole, string[]> = {
-  Federal:    ['/dashboard/federal', '/dashboard/site-intelligence'],
-  State:      ['/dashboard/state', '/dashboard/site-intelligence'],
-  Local:      ['/dashboard/local', '/dashboard/site-intelligence'],
-  MS4:        ['/dashboard/ms4', '/dashboard/site-intelligence'],
+  Federal:    ['/dashboard/federal'],
+  State:      ['/dashboard/state'],
+  Local:      ['/dashboard/local'],
+  MS4:        ['/dashboard/ms4'],
   Corporate:  ['/dashboard/esg', '/dashboard/site-intelligence'],
   Utility:    ['/dashboard/utility', '/dashboard/infrastructure', '/dashboard/site-intelligence'],
   Agriculture:['/dashboard/infrastructure', '/dashboard/site-intelligence'],
-  Lab:        ['/dashboard/aqua-lo', '/dashboard/site-intelligence'],
+  Lab:        ['/dashboard/aqua-lo'],
   Biotech:    ['/dashboard/biotech', '/dashboard/site-intelligence'],
   Investor:   ['/dashboard/investor', '/dashboard/site-intelligence'],
-  K12:        ['/dashboard/k12', '/dashboard/site-intelligence'],
-  College:    ['/dashboard/university', '/dashboard/site-intelligence'],
-  Researcher: ['/dashboard/university', '/dashboard/site-intelligence'],
+  K12:        ['/dashboard/k12'],
+  College:    ['/dashboard/university'],
+  Researcher: ['/dashboard/university'],
   NGO:        ['/dashboard/ngo'],
-  Temp:       ['/dashboard/k12', '/dashboard/site-intelligence'],
+  Temp:       ['/dashboard/k12'],
   Pearl:      [], // special-cased: admin sees everything
 };
 
