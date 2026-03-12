@@ -26,30 +26,30 @@ export function scoreToGrade(score: number): { letter: string; color: string; bg
   switch (l) {
     case 'A':
       return minor === '+'
-        ? { letter, color: 'text-green-700',  bg: 'bg-green-600 border-green-700',    textColor: 'text-white' }
+        ? { letter, color: 'text-green-700',    bg: 'bg-green-100 border-green-300',      textColor: 'text-green-800' }
         : minor === '-'
-        ? { letter, color: 'text-green-600',  bg: 'bg-green-500 border-green-600',    textColor: 'text-white' }
-        : { letter, color: 'text-green-700',  bg: 'bg-green-600 border-green-700',    textColor: 'text-white' };
+        ? { letter, color: 'text-green-600',    bg: 'bg-green-50 border-green-200',       textColor: 'text-green-700' }
+        : { letter, color: 'text-green-700',    bg: 'bg-green-100 border-green-300',      textColor: 'text-green-800' };
     case 'B':
       return minor === '+'
-        ? { letter, color: 'text-emerald-700', bg: 'bg-emerald-600 border-emerald-700', textColor: 'text-white' }
+        ? { letter, color: 'text-emerald-700',  bg: 'bg-emerald-100 border-emerald-300',  textColor: 'text-emerald-800' }
         : minor === '-'
-        ? { letter, color: 'text-teal-600',    bg: 'bg-teal-500 border-teal-600',       textColor: 'text-white' }
-        : { letter, color: 'text-emerald-600', bg: 'bg-emerald-500 border-emerald-600', textColor: 'text-white' };
+        ? { letter, color: 'text-teal-600',     bg: 'bg-teal-50 border-teal-200',         textColor: 'text-teal-700' }
+        : { letter, color: 'text-emerald-600',  bg: 'bg-emerald-50 border-emerald-200',   textColor: 'text-emerald-700' };
     case 'C':
       return minor === '-'
-        ? { letter, color: 'text-yellow-600',  bg: 'bg-yellow-500 border-yellow-600',   textColor: 'text-white' }
-        : { letter, color: 'text-yellow-700',  bg: 'bg-yellow-500 border-yellow-600',   textColor: 'text-white' };
+        ? { letter, color: 'text-yellow-700',   bg: 'bg-yellow-50 border-yellow-200',     textColor: 'text-yellow-800' }
+        : { letter, color: 'text-yellow-700',   bg: 'bg-yellow-100 border-yellow-300',    textColor: 'text-yellow-800' };
     case 'D':
       return minor === '+'
-        ? { letter, color: 'text-orange-700',  bg: 'bg-orange-600 border-orange-700',   textColor: 'text-white' }
+        ? { letter, color: 'text-orange-700',   bg: 'bg-orange-100 border-orange-300',    textColor: 'text-orange-800' }
         : minor === '-'
-        ? { letter, color: 'text-orange-500',  bg: 'bg-orange-500 border-orange-600',   textColor: 'text-white' }
-        : { letter, color: 'text-orange-600',  bg: 'bg-orange-500 border-orange-600',   textColor: 'text-white' };
+        ? { letter, color: 'text-orange-600',   bg: 'bg-orange-50 border-orange-200',     textColor: 'text-orange-700' }
+        : { letter, color: 'text-orange-600',   bg: 'bg-orange-50 border-orange-200',     textColor: 'text-orange-700' };
     case 'F':
-      return { letter, color: 'text-red-700',  bg: 'bg-red-600 border-red-700',         textColor: 'text-white' };
+      return { letter, color: 'text-red-700',   bg: 'bg-red-100 border-red-300',          textColor: 'text-red-800' };
     default:
-      return { letter, color: 'text-slate-500', bg: 'bg-slate-400 border-slate-500',    textColor: 'text-white' };
+      return { letter, color: 'text-slate-500', bg: 'bg-slate-100 border-slate-300',      textColor: 'text-slate-600' };
   }
 }
 
