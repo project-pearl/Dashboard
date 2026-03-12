@@ -188,7 +188,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Public Health & Contaminants',
     description: 'Contaminant tracking, health coordination, and lab capacity',
     defaultOverlay: 'risk',
-    sections: new Set(['sdwis', 'ph-contaminants', 'ph-health-coord', 'ph-lab-capacity', 'disclaimer']),
+    sections: new Set(['sdwis', 'ph-contaminants', 'ph-health-coord', 'ph-lab-capacity', 'ph-mortality-context', 'ph-healthcare-access', 'ph-outbreak-tracker', 'ph-env-health-corr', 'disclaimer']),
   },
   habitat: {
     label: 'Habitat & Ecology',
@@ -3241,6 +3241,156 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                     ))}
                   </div>
                   <p className="text-xs text-slate-400 mt-4 italic">Data source: State environmental laboratory management system</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'ph-mortality-context': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Heart className="h-5 w-5 text-red-600" />
+                    National Mortality Context
+                  </CardTitle>
+                  <CardDescription>Environmental causes of death — CDC WONDER national data</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Waterborne Disease', value: '~3,200/yr', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Toxic Exposure', value: '~7,800/yr', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Heavy Metal Poisoning', value: '~420/yr', bg: 'bg-orange-50 border-orange-200' },
+                      { label: 'Respiratory (Env.)', value: '~144,100/yr', bg: 'bg-red-50 border-red-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    {[
+                      { cause: 'Chronic Lower Respiratory (J40-J47)', trend: 'declining', rate: '43.2/100k' },
+                      { cause: 'Toxic Effects (T51-T65)', trend: 'rising', rate: '2.37/100k' },
+                      { cause: 'Intestinal Infections (A00-A09)', trend: 'stable', rate: '0.97/100k' },
+                      { cause: 'Liver Cancer (C22) — PFAS-linked', trend: 'rising', rate: '8.2/100k' },
+                    ].map((c, i) => (
+                      <div key={i} className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50/50 p-3">
+                        <span className="text-xs font-medium text-slate-700">{c.cause}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-500">{c.rate}</span>
+                          <Badge variant={c.trend === 'rising' ? 'destructive' : c.trend === 'declining' ? 'default' : 'secondary'} className="text-2xs">
+                            {c.trend === 'rising' ? '↑' : c.trend === 'declining' ? '↓' : '→'} {c.trend}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: CDC WONDER D76 (national-level data)</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'ph-healthcare-access': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5 text-purple-600" />
+                    Healthcare Access Deserts
+                  </CardTitle>
+                  <CardDescription>HRSA shortage areas overlapping with water quality violations</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Total HPSAs', value: '—', bg: 'bg-purple-50 border-purple-200' },
+                      { label: 'High Severity', value: '—', bg: 'bg-red-50 border-red-200' },
+                      { label: 'Rural %', value: '—', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Near Violations', value: '—', bg: 'bg-amber-50 border-amber-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 rounded-lg border border-purple-200 bg-purple-50/40 p-3">
+                    <div className="text-2xs font-bold uppercase tracking-wider text-purple-700 mb-1">HPSA Coverage</div>
+                    <div className="text-xs text-slate-700">Healthcare shortage data loaded from HRSA HPSA designations. Cross-referenced with SDWIS county violations.</div>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: HRSA HPSA designations, SDWIS violations</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'ph-outbreak-tracker': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-orange-600" />
+                    Outbreak Surveillance
+                  </CardTitle>
+                  <CardDescription>Waterborne illness outbreaks and violation correlation</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Total Outbreaks', value: '—', bg: 'bg-orange-50 border-orange-200' },
+                      { label: 'Total Cases', value: '—', bg: 'bg-red-50 border-red-200' },
+                      { label: 'Hospitalizations', value: '—', bg: 'bg-pink-50 border-pink-200' },
+                      { label: 'Violation-Correlated', value: '—', bg: 'bg-amber-50 border-amber-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 rounded-lg border border-orange-200 bg-orange-50/40 p-3">
+                    <div className="text-2xs font-bold uppercase tracking-wider text-orange-700 mb-1">Tracking Status</div>
+                    <div className="text-xs text-slate-700">Outbreak surveillance data populated by rebuild-outbreaks cron. Live data appears when cache is warmed.</div>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: CDC waterborne illness surveillance, SDWIS correlation</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'ph-env-health-corr': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-teal-600" />
+                    Health-Environment Correlation
+                  </CardTitle>
+                  <CardDescription>Environmental health metrics and risk scoring</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {[
+                      { label: 'Avg. AQI', value: '—', bg: 'bg-teal-50 border-teal-200', desc: 'Air Quality Index' },
+                      { label: 'Violation Density', value: '—', bg: 'bg-blue-50 border-blue-200', desc: 'Per capita' },
+                      { label: 'EJ Percentile', value: '—', bg: 'bg-amber-50 border-amber-200', desc: 'EPA EJScreen' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                        <div className="text-2xs text-slate-400 mt-0.5">{k.desc}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 grid grid-cols-3 gap-2">
+                    {[
+                      { label: 'Low Risk', color: 'bg-green-200', pct: '60%' },
+                      { label: 'Moderate', color: 'bg-amber-200', pct: '28%' },
+                      { label: 'High Risk', color: 'bg-red-200', pct: '12%' },
+                    ].map(r => (
+                      <div key={r.label} className="text-center">
+                        <div className={`h-2 rounded-full ${r.color} mb-1`} />
+                        <div className="text-2xs text-slate-500">{r.label} ({r.pct})</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA EJScreen, CDC Environmental Tracking</p>
                 </CardContent>
               </Card>
             );

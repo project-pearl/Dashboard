@@ -62,7 +62,11 @@
     },
     {
       "path": "/api/cron/rebuild-cdc-wonder",
-      "schedule": "45 9 * * *"
+      "schedule": "45 3 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-hrsa-hpsa",
+      "schedule": "30 13 * * *"
     },
     {
       "path": "/api/cron/rebuild-frs",
@@ -275,6 +279,18 @@
     {
       "path": "/api/cron/installation-threat-assessment",
       "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-ejscreen",
+      "schedule": "0 23 * * 0"
+    },
+    {
+      "path": "/api/cron/rebuild-campd",
+      "schedule": "0 20 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-climate-normals",
+      "schedule": "30 23 * * 0"
     }
   ]
 }

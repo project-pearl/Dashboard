@@ -66,6 +66,10 @@ import { getHospitalCacheStatus, ensureWarmed as warmHospitals } from '@/lib/hos
 import { getWaterborneOutbreakCacheStatus, ensureWarmed as warmOutbreaks } from '@/lib/waterborneIllnessCache';
 import { getEnvironmentalHealthCacheStatus, ensureWarmed as warmEnvironmentalHealth } from '@/lib/environmentalHealthCache';
 import { getCDCWonderCacheStatus, ensureWarmed as warmCDCWonder } from '@/lib/cdcWonderCache';
+import { getHpsaCacheStatus, ensureWarmed as warmHrsaHpsa } from '@/lib/hrsaHpsaCache';
+import { getEJScreenCacheStatus, ensureWarmed as warmEJScreen } from '@/lib/ejscreenCache';
+import { getCampdCacheStatus, ensureWarmed as warmCampd } from '@/lib/campdCache';
+import { getClimateNormalsCacheStatus, ensureWarmed as warmClimateNormals } from '@/lib/climateNormalsCache';
 import { getHealthSummary, ensureWarmed as warmSentinelHealth } from '@/lib/sentinel/sentinelHealth';
 import { getQueueStats, ensureWarmed as warmSentinelQueue } from '@/lib/sentinel/eventQueue';
 import { getScoredHucsSummary, ensureWarmed as warmSentinelScores } from '@/lib/sentinel/scoringEngine';
@@ -93,7 +97,8 @@ export async function GET(request: NextRequest) {
     [warmFema, warmSuperfund, warmUsdm, warmUsgsDv, warmCoopsDerived, warmErddapSat],
     [warmNasaStream, warmNwm, warmIpac, warmNcei, warmHabsos, warmGlerl, warmHefs, warmBeacon, warmSsoCso, warmFirms, warmSeismic, warmDam, warmEmbassyAqi],
     [warmNfipClaims, warmHazMit, warmUsbr, warmEchoEffluent, warmRcra, warmSems, warmAdvocacy],
-    [warmHospitals, warmOutbreaks, warmEnvironmentalHealth, warmCDCWonder],
+    [warmHospitals, warmOutbreaks, warmEnvironmentalHealth, warmCDCWonder, warmHrsaHpsa],
+    [warmEJScreen, warmCampd, warmClimateNormals],
   ];
   for (const batch of warmBatches) {
     await Promise.allSettled(batch.map(fn => fn()));
@@ -158,6 +163,10 @@ export async function GET(request: NextRequest) {
   const outbreaks = getWaterborneOutbreakCacheStatus();
   const environmentalHealth = getEnvironmentalHealthCacheStatus();
   const cdcWonder = getCDCWonderCacheStatus();
+  const hrsaHpsa = getHpsaCacheStatus();
+  const ejscreen = getEJScreenCacheStatus();
+  const campd = getCampdCacheStatus();
+  const climateNormals = getClimateNormalsCacheStatus();
 
   const caches = {
     wqp: {
@@ -400,6 +409,22 @@ export async function GET(request: NextRequest) {
     cdcWonder: {
       ...cdcWonder,
       ...staleness(cdcWonder.loaded ? (cdcWonder as any).built : null),
+    },
+    hrsaHpsa: {
+      ...hrsaHpsa,
+      ...staleness(hrsaHpsa.loaded ? (hrsaHpsa as any).built : null),
+    },
+    ejscreen: {
+      ...ejscreen,
+      ...staleness(ejscreen.loaded ? (ejscreen as any).built : null),
+    },
+    campd: {
+      ...campd,
+      ...staleness(campd.loaded ? (campd as any).built : null),
+    },
+    climateNormals: {
+      ...climateNormals,
+      ...staleness(climateNormals.loaded ? (climateNormals as any).built : null),
     },
   };
 

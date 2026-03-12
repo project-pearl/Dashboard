@@ -40,6 +40,10 @@ import { pollNwss }    from '@/lib/sentinel/adapters/nwssAdapter';
 import { pollStateDischarge } from '@/lib/sentinel/adapters/stateDischargeAdapter';
 import { pollNwpsForecast } from '@/lib/sentinel/adapters/nwpsForecastAdapter';
 import { pollAirQuality } from '@/lib/sentinel/adapters/airQualityAdapter';
+import { pollTri }     from '@/lib/sentinel/adapters/triAdapter';
+import { pollRcra }    from '@/lib/sentinel/adapters/rcraAdapter';
+import { pollSems }    from '@/lib/sentinel/adapters/semsAdapter';
+import { pollCampd }   from '@/lib/sentinel/adapters/campdAdapter';
 
 // Existing caches (need warming for adapters that read them)
 import { ensureWarmed as warmNws }     from '@/lib/nwsAlertCache';
@@ -51,6 +55,10 @@ import { ensureWarmed as warmNwss }    from '@/lib/nwss/nwssCache';
 import { ensureWarmed as warmNwps }    from '@/lib/nwpsCache';
 import { ensureWarmed as warmGaugeLookup } from '@/lib/nwpsGaugeLookup';
 import { ensureWarmed as warmAirQuality } from '@/lib/airQualityCache';
+import { ensureWarmed as warmTri }     from '@/lib/triCache';
+import { ensureWarmed as warmRcra }    from '@/lib/rcraCache';
+import { ensureWarmed as warmSems }    from '@/lib/semsCache';
+import { ensureWarmed as warmCampd }   from '@/lib/campdCache';
 import { isCronAuthorized } from '@/lib/apiAuth';
 import * as Sentry from '@sentry/nextjs';
 import { notifySlackCronFailure } from '@/lib/slackNotify';
@@ -127,6 +135,10 @@ const ADAPTERS: AdapterEntry[] = [
   { source: 'CDC_NWSS',         poll: pollNwss,    isAsync: true,  warmFn: warmNwss },
   { source: 'STATE_DISCHARGE',  poll: pollStateDischarge, isAsync: false },
   { source: 'NWPS_FORECAST',   poll: pollNwpsForecast,  isAsync: false, warmFn: async () => { await Promise.all([warmNwps(), warmGaugeLookup()]); } },
+  { source: 'TRI_RELEASE',     poll: pollTri,           isAsync: false, warmFn: warmTri },
+  { source: 'RCRA_VIOLATION',  poll: pollRcra,          isAsync: false, warmFn: warmRcra },
+  { source: 'SEMS_SUPERFUND',  poll: pollSems,          isAsync: false, warmFn: warmSems },
+  { source: 'CAMPD_EMISSIONS', poll: pollCampd,         isAsync: false, warmFn: warmCampd },
 ];
 
 /* ------------------------------------------------------------------ */

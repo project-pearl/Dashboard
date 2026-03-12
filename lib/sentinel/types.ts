@@ -17,7 +17,11 @@ export type ChangeSource =
   | 'ECHO_ENFORCEMENT'
   | 'CDC_NWSS'
   | 'HABSOS'
-  | 'EPA_BEACON';
+  | 'EPA_BEACON'
+  | 'TRI_RELEASE'
+  | 'RCRA_VIOLATION'
+  | 'SEMS_SUPERFUND'
+  | 'CAMPD_EMISSIONS';
 
 export type ChangeType =
   | 'NEW_RECORD'

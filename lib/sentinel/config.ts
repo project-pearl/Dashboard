@@ -29,6 +29,10 @@ export const BASE_SCORES: Record<ChangeSource, Record<SeverityHint, number>> = {
   CDC_NWSS:         { LOW:  5, MODERATE: 15, HIGH: 35, CRITICAL: 55 },
   HABSOS:           { LOW: 10, MODERATE: 25, HIGH: 45, CRITICAL: 65 },
   EPA_BEACON:       { LOW: 10, MODERATE: 30, HIGH: 50, CRITICAL: 70 },
+  TRI_RELEASE:      { LOW:  5, MODERATE: 20, HIGH: 40, CRITICAL: 60 },
+  RCRA_VIOLATION:   { LOW: 10, MODERATE: 25, HIGH: 45, CRITICAL: 65 },
+  SEMS_SUPERFUND:   { LOW:  5, MODERATE: 15, HIGH: 35, CRITICAL: 55 },
+  CAMPD_EMISSIONS:  { LOW:  5, MODERATE: 15, HIGH: 30, CRITICAL: 50 },
 };
 
 /* ------------------------------------------------------------------ */
@@ -193,6 +197,30 @@ export const COMPOUND_PATTERNS: CompoundPattern[] = [
     ],
     minDistinctSources: 2,
   },
+  {
+    id: 'toxic-release-cascade',
+    name: 'Toxic Release Cascade',
+    multiplier: 2.5,
+    timeWindowHours: 24,
+    requireSameHuc: false,
+    requiredSources: [
+      ['TRI_RELEASE'],
+      ['NPDES_DMR'],
+    ],
+    minDistinctSources: 2,
+  },
+  {
+    id: 'contamination-cluster',
+    name: 'Contamination Cluster',
+    multiplier: 3.0,
+    timeWindowHours: 72,
+    requireSameHuc: false,
+    requiredSources: [
+      ['SEMS_SUPERFUND', 'RCRA_VIOLATION'],
+      ['ECHO_ENFORCEMENT'],
+    ],
+    minDistinctSources: 2,
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -241,6 +269,10 @@ export const POLL_INTERVALS: Record<ChangeSource, number> = {
   CDC_NWSS:        2016, // weekly (2016 × 5 min ≈ 7 days)
   HABSOS:           288, // once/day
   EPA_BEACON:       288, // once/day
+  TRI_RELEASE:      288, // once/day
+  RCRA_VIOLATION:   288, // once/day
+  SEMS_SUPERFUND:   288, // once/day
+  CAMPD_EMISSIONS:  288, // once/day
 };
 
 /* ------------------------------------------------------------------ */

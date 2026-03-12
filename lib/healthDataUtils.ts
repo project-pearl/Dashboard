@@ -124,6 +124,33 @@ export interface EnvironmentalHealthMetric {
   lastUpdated: string;
 }
 
+// ─── Summary Types (for UI cards) ────────────────────────────────────────
+
+export interface NationalMortalityContext {
+  topCauses: Array<{
+    causeCode: string;
+    causeLabel: string;
+    category: string;
+    totalDeaths: number;
+    avgRate: number;
+    trend: 'rising' | 'stable' | 'declining' | null;
+  }>;
+  yearRange: [number, number] | null;
+  cacheBuilt: string | null;
+}
+
+export interface HpsaSummary {
+  totalDesignations: number;
+  primaryCare: number;
+  dentalHealth: number;
+  mentalHealth: number;
+  highSeverity: number;
+  ruralCount: number;
+  totalPopulationServed: number;
+  avgScore: number;
+  overlappingWithViolations: number; // county FIPS overlap with SDWIS
+}
+
 // ─── Spatial Utility Functions ───────────────────────────────────────────────
 
 /**
