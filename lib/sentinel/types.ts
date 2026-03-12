@@ -103,6 +103,31 @@ export interface ActivePattern {
   patternId: string;
   multiplier: number;
   matchedEventIds: string[];
+  plumeAdjustment?: {
+    adjustment: number;
+    exposure: 'direct' | 'partial' | 'perpendicular' | 'upwind';
+    targetId: string;
+    targetName: string;
+    arrivalTimeHours: number | null;
+    windStationId: string;
+    evacuationZone: {
+      stabilityClass: string;
+      innerRadiusM: number;
+      downwindExtentM: number;
+      crosswindHalfWidthM: number;
+      blowDirectionDeg: number;
+      isNighttime: boolean;
+    };
+    affectedTargets: {
+      id: string;
+      name: string;
+      category: 'installation' | 'water-intake' | 'industrial' | 'embassy';
+      distanceKm: number;
+      exposure: 'direct' | 'partial' | 'perpendicular' | 'upwind';
+      arrivalTimeHours: number | null;
+      inEvacZone: boolean;
+    }[];
+  };
 }
 
 export interface ScoredHuc {

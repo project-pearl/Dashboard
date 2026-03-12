@@ -25,10 +25,36 @@ import {
 import { getAllEvents, getActiveHucs, getEventsForHuc } from './eventQueue';
 import { getAdjacentHucs, getStateForHuc, shareHuc6Parent } from './hucAdjacency';
 import { getWatershedContext } from './indexLookup';
+import { assessPlumeForPattern, type PlumeTarget } from './plumeModel';
 import { saveCacheToBlob, loadCacheFromBlob } from '../blobPersistence';
 
 import fs from 'fs';
 import path from 'path';
+
+/* ------------------------------------------------------------------ */
+/*  Plume Targets (lazy-loaded)                                       */
+/* ------------------------------------------------------------------ */
+
+let _plumeTargets: PlumeTarget[] | null = null;
+
+function getPlumeTargets(): PlumeTarget[] {
+  if (_plumeTargets) return _plumeTargets;
+  try {
+    const filePath = path.resolve(process.cwd(), 'data/military-installations.json');
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    const installations: { id: string; name: string; lat: number; lng: number; type?: string }[] = JSON.parse(raw);
+    _plumeTargets = installations.map(i => ({
+      id: i.id,
+      name: i.name,
+      lat: i.lat,
+      lng: i.lng,
+      category: (i.type === 'embassy' ? 'embassy' : 'installation') as PlumeTarget['category'],
+    }));
+  } catch {
+    _plumeTargets = [];
+  }
+  return _plumeTargets;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Scored HUC Persistence                                            */
@@ -223,9 +249,33 @@ export async function scoreAllHucs(): Promise<ScoredHuc[]> {
     const activePatterns: ActivePattern[] = [];
     let patternMultiplier = 1.0;
 
+    const targets = getPlumeTargets();
+
     for (const pattern of COMPOUND_PATTERNS) {
       const match = matchPattern(pattern, allNearbyEvents, huc8, adjacentHucs);
       if (match) {
+        // 2b. Plume assessment — check if matched events have lat/lng
+        //     and if targets are downwind; adjust multiplier accordingly
+        if (targets.length > 0) {
+          const matchedEvents = allNearbyEvents.filter(
+            e => match.matchedEventIds.includes(e.eventId),
+          );
+          const plume = assessPlumeForPattern(matchedEvents, targets);
+          if (plume && plume.adjustment > 0) {
+            match.multiplier += plume.adjustment;
+            match.plumeAdjustment = {
+              adjustment: plume.adjustment,
+              exposure: plume.bestExposure,
+              targetId: plume.targetId,
+              targetName: plume.targetName,
+              arrivalTimeHours: plume.arrivalTimeHours,
+              windStationId: plume.windStationId,
+              evacuationZone: plume.evacuationZone,
+              affectedTargets: plume.affectedTargets,
+            };
+          }
+        }
+
         activePatterns.push(match);
         // Use the highest pattern multiplier (don't stack)
         patternMultiplier = Math.max(patternMultiplier, match.multiplier);
