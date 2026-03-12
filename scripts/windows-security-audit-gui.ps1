@@ -205,7 +205,7 @@ $subtitleLabel = New-Object System.Windows.Forms.Label
 $subtitleLabel.Text = 'Persistence & Threat Detection for Windows Endpoints'
 $subtitleLabel.Font = New-Object System.Drawing.Font('Segoe UI', 9.5)
 $subtitleLabel.ForeColor = [System.Drawing.Color]::FromArgb(180, 195, 220)
-$subtitleLabel.BackColor = [System.Drawing.Color]::Transparent
+$subtitleLabel.BackColor = $brandNavy
 $subtitleLabel.Location = New-Object System.Drawing.Point(232, 48)
 $subtitleLabel.AutoSize = $true
 $headerPanel.Controls.Add($subtitleLabel)
@@ -214,7 +214,7 @@ $versionLabel = New-Object System.Windows.Forms.Label
 $versionLabel.Text = "v$appVersion"
 $versionLabel.Font = New-Object System.Drawing.Font('Segoe UI', 8)
 $versionLabel.ForeColor = [System.Drawing.Color]::FromArgb(120, 140, 170)
-$versionLabel.BackColor = [System.Drawing.Color]::Transparent
+$versionLabel.BackColor = $brandNavy
 $versionLabel.Anchor = 'Top, Right'
 $versionLabel.Location = New-Object System.Drawing.Point(1130, 58)
 $versionLabel.AutoSize = $true
@@ -235,14 +235,14 @@ $defenderIcon.Text = '🛡'
 $defenderIcon.Font = New-Object System.Drawing.Font('Segoe UI Emoji', 11)
 $defenderIcon.Location = New-Object System.Drawing.Point(14, 3)
 $defenderIcon.AutoSize = $true
-$defenderIcon.BackColor = [System.Drawing.Color]::Transparent
+$defenderIcon.BackColor = [System.Drawing.Color]::FromArgb(225, 235, 248)
 $defenderBar.Controls.Add($defenderIcon)
 
 $defenderStatus = New-Object System.Windows.Forms.Label
 $defenderStatus.Text = "Windows Defender: $(Get-DefenderStatusText)"
 $defenderStatus.Font = New-Object System.Drawing.Font('Segoe UI', 9)
 $defenderStatus.ForeColor = [System.Drawing.Color]::FromArgb(50, 60, 80)
-$defenderStatus.BackColor = [System.Drawing.Color]::Transparent
+$defenderStatus.BackColor = [System.Drawing.Color]::FromArgb(225, 235, 248)
 $defenderStatus.Location = New-Object System.Drawing.Point(38, 7)
 $defenderStatus.AutoSize = $true
 $defenderBar.Controls.Add($defenderStatus)
@@ -299,7 +299,7 @@ $statusLabel = New-Object System.Windows.Forms.Label
 $statusLabel.Text = 'Ready'
 $statusLabel.Font = New-Object System.Drawing.Font('Segoe UI', 8.5)
 $statusLabel.ForeColor = [System.Drawing.Color]::FromArgb(180, 195, 220)
-$statusLabel.BackColor = [System.Drawing.Color]::Transparent
+$statusLabel.BackColor = $brandNavy
 $statusLabel.Location = New-Object System.Drawing.Point(14, 6)
 $statusLabel.AutoSize = $true
 $statusBar.Controls.Add($statusLabel)
@@ -308,7 +308,7 @@ $copyrightLabel = New-Object System.Windows.Forms.Label
 $copyrightLabel.Text = "© $(Get-Date -Format 'yyyy') DMH Computers, Inc. — When you can't afford to be down!"
 $copyrightLabel.Font = New-Object System.Drawing.Font('Segoe UI', 7.5)
 $copyrightLabel.ForeColor = [System.Drawing.Color]::FromArgb(100, 120, 155)
-$copyrightLabel.BackColor = [System.Drawing.Color]::Transparent
+$copyrightLabel.BackColor = $brandNavy
 $copyrightLabel.Anchor = 'Bottom, Right'
 $copyrightLabel.Location = New-Object System.Drawing.Point(870, 8)
 $copyrightLabel.AutoSize = $true
