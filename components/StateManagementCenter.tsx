@@ -405,6 +405,9 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
   const [attainsBulk, setAttainsBulk] = useState<Array<{ id: string; name: string; category: string; alertLevel: AlertLevel; causes: string[]; cycle: string; lat?: number | null; lon?: number | null; waterType?: string | null; causeCount: number }>>([]);
   const [attainsBulkLoaded, setAttainsBulkLoaded] = useState(false);
 
+  // 14-layer composite index score for this state
+  const [stateCompositeScore, setStateCompositeScore] = useState<{ score: number; confidence: number; hucCount: number; grade: string } | null>(null);
+
   // Merge ATTAINS into region data
   const mergedRegionData = useMemo(() => {
     if (attainsBulk.length === 0) return baseRegions;
@@ -562,6 +565,21 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
     }
     const timer = setTimeout(fetchAttains, 1_000);
     return () => { cancelled = true; clearTimeout(timer); };
+  }, [stateAbbr]);
+
+  // Fetch 14-layer composite score for this state
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/indices?stateScores=true&state=${stateAbbr}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (cancelled || !data?.stateScores) return;
+        const sc = data.stateScores[stateAbbr];
+        if (sc) setStateCompositeScore(sc);
+        else setStateCompositeScore(null);
+      })
+      .catch(() => setStateCompositeScore(null));
+    return () => { cancelled = true; };
   }, [stateAbbr]);
 
   // ── Per-waterbody caches ──
@@ -2482,7 +2500,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                     <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-700">
                       <p className="text-2xs font-semibold uppercase tracking-wide">{stateName} PIN Composite</p>
                       <p className="mt-1 text-sm font-semibold">
-                        {alertLevelAvgScore(regionData)}/100 ({scoreToGrade(alertLevelAvgScore(regionData)).letter})
+                        {stateCompositeScore ? `${stateCompositeScore.score}/100 (${stateCompositeScore.grade})` : `${alertLevelAvgScore(regionData)}/100 (${scoreToGrade(alertLevelAvgScore(regionData)).letter})`}
                       </p>
                     </div>
                     <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700">

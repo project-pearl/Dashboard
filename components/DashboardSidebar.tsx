@@ -24,15 +24,15 @@ import { LazyIcon, preloadIconBundle } from '@/lib/iconLoader';
 // Lens icon names for lazy loading
 export const LENS_ICON_NAMES: Record<string, string> = {
   // ── Shared / Federal ───────────────────────────────────────────────────────
-  overview: LayoutDashboard,
-  briefing: Sparkles,
-  compliance: ShieldCheck,
-  'water-quality': Waves,
-  infrastructure: Building2,
-  monitoring: Activity,
-  trends: TrendingUp,
-  policy: Scale,
-  contaminants: Biohazard,
+  overview: 'LayoutDashboard',
+  briefing: 'Sparkles',
+  compliance: 'ShieldCheck',
+  'water-quality': 'Waves',
+  infrastructure: 'Building2',
+  monitoring: 'Activity',
+  trends: 'TrendingUp',
+  policy: 'Scale',
+  contaminants: 'Biohazard',
   'public-health': Biohazard,
   'habitat-ecology': TreePine,
   'agricultural-nps': Sprout,
@@ -501,7 +501,7 @@ export function DashboardSidebar() {
           /* ── Single-role mode: lenses as top-level nav items ── */
           <div className="space-y-0.5">
             {singleRoleLenses.map((lens) => {
-              const LensIcon = LENS_ICONS[lens.id] || LayoutDashboard;
+              const iconName = LENS_ICON_NAMES[lens.id] || 'LayoutDashboard';
               const lensActive = isLensActive(singleRoleItem.href, lens.id)
                 || (lens.id === 'overview' && isActive(singleRoleItem.href) && !currentLensParam);
               return (
@@ -516,7 +516,11 @@ export function DashboardSidebar() {
                       : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                   }`}
                 >
-                  <LensIcon className={`w-4 h-4 flex-shrink-0 ${lensActive ? singleRoleItem.accent : 'text-slate-400'}`} aria-hidden="true" />
+                  <LazyIcon
+                    name={iconName}
+                    role="federal"
+                    className={`w-4 h-4 flex-shrink-0 ${lensActive ? singleRoleItem.accent : 'text-slate-400'}`}
+                  />
                   {!collapsed && <span className="truncate">{lens.label}</span>}
                 </button>
               );
