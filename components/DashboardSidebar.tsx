@@ -8,76 +8,21 @@ import { useAuth } from '@/lib/authContext';
 import { canAccessRoute } from '@/lib/roleRoutes';
 import { getLensesForHref, type LensDef } from '@/lib/lensRegistry';
 import { useAdminState, STATE_ABBR_TO_NAME } from '@/lib/adminStateContext';
+// Core navigation icons - kept for immediate use
 import {
-  Building2,
-  Map,
-  CloudRain,
-  Droplets,
-  Factory,
-  Shield,
-  Sprout,
-  FlaskConical,
-  GraduationCap,
-  BookOpen,
-  Leaf,
-  Landmark,
-  Megaphone,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  Home,
-  Settings,
   Menu,
   X,
   LayoutDashboard,
-  Sparkles,
-  ShieldCheck,
-  Waves,
-  Activity,
-  FileText,
-  Trophy,
-  TrendingUp,
-  Scale,
-  Biohazard,
-  Network,
-  Banknote,
-  Crown,
-  Zap,
-  ClipboardList,
-  // Additional icons for expanded lens registries
-  RadioTower,
-  Wrench,
-  FileCheck,
-  AlertTriangle,
-  Bell,
-  Gauge,
-  HardHat,
-  DollarSign,
-  Users,
-  Heart,
-  Search,
-  Beaker,
   MapPin,
-  BarChart3,
-  Hammer,
-  Clock,
-  Link2,
-  Layers,
-  TreePine,
-  Microscope,
-  Handshake,
-  GlassWater,
-  MessageSquare,
-  Target,
-  Calculator,
-  HandCoins,
-  Gamepad2,
-  Flame,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { LazyIcon, preloadIconBundle } from '@/lib/iconLoader';
 
-// Icons for lens items when rendered as top-level nav (single-role mode)
-export const LENS_ICONS: Record<string, LucideIcon> = {
+// Lens icon names for lazy loading
+export const LENS_ICON_NAMES: Record<string, string> = {
   // ── Shared / Federal ───────────────────────────────────────────────────────
   overview: LayoutDashboard,
   briefing: Sparkles,
@@ -514,7 +459,11 @@ export function DashboardSidebar() {
   };
 
   const sidebar = (
-    <div className={`flex flex-col h-full bg-white dark:bg-[#0D1526] border-r border-slate-200 dark:border-[rgba(58,189,176,0.12)] transition-all duration-300 ${collapsed ? 'w-16' : 'w-64'}`}>
+    <aside
+      role="navigation"
+      aria-label="Main navigation"
+      className={`flex flex-col h-full bg-white dark:bg-[#0D1526] border-r border-slate-200 dark:border-[rgba(58,189,176,0.12)] transition-all duration-300 ${collapsed ? 'w-16' : 'w-64'}`}
+    >
       {/* Logo */}
       <div className="p-4 flex items-center justify-center border-b border-slate-200 dark:border-[rgba(58,189,176,0.12)]">
         {collapsed ? (
@@ -596,8 +545,9 @@ export function DashboardSidebar() {
           {!collapsed ? (
             <div className="px-3 mb-1.5 space-y-1">
               <div className="text-2xs font-bold uppercase tracking-wider text-slate-400">Admin</div>
-              <div className="text-2xs font-medium text-slate-500">Viewing as</div>
+              <label htmlFor="admin-state-selector" className="text-2xs font-medium text-slate-500">Viewing as</label>
               <select
+                id="admin-state-selector"
                 value={adminState}
                 onChange={(e) => {
                   const next = e.target.value;
@@ -606,6 +556,7 @@ export function DashboardSidebar() {
                     router.push(`/dashboard/state/${next}`);
                   }
                 }}
+                aria-label="Select state to view as administrator"
                 className="w-full text-xs px-2 py-1.5 rounded-md border border-slate-200 dark:border-[rgba(58,189,176,0.15)] bg-white dark:bg-[#0D1526] text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-purple-400"
               >
                 {Object.entries(STATE_ABBR_TO_NAME).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
@@ -654,12 +605,13 @@ export function DashboardSidebar() {
         {/* Collapse toggle (desktop only) */}
         <button
           onClick={() => setCollapsed(!collapsed)}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className="hidden lg:flex items-center justify-center w-full py-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
       </div>
-    </div>
+    </aside>
   );
 
   return (

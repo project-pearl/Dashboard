@@ -109,6 +109,39 @@ export function getCacheStatus() {
   };
 }
 
+/* ── State-level composite aggregation ───────────────────────── */
+
+export function getStateCompositeScore(stateAbbr: string): { score: number; confidence: number; hucCount: number } | null {
+  ensureDiskLoaded();
+  if (!_cache) return null;
+  const stateHucs = Object.values(_cache.indices).filter(h => h.stateAbbr === stateAbbr);
+  if (stateHucs.length === 0) return null;
+  const score = Math.round(stateHucs.reduce((s, h) => s + h.composite, 0) / stateHucs.length);
+  const confidence = Math.round(stateHucs.reduce((s, h) => s + h.compositeConfidence, 0) / stateHucs.length);
+  return { score, confidence, hucCount: stateHucs.length };
+}
+
+export function getAllStateCompositeScores(): Record<string, { score: number; confidence: number; hucCount: number }> {
+  ensureDiskLoaded();
+  if (!_cache) return {};
+  const byState: Record<string, { sum: number; confSum: number; count: number }> = {};
+  for (const h of Object.values(_cache.indices)) {
+    if (!byState[h.stateAbbr]) byState[h.stateAbbr] = { sum: 0, confSum: 0, count: 0 };
+    byState[h.stateAbbr].sum += h.composite;
+    byState[h.stateAbbr].confSum += h.compositeConfidence;
+    byState[h.stateAbbr].count++;
+  }
+  const result: Record<string, { score: number; confidence: number; hucCount: number }> = {};
+  for (const [abbr, d] of Object.entries(byState)) {
+    result[abbr] = {
+      score: Math.round(d.sum / d.count),
+      confidence: Math.round(d.confSum / d.count),
+      hucCount: d.count,
+    };
+  }
+  return result;
+}
+
 /* ── Write API ───────────────────────────────────────────────── */
 
 export async function setIndicesCache(

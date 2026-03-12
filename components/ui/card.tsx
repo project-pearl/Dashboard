@@ -4,12 +4,17 @@ import { cn } from '@/lib/utils';
 
 const Card = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, style, ...props }, ref) => (
+  React.HTMLAttributes<HTMLDivElement> & {
+    interactive?: boolean;
+  }
+>(({ className, style, interactive, ...props }, ref) => (
     <div
       ref={ref}
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
       className={cn(
       'pin-soft-surface rounded-[14px] border bg-card text-card-foreground backdrop-blur-[20px]',
+      interactive && 'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer hover:bg-accent/50 transition-colors',
       className
     )}
     style={{

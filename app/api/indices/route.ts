@@ -4,7 +4,10 @@ import {
   getIndicesForHuc,
   getAllIndices,
   getCacheStatus,
+  getStateCompositeScore,
+  getAllStateCompositeScores,
 } from '@/lib/indices/indicesCache';
+import { scoreToLetter } from '@/lib/waterQualityScore';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,7 +26,28 @@ export async function GET(request: Request) {
   const top = searchParams.get('top');
   const sort = searchParams.get('sort') || 'composite';
 
+  const stateScores = searchParams.get('stateScores');
   const cacheStatus = getCacheStatus();
+
+  // State composite scores (lightweight aggregate)
+  if (stateScores === 'true') {
+    const stateFilter = state?.toUpperCase();
+    if (stateFilter) {
+      const sc = getStateCompositeScore(stateFilter);
+      return NextResponse.json({
+        stateScores: sc
+          ? { [stateFilter]: { ...sc, grade: scoreToLetter(sc.score) } }
+          : {},
+        meta: cacheStatus,
+      });
+    }
+    const all = getAllStateCompositeScores();
+    const withGrades: Record<string, any> = {};
+    for (const [abbr, s] of Object.entries(all)) {
+      withGrades[abbr] = { ...s, grade: scoreToLetter(s.score) };
+    }
+    return NextResponse.json({ stateScores: withGrades, meta: cacheStatus });
+  }
 
   // Single HUC lookup
   if (huc8) {

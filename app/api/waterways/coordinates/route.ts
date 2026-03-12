@@ -6,7 +6,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthorized } from '@/lib/apiAuth';
-import waterwayFixes from '@/data/fixed-coordinates/maryland-waterways-fixed.json';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export async function GET(request: NextRequest) {
   if (!isAuthorized(request)) {
@@ -19,6 +20,10 @@ export async function GET(request: NextRequest) {
   const state = searchParams.get('state')?.toUpperCase() || 'MD';
 
   try {
+    // Load waterway fixes from JSON file
+    const filePath = path.join(process.cwd(), 'data', 'fixed-coordinates', 'maryland-waterways-fixed.json');
+    const fileContent = fs.readFileSync(filePath, 'utf-8');
+    const waterwayFixes = JSON.parse(fileContent);
     switch (action) {
       case 'fixes':
         // Return all coordinate fixes for Maryland waterways

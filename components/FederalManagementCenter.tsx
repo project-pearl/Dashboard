@@ -91,6 +91,7 @@ import WaterbodyRestorationCard from '@/components/federal/WaterbodyRestorationC
 import ScorecardDashboard from '@/components/federal/ScorecardDashboard';
 import StateRollupTable from '@/components/federal/StateRollupTable';
 import NationalMapSection from '@/components/federal/NationalMapSection';
+import { SectionLoader, isSectionExtracted } from '@/components/federal/sections';
 
 import hucNamesData from '@/data/huc8-names.json';
 import centroidsData from '@/data/huc8-centroids.json';
@@ -1352,6 +1353,9 @@ export function FederalManagementCenter(props: Props) {
   const [hucIndicesByState, setHucIndicesByState] = useState<Record<string, { composite: number }[]>>({});
   const [selectedHucIndices, setSelectedHucIndices] = useState<any>(null);
 
+  // 14-layer composite state scores (loaded eagerly for stateRollup)
+  const [stateCompositeScores, setStateCompositeScores] = useState<Record<string, { score: number; confidence: number; hucCount: number; grade: string }>>({});
+
   useEffect(() => {
     let cancelled = false;
     let pollTimer: ReturnType<typeof setTimeout> | null = null;
@@ -1990,11 +1994,23 @@ export function FederalManagementCenter(props: Props) {
       const attainsTotal = stateAttains.length;
       const realWaterbodyCount = Math.max(regions.length, attainsTotal);
 
-      // Blend USGS flow vulnerability into composite score (15% weight)
+      // Primary: 14-layer composite index score (already incorporates flow + all data layers)
+      // Fallback: ATTAINS alert-level score blended with flow vulnerability (15%)
+      const compositeData = stateCompositeScores[abbr];
       const flowData = nationalSummary?.flowScores?.[abbr];
-      const finalScore = (canGradeState && score >= 0 && flowData)
-        ? Math.round(score * 0.85 + flowData.score * 0.15)
-        : score;
+      let finalScore: number;
+      let finalDataSource = dataSource;
+
+      if (compositeData && compositeData.hucCount > 0) {
+        finalScore = compositeData.score;
+        canGradeState = true;
+        finalDataSource = 'per-waterbody'; // composite is derived from per-HUC real data
+      } else if (canGradeState && score >= 0 && flowData) {
+        finalScore = Math.round(score * 0.85 + flowData.score * 0.15);
+      } else {
+        finalScore = score;
+      }
+
       const finalGrade = canGradeState ? scoreToGrade(finalScore) : grade;
 
       return {
@@ -2005,7 +2021,7 @@ export function FederalManagementCenter(props: Props) {
         monitored: monitored.length,
         unmonitored: unmonitored.length,
         canGradeState,
-        score: finalScore, grade: finalGrade, dataSource,
+        score: finalScore, grade: finalGrade, dataSource: finalDataSource,
         flowScore: flowData?.score, flowSites: flowData?.sites,
         cat5, cat4a, cat4b, cat4c,
         totalImpaired: cat5 + cat4a + cat4b + cat4c,
@@ -2019,7 +2035,7 @@ export function FederalManagementCenter(props: Props) {
       if (a.canGradeState && b.canGradeState) return a.score - b.score;
       return a.name.localeCompare(b.name);
     });
-  }, [derived.regionsByState, attainsBulk, nationalSummary?.flowScores]);
+  }, [derived.regionsByState, attainsBulk, nationalSummary?.flowScores, stateCompositeScores]);
 
   const briefingLiveStats = useMemo(() => {
     const mdRow = stateRollup.find((r) => r.abbr === 'MD');
@@ -2397,17 +2413,22 @@ export function FederalManagementCenter(props: Props) {
     superfund:    { label: 'Superfund',     staleAfterHours: 48,     deployed: true },
   };
 
-  // Fetch national-summary and federal-briefing-metrics on mount
+  // Fetch national-summary, federal-briefing-metrics, and composite scores on mount
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const [summaryRes, briefingRes] = await Promise.all([
+        const [summaryRes, briefingRes, compositeRes] = await Promise.all([
           fetch('/api/national-summary'),
           fetch('/api/federal-briefing-metrics'),
+          fetch('/api/indices?stateScores=true'),
         ]);
         if (summaryRes.ok && !cancelled) setNationalSummary(await summaryRes.json());
         if (briefingRes.ok && !cancelled) setFederalBriefingMetrics(await briefingRes.json());
+        if (compositeRes.ok && !cancelled) {
+          const data = await compositeRes.json();
+          if (data?.stateScores) setStateCompositeScores(data.stateScores);
+        }
       } catch { /* non-critical */ }
     })();
     return () => { cancelled = true; };
@@ -2999,27 +3020,45 @@ export function FederalManagementCenter(props: Props) {
           <WaterbodyRestorationCard viewLens={viewLens} showTopStrip={lens.showTopStrip} attainsAggregation={attainsAggregation} />
         ); {/* end impairmentprofile */}
 
-        case 'ai-water-intelligence': return DS(<>
-        {/* ── AI Water Intelligence — Claude-powered, ATTAINS-fed ── */}
-        {lens.showAIInsights && (
-          <AIInsightsEngine
-            key={`national-${attainsAggregation.totalAssessed}`}
-            role="Federal"
-            stateAbbr="US"
-            regionData={regionData as any}
-            nationalData={nationalAIData}
-          />
-        )}
-        </>); {/* end ai-water-intelligence */}
+        case 'ai-water-intelligence': {
+          if (isSectionExtracted('ai-water-intelligence')) {
+            return <SectionLoader
+              sectionId="ai-water-intelligence"
+              props={{ lens, attainsAggregation, regionData, nationalAIData, DS }}
+            />;
+          }
+          // Fallback to original implementation
+          return DS(<>
+          {/* ── AI Water Intelligence — Claude-powered, ATTAINS-fed ── */}
+          {lens.showAIInsights && (
+            <AIInsightsEngine
+              key={`national-${attainsAggregation.totalAssessed}`}
+              role="Federal"
+              stateAbbr="US"
+              regionData={regionData as any}
+              nationalData={nationalAIData}
+            />
+          )}
+          </>);
+        }
 
-        case 'national-briefing': return DS(<>
-        {/* ── AMS Alert Monitor ── */}
-        <AMSAlertMonitor
-          summary={amsSummary}
-          role="FEDERAL_OVERSIGHT"
-          onOpenResponsePlanner={() => setViewLens('disaster-emergency' as ViewLens)}
-        />
-        </>); {/* end national-briefing */}
+        case 'national-briefing': {
+          if (isSectionExtracted('national-briefing')) {
+            return <SectionLoader
+              sectionId="national-briefing"
+              props={{ amsSummary, setViewLens, DS }}
+            />;
+          }
+          // Fallback to original implementation
+          return DS(<>
+          {/* ── AMS Alert Monitor ── */}
+          <AMSAlertMonitor
+            summary={amsSummary}
+            role="FEDERAL_OVERSIGHT"
+            onOpenResponsePlanner={() => setViewLens('disaster-emergency' as ViewLens)}
+          />
+          </>);
+        }
 
         case 'aiinsights': return DS(<>
         {/* ── Combined AI Insights (legacy — used by non-briefing lenses) ── */}
@@ -3758,28 +3797,37 @@ export function FederalManagementCenter(props: Props) {
           />
         ); {/* end statebystatesummary */}
 
-        case 'icis': return DS(
-        <div id="section-icis">
-          {!lens.sections?.has('usmap') && (
-            <div className="flex items-center gap-2 mb-3 px-1">
-              <span className="text-xs font-medium text-slate-500">State:</span>
-              <select
-                value={selectedState}
-                onChange={(e) => setSelectedState(e.target.value)}
-                className="px-2 py-1 rounded-md border border-slate-300 text-xs bg-white cursor-pointer hover:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-300"
-              >
-                {Object.entries(STATE_ABBR_TO_NAME).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
-                  <option key={abbr} value={abbr}>{name} ({abbr})</option>
-                ))}
-              </select>
-            </div>
-          )}
-          <ICISCompliancePanel
-            state={selectedState}
-            compactMode={false}
-          />
-        </div>
-      );
+        case 'icis': {
+          if (isSectionExtracted('icis')) {
+            return <SectionLoader
+              sectionId="icis"
+              props={{ selectedState, setSelectedState, lens, DS }}
+            />;
+          }
+          // Fallback to original implementation
+          return DS(
+          <div id="section-icis">
+            {!lens.sections?.has('usmap') && (
+              <div className="flex items-center gap-2 mb-3 px-1">
+                <span className="text-xs font-medium text-slate-500">State:</span>
+                <select
+                  value={selectedState}
+                  onChange={(e) => setSelectedState(e.target.value)}
+                  className="px-2 py-1 rounded-md border border-slate-300 text-xs bg-white cursor-pointer hover:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-300"
+                >
+                  {Object.entries(STATE_ABBR_TO_NAME).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
+                    <option key={abbr} value={abbr}>{name} ({abbr})</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <ICISCompliancePanel
+              state={selectedState}
+              compactMode={false}
+            />
+          </div>
+          );
+        }
 
         case 'sdwis': return DS(
         <div id="section-sdwis">

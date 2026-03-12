@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from 'react';
 import type { NationalSummary } from '@/lib/national-summary';
+import { createCardAria, createStatusAria, generateId } from '@/lib/accessibility';
 
 // ── Relative-time helper ─────────────────────────────────────────────────────
 
@@ -29,14 +30,21 @@ interface Props {
   summary: NationalSummary | null;
 }
 
-// ── Tooltip wrapper ──────────────────────────────────────────────────────────
+// ── Accessible tooltip wrapper ──────────────────────────────────────────────
 
 function Tip({ text, children }: { text: string; children: React.ReactNode }) {
+  const id = `tooltip-${Math.random().toString(36).substr(2, 9)}`;
+
   return (
     <div className="group relative">
-      {children}
+      <div aria-describedby={id} tabIndex={0}>
+        {children}
+      </div>
       <div
-        className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 rounded-md text-xs leading-tight whitespace-normal max-w-[220px] text-center opacity-0 group-hover:opacity-100 transition-opacity z-50"
+        id={id}
+        role="tooltip"
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 rounded-md text-xs leading-tight whitespace-normal max-w-[220px] text-center opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity z-50"
         style={{ background: 'var(--bg-tooltip, #1e293b)', color: 'var(--text-tooltip, #f8fafc)' }}
       >
         {text}

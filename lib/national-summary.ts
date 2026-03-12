@@ -27,6 +27,7 @@ import { getDataGovCacheStatus } from './dataGovCache';
 import { getStateIRCacheStatus } from './stateIRCache';
 import { getFrsCacheStatus } from './frsCache';
 import { ALERT_LEVEL_SCORES, letterGrade } from './scoringUtils';
+import { getAllStateCompositeScores } from './indices/indicesCache';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -132,6 +133,9 @@ export function getNationalSummary(): NationalSummary {
   // Flow vulnerability scores (NWIS IV discharge data)
   const flowScores = getAllStateFlowScores();
 
+  // 14-layer composite index scores (primary scoring)
+  const compositeScores = getAllStateCompositeScores();
+
   for (const [abbr, s] of stateEntries) {
     totalWaterbodies += s.total;
     const impaired = s.high + s.medium + s.low;
@@ -143,11 +147,21 @@ export function getNationalSummary(): NationalSummary {
 
     if (s.high > 0) highAlertStates++;
 
-    const attainsScore = computeStateScore(s);
+    // Primary: 14-layer composite index (already incorporates flow + all data layers)
+    // Fallback: ATTAINS alert-level weighted average blended with flow
+    const composite = compositeScores[abbr];
+    let score: number;
+    if (composite && composite.hucCount > 0) {
+      score = composite.score;
+    } else {
+      const attainsScore = computeStateScore(s);
+      const flow = flowScores[abbr];
+      score = (attainsScore >= 0 && flow)
+        ? Math.round(attainsScore * 0.85 + flow.score * 0.15)
+        : attainsScore;
+    }
+
     const flow = flowScores[abbr];
-    const score = (attainsScore >= 0 && flow)
-      ? Math.round(attainsScore * 0.85 + flow.score * 0.15)
-      : attainsScore;
     const denom = s.none + s.low + s.medium + s.high;
     if (score >= 0 && denom > 0) {
       weightedScoreSum += score * denom;
