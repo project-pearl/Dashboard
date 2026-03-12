@@ -73,6 +73,10 @@ import { getHpsaCacheStatus, ensureWarmed as warmHrsaHpsa } from '@/lib/hrsaHpsa
 import { getEJScreenCacheStatus, ensureWarmed as warmEJScreen } from '@/lib/ejscreenCache';
 import { getCampdCacheStatus, ensureWarmed as warmCampd } from '@/lib/campdCache';
 import { getClimateNormalsCacheStatus, ensureWarmed as warmClimateNormals } from '@/lib/climateNormalsCache';
+import { getMyHealthfinderCacheStatus, ensureWarmed as warmMyHealthfinder } from '@/lib/myhealthfinderCache';
+import { getATSDRToxicologyCacheStatus, ensureWarmed as warmATSDRToxicology } from '@/lib/atsdrToxicologyCache';
+import { getUSGSWQPCacheStatus, ensureWarmed as warmUSGSWQP } from '@/lib/usgsWqpCache';
+import { getDataCDCGovCacheStatus, ensureWarmed as warmDataCDCGov } from '@/lib/dataCdcGovCache';
 import { getHealthSummary, ensureWarmed as warmSentinelHealth } from '@/lib/sentinel/sentinelHealth';
 import { getQueueStats, ensureWarmed as warmSentinelQueue } from '@/lib/sentinel/eventQueue';
 import { getScoredHucsSummary, ensureWarmed as warmSentinelScores } from '@/lib/sentinel/scoringEngine';
@@ -103,6 +107,7 @@ export async function GET(request: NextRequest) {
     [warmHospitals, warmOutbreaks, warmEnvironmentalHealth, warmCDCWonder, warmEnvironmentalTracking, warmHealthDataGov, warmOpenFDA],
     [warmHrsaHpsa],
     [warmEJScreen, warmCampd, warmClimateNormals],
+    [warmMyHealthfinder, warmATSDRToxicology, warmUSGSWQP, warmDataCDCGov],
   ];
   for (const batch of warmBatches) {
     await Promise.allSettled(batch.map(fn => fn()));
