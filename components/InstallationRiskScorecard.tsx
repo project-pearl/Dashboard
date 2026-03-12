@@ -61,6 +61,7 @@ export function InstallationRiskScorecard() {
   const [sortField, setSortField] = useState<SortField>('composite');
   const [sortAsc, setSortAsc] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -151,7 +152,7 @@ export function InstallationRiskScorecard() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {sorted.map((inst, i) => (
+                {(showAll ? sorted : sorted.slice(0, 5)).map((inst, i) => (
                   <React.Fragment key={inst.id}>
                     <tr
                       className={`hover:bg-slate-50 cursor-pointer ${rowBorder(inst.composite)}`}
@@ -228,6 +229,14 @@ export function InstallationRiskScorecard() {
                 ))}
               </tbody>
             </table>
+            {sorted.length > 5 && (
+              <button
+                onClick={() => setShowAll(p => !p)}
+                className="w-full text-center text-xs text-blue-600 hover:text-blue-800 font-medium py-2 rounded-b-lg hover:bg-blue-50 transition-colors border-t border-slate-200"
+              >
+                {showAll ? 'Show top 5' : `Show all ${sorted.length} installations`}
+              </button>
+            )}
           </div>
         )}
       </CardContent>

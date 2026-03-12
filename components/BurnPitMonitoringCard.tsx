@@ -76,6 +76,8 @@ export default function BurnPitMonitoringCard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedInstallation, setSelectedInstallation] = useState<string | null>(null);
+  const [showAllAlerts, setShowAllAlerts] = useState(false);
+  const [showAllInstallations, setShowAllInstallations] = useState(false);
 
   useEffect(() => {
     fetchDashboard();
@@ -146,6 +148,12 @@ export default function BurnPitMonitoringCard() {
 
   const criticalAlerts = dashboard.alerts.filter(a => a.severity === 'extreme' || a.severity === 'high');
   const lastUpdate = new Date(dashboard.timestamp).toLocaleTimeString();
+  const visibleAlerts = showAllAlerts ? criticalAlerts : criticalAlerts.slice(0, 5);
+  const sortedAssessments = [...dashboard.assessments].sort((a, b) => {
+    const riskOrder = { minimal: 0, low: 1, moderate: 2, high: 3, extreme: 4 };
+    return riskOrder[b.riskLevel] - riskOrder[a.riskLevel];
+  });
+  const visibleAssessments = showAllInstallations ? sortedAssessments : sortedAssessments.slice(0, 5);
 
   return (
     <Card>
@@ -170,7 +178,7 @@ export default function BurnPitMonitoringCard() {
               CRITICAL ALERTS ({criticalAlerts.length})
             </div>
             <div className="space-y-2">
-              {criticalAlerts.map((alert, i) => (
+              {visibleAlerts.map((alert, i) => (
                 <div key={i} className="text-sm">
                   <div className="font-medium text-red-900">{alert.installationName}</div>
                   <div className="text-red-700">{alert.message}</div>
@@ -179,6 +187,14 @@ export default function BurnPitMonitoringCard() {
                   </div>
                 </div>
               ))}
+              {criticalAlerts.length > 5 && (
+                <button
+                  onClick={() => setShowAllAlerts(p => !p)}
+                  className="w-full text-center text-xs text-red-600 hover:text-red-800 font-medium py-1 rounded hover:bg-red-100 transition-colors"
+                >
+                  {showAllAlerts ? 'Show fewer' : `Show all ${criticalAlerts.length} alerts`}
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -218,39 +234,42 @@ export default function BurnPitMonitoringCard() {
         {/* Installation Assessments */}
         <div>
           <h4 className="font-medium mb-2">Installation Status</h4>
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {dashboard.assessments
-              .sort((a, b) => {
-                const riskOrder = { minimal: 0, low: 1, moderate: 2, high: 3, extreme: 4 };
-                return riskOrder[b.riskLevel] - riskOrder[a.riskLevel];
-              })
-              .map((assessment) => (
-                <div
-                  key={assessment.installationId}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
-                  onClick={() => setSelectedInstallation(
-                    selectedInstallation === assessment.installationId ? null : assessment.installationId
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <MapPin className="w-4 h-4 text-gray-500" />
-                    <div>
-                      <div className="font-medium text-sm">{assessment.installationName}</div>
-                      <div className="text-xs text-gray-600">
-                        {assessment.personnelAtRisk.toLocaleString()} personnel at risk
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className={getRiskColor(assessment.riskLevel)}>
-                      {assessment.riskLevel}
-                    </Badge>
-                    <div className="text-xs text-gray-500">
-                      {assessment.particulateDispersionRadius}km
+          <div className="space-y-2">
+            {visibleAssessments.map((assessment) => (
+              <div
+                key={assessment.installationId}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
+                onClick={() => setSelectedInstallation(
+                  selectedInstallation === assessment.installationId ? null : assessment.installationId
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <MapPin className="w-4 h-4 text-gray-500" />
+                  <div>
+                    <div className="font-medium text-sm">{assessment.installationName}</div>
+                    <div className="text-xs text-gray-600">
+                      {assessment.personnelAtRisk.toLocaleString()} personnel at risk
                     </div>
                   </div>
                 </div>
-              ))}
+                <div className="flex items-center gap-2">
+                  <Badge className={getRiskColor(assessment.riskLevel)}>
+                    {assessment.riskLevel}
+                  </Badge>
+                  <div className="text-xs text-gray-500">
+                    {assessment.particulateDispersionRadius}km
+                  </div>
+                </div>
+              </div>
+            ))}
+            {sortedAssessments.length > 5 && (
+              <button
+                onClick={() => setShowAllInstallations(p => !p)}
+                className="w-full text-center text-xs text-blue-600 hover:text-blue-800 font-medium py-1.5 rounded-md hover:bg-blue-50 transition-colors"
+              >
+                {showAllInstallations ? 'Show fewer' : `Show all ${sortedAssessments.length} installations`}
+              </button>
+            )}
           </div>
         </div>
 
