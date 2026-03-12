@@ -7,6 +7,10 @@ import GlobalAlertBadge from '@/ams/components/GlobalAlertBadge';
 import { useAlertSummary } from '@/ams/hooks/useAlertSummary';
 import { PipelineHealthIndicator } from '@/components/PipelineHealthIndicator';
 import { JurisdictionScopeSwitcher } from '@/components/JurisdictionScopeSwitcher';
+import {
+  Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink,
+  BreadcrumbPage, BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 
 
 const ROUTE_LABELS: Record<string, string> = {
@@ -60,21 +64,37 @@ export function DashboardHeader() {
   return (
     <header className="h-14 flex items-center justify-between px-4 lg:px-6 bg-white border-b border-slate-200 flex-shrink-0 shadow-sm dark:bg-[rgba(14,22,45,0.9)] dark:backdrop-blur-xl dark:border-[rgba(58,189,176,0.12)]">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm ml-12 lg:ml-0">
-        <span className="text-slate-400 font-medium">Dashboard</span>
-        {routeLabel && (
-          <>
-            <span className="text-slate-300">/</span>
-            <span className={`${accentColor} font-semibold`}>{routeLabel}</span>
-          </>
-        )}
-        {subParam && (
-          <>
-            <span className="text-slate-300">/</span>
-            <span className="text-slate-600 font-medium">{subParam.toUpperCase()}</span>
-          </>
-        )}
-      </div>
+      <Breadcrumb className="ml-12 lg:ml-0">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard" className="text-slate-400 font-medium">Dashboard</BreadcrumbLink>
+          </BreadcrumbItem>
+          {routeLabel && (
+            <>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink href={`/dashboard/${routeKey}`} className={`${accentColor} font-semibold`}>{routeLabel}</BreadcrumbLink>
+              </BreadcrumbItem>
+            </>
+          )}
+          {lens && (
+            <>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage className="text-slate-600 font-medium capitalize">{lens.replace(/-/g, ' ')}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </>
+          )}
+          {subParam && (
+            <>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage className="text-slate-600 font-medium">{subParam.toUpperCase()}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </>
+          )}
+        </BreadcrumbList>
+      </Breadcrumb>
 
       {/* Right side */}
       <div className="flex items-center gap-3">
