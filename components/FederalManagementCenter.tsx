@@ -47,7 +47,7 @@ import { PolicyTracker } from './PolicyTracker';
 import { DataLatencyTracker } from './DataLatencyTracker';
 import { DeltaChangelog } from './DeltaChangelog';
 import { useAdminState, STATE_ABBR_TO_NAME } from '@/lib/adminStateContext';
-import { scoreToGrade, ALERT_LEVEL_SCORES } from '@/lib/scoringUtils';
+import { scoreToGrade } from '@/lib/scoringUtils';
 import { useJurisdictionContext } from '@/lib/jurisdiction-context';
 import { scopeRowsByJurisdiction } from '@/lib/jurisdictions/index';
 
@@ -1945,42 +1945,47 @@ export function FederalManagementCenter(props: Props) {
       let score: number;
       let dataSource: 'per-waterbody' | 'attains' | 'none';
 
-      if (assessed.length > 0) {
-        // Tier 1: We have per-waterbody assessments (legacy + matched ATTAINS)
-        high = assessed.filter(r => r.alertLevel === 'high').length;
-        medium = assessed.filter(r => r.alertLevel === 'medium').length;
-        low = assessed.filter(r => r.alertLevel === 'low').length;
-        none = assessed.filter(r => r.alertLevel === 'none').length;
-        totalAlerts = assessed.reduce((sum, r) => sum + (r.activeAlerts || 0), 0);
-        assessedCount = assessed.length;
-        canGradeState = true;
-        score = Math.round(assessed.reduce((s, r) => s + (ALERT_LEVEL_SCORES[r.alertLevel] ?? 65), 0) / assessed.length);
-        dataSource = 'per-waterbody';
-      } else if (hasAttains) {
-        // Tier 2: No per-waterbody matches, but ATTAINS bulk data exists
-        // Use raw counts from cache (pre-capping) for accurate scoring
-        const rawCounts = attainsCounts[abbr];
-        if (rawCounts && (rawCounts.high + rawCounts.medium + rawCounts.low + rawCounts.none) > 0) {
+      // Raw ATTAINS counts (pre-capping) are the ground truth for scoring.
+      // The per-waterbody merge caps at 1500/state sorted impaired-first,
+      // which biases Tier 1 counts. Always prefer raw counts when available.
+      const rawCounts = attainsCounts[abbr];
+      const hasRawCounts = rawCounts && (rawCounts.high + rawCounts.medium + rawCounts.low + rawCounts.none) > 0;
+
+      if (assessed.length > 0 || hasAttains) {
+        // Tier 1/2: Have waterbody data — use raw ATTAINS counts for unbiased scoring
+        if (hasRawCounts) {
           high = rawCounts.high;
           medium = rawCounts.medium;
           low = rawCounts.low;
           none = rawCounts.none;
+          const attainsTotal = high + medium + low + none;
+          score = attainsTotal > 0
+            ? Math.round((high * 40 + medium * 65 + low * 85 + none * 100) / attainsTotal)
+            : -1;
+          assessedCount = rawCounts.total || attainsTotal;
         } else {
-          // Fallback: count from waterbodies array (may be capped/biased)
-          high = attainsState.filter(a => a.alertLevel === 'high').length;
-          medium = attainsState.filter(a => a.alertLevel === 'medium').length;
-          low = attainsState.filter(a => a.alertLevel === 'low').length;
-          none = attainsState.filter(a => a.alertLevel === 'none').length;
+          // Fallback: count from per-waterbody data (may be capped/biased)
+          high = assessed.length > 0
+            ? assessed.filter(r => r.alertLevel === 'high').length
+            : (attainsState?.filter(a => a.alertLevel === 'high').length ?? 0);
+          medium = assessed.length > 0
+            ? assessed.filter(r => r.alertLevel === 'medium').length
+            : (attainsState?.filter(a => a.alertLevel === 'medium').length ?? 0);
+          low = assessed.length > 0
+            ? assessed.filter(r => r.alertLevel === 'low').length
+            : (attainsState?.filter(a => a.alertLevel === 'low').length ?? 0);
+          none = assessed.length > 0
+            ? assessed.filter(r => r.alertLevel === 'none').length
+            : (attainsState?.filter(a => a.alertLevel === 'none').length ?? 0);
+          const total = high + medium + low + none;
+          score = total > 0
+            ? Math.round((high * 40 + medium * 65 + low * 85 + none * 100) / total)
+            : -1;
+          assessedCount = assessed.length || (attainsState?.length ?? 0);
         }
-        totalAlerts = high + medium; // Cat 5 + Cat 4 = impaired
-        assessedCount = rawCounts?.total || attainsState.length;
+        totalAlerts = high + medium;
         canGradeState = true;
-        // Score from ATTAINS category distribution (using full counts, not capped sample)
-        const attainsTotal = high + medium + low + none;
-        score = attainsTotal > 0
-          ? Math.round((high * 40 + medium * 65 + low * 85 + none * 100) / attainsTotal)
-          : -1;
-        dataSource = 'attains';
+        dataSource = assessed.length > 0 ? 'per-waterbody' : 'attains';
       } else {
         // Tier 3: No data at all
         high = 0; medium = 0; low = 0; none = 0; totalAlerts = 0;
