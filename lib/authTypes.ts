@@ -16,6 +16,7 @@ export function normalizeUserRole(role: string | undefined): UserRole {
     corporate: 'Corporate',
     researcher: 'Researcher',
     college: 'College',
+    university: 'College',
     ngo: 'NGO',
     k12: 'K12',
     temp: 'Temp',
