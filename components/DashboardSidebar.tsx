@@ -17,6 +17,20 @@ import {
   X,
   LayoutDashboard,
   MapPin,
+  // Nav-group icons used in buildNavGroups
+  Landmark,
+  Map,
+  Building2,
+  Factory,
+  Microscope,
+  TrendingUp,
+  Search,
+  FlaskConical,
+  GraduationCap,
+  BookOpen,
+  Leaf,
+  Crown,
+  FileCheck,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { LazyIcon, preloadIconBundle } from '@/lib/iconLoader';
