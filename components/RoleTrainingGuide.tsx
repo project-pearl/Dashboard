@@ -4,7 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { getLensesForHref } from '@/lib/lensRegistry';
 import { ROLE_TRAINING, type RoleTrainingData } from '@/lib/trainingContent';
-import { LENS_ICONS } from '@/components/DashboardSidebar';
+import { LENS_ICON_NAMES } from '@/components/DashboardSidebar';
+import { LazyIcon } from '@/lib/iconLoader';
 import {
   GraduationCap,
   CheckCircle,
@@ -150,7 +151,7 @@ export default function RoleTrainingGuide({ rolePath }: Props) {
           </div>
           <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
             {lenses.map((lens) => {
-              const Icon = LENS_ICONS[lens.id] || LayoutDashboard;
+              const iconName = LENS_ICON_NAMES[lens.id] || 'LayoutDashboard';
               const guide = training.lensGuides[lens.id];
               return (
                 <button
@@ -160,7 +161,7 @@ export default function RoleTrainingGuide({ rolePath }: Props) {
                 >
                   <div className="flex items-center gap-2.5 mb-2">
                     <div className="rounded-md bg-slate-100 group-hover:bg-blue-50 p-1.5 transition-colors">
-                      <Icon className="w-4 h-4 text-slate-500 group-hover:text-blue-600 transition-colors" />
+                      <LazyIcon name={iconName} className="w-4 h-4 text-slate-500 group-hover:text-blue-600 transition-colors" />
                     </div>
                     <span className="text-sm font-semibold text-slate-700 group-hover:text-blue-700 transition-colors">
                       {lens.label}

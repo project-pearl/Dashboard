@@ -8,7 +8,7 @@ import { haptic } from '@/lib/haptic';
 import type { ReactNode, MouseEvent } from 'react';
 import { AskPinPopover } from './AskPinPopover';
 
-interface DraggableSectionProps {
+export interface DraggableSectionProps {
   id: string;
   children: ReactNode;
   isEditMode: boolean;

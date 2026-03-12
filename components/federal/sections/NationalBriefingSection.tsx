@@ -1,6 +1,6 @@
 'use client';
 
-import { AMSAlertMonitor } from '@/ams/components/AMSAlertMonitor';
+import AMSAlertMonitor from '@/ams/components/AMSAlertMonitor';
 import type { DraggableSectionProps } from '@/components/DraggableSection';
 
 interface Props {
