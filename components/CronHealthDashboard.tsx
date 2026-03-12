@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { Activity, AlertTriangle, CheckCircle, Clock, RefreshCw } from 'lucide-react';
+import { useCacheStatus } from '@/hooks/useCacheStatus';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -43,22 +44,17 @@ export default function CronHealthDashboard() {
     summary: Record<string, CronHealthSummary>;
     history: Record<string, CronRunRecord[]>;
   } | null>(null);
-  const [cacheData, setCacheData] = useState<Record<string, CacheStatusEntry> | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
-  const fetchData = useCallback(async () => {
+  // Shared cache-status poller (polls at 60s, deduped across all subscribers)
+  const { data: cacheStatusData } = useCacheStatus({ periodMs: 60_000 });
+  const cacheData = cacheStatusData?.caches as Record<string, CacheStatusEntry> | null ?? null;
+
+  const fetchCronHealth = useCallback(async () => {
     try {
-      const [healthRes, cacheRes] = await Promise.allSettled([
-        fetch('/api/admin/cron-health').then(r => r.ok ? r.json() : null),
-        fetch('/api/cache-status').then(r => r.ok ? r.json() : null),
-      ]);
-      if (healthRes.status === 'fulfilled' && healthRes.value) {
-        setHealthData(healthRes.value);
-      }
-      if (cacheRes.status === 'fulfilled' && cacheRes.value) {
-        setCacheData(cacheRes.value);
-      }
+      const res = await fetch('/api/admin/cron-health');
+      if (res.ok) setHealthData(await res.json());
       setLastRefresh(new Date());
     } catch {
       // Silent — dashboard is non-critical
@@ -68,10 +64,10 @@ export default function CronHealthDashboard() {
   }, []);
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 60_000);
+    fetchCronHealth();
+    const interval = setInterval(fetchCronHealth, 60_000);
     return () => clearInterval(interval);
-  }, [fetchData]);
+  }, [fetchCronHealth]);
 
   // ── Derived data ─────────────────────────────────────────────────────────
 

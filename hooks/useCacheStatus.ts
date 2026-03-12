@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import type { CacheDelta } from '@/lib/cacheUtils';
 import { CACHE_META } from '@/lib/cacheDeltaDescriber';
 
-const POLL_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const DEFAULT_POLL_MS = 5 * 60 * 1000; // 5 minutes
+const MIN_POLL_MS = 30_000; // floor: 30 seconds
 
 // ── Module-level singleton state ──────────────────────────────────────────
 
@@ -84,7 +85,8 @@ async function doFetch() {
 
 // ── Hook ──────────────────────────────────────────────────────────────────
 
-export function useCacheStatus() {
+export function useCacheStatus(opts?: { periodMs?: number }) {
+  const periodMs = Math.max(MIN_POLL_MS, opts?.periodMs ?? DEFAULT_POLL_MS);
   const [, forceUpdate] = useState(0);
   const changelogRef = useRef<ChangelogEntry[]>([]);
   const prevDeltasRef = useRef<Record<string, string>>({});
@@ -97,12 +99,12 @@ export function useCacheStatus() {
     // Fetch on first subscriber
     if (!_data && !_loading) doFetch();
 
-    const id = setInterval(doFetch, POLL_INTERVAL);
+    const id = setInterval(doFetch, periodMs);
     return () => {
       _listeners.delete(listener);
       clearInterval(id);
     };
-  }, []);
+  }, [periodMs]);
 
   // Accumulate changelog entries when deltas change
   useEffect(() => {

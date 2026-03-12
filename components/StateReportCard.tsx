@@ -108,7 +108,7 @@ export default function StateReportCard({ stateAbbr }: { stateAbbr: string }) {
     setSignalsLoading(true);
     fetchSignals();
 
-    // Poll every 5 minutes
+    // Poll /api/water-data?action=signals every 5 min (not a useCacheStatus candidate — different endpoint)
     signalsPollRef.current = setInterval(fetchSignals, 5 * 60 * 1000);
     return () => {
       if (signalsPollRef.current) clearInterval(signalsPollRef.current);

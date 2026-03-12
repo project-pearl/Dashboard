@@ -280,7 +280,7 @@ For beach closures or harvest stops, connect them to downstream impact on public
     if (expanded) {
       fetchInsights(keyChanged); // force bypass cache if key changed
 
-      // Poll every 5 minutes while expanded — force cache bypass so fresh signals are fetched
+      // Poll /api/ai-insights every 5 min while expanded (not a useCacheStatus candidate — different endpoint)
       pollRef.current = setInterval(() => fetchInsights(true), 5 * 60 * 1000);
     }
 

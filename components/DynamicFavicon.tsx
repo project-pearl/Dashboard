@@ -1,17 +1,16 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useCacheStatus } from '@/lib/useCacheStatus';
+import { useCacheStatus } from '@/hooks/useCacheStatus';
 
 /** Updates the favicon with an alert badge when Sentinel has active alerts. */
 export function DynamicFavicon() {
-  const { data } = useCacheStatus(60_000);
+  const { data } = useCacheStatus({ periodMs: 60_000 });
 
   useEffect(() => {
-    if (!data || typeof data !== 'object') return;
-    const caches = data as Record<string, unknown>;
+    if (!data?.caches) return;
     // Check if any sentinel/alert cache has active alerts
-    const alertCount = (caches as Record<string, { count?: number }>)?.sentinelAlerts?.count ?? 0;
+    const alertCount = (data.caches as Record<string, { count?: number }>)?.sentinelAlerts?.count ?? 0;
 
     const link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
     if (!link) return;

@@ -86,6 +86,7 @@ import { WeatherAlertsSection } from '@/components/WeatherAlertsSection';
 import { NtasStatusBadge } from '@/components/NtasStatusBadge';
 import { AtRiskFacilitiesCard } from '@/components/AtRiskFacilitiesCard';
 import { AlertDetailDrawer } from '@/components/AlertDetailDrawer';
+import { useCacheStatus } from '@/hooks/useCacheStatus';
 
 import hucNamesData from '@/data/huc8-names.json';
 import centroidsData from '@/data/huc8-centroids.json';
@@ -972,6 +973,9 @@ export function FederalManagementCenter(props: Props) {
   const { logout, user } = useAuth();
   const { activeJurisdiction } = useJurisdictionContext();
   const router = useRouter();
+
+  // Shared cache-status poller (deduped across all subscribers)
+  const { data: _cacheStatusData } = useCacheStatus({ periodMs: 60_000 });
 
   // ── View Lens: controls layout composition ──
   const [viewLens, setViewLens] = useLensParam<ViewLens>(federalMode ? 'overview' : 'overview');
@@ -2389,100 +2393,71 @@ export function FederalManagementCenter(props: Props) {
     superfund:    { label: 'Superfund',     staleAfterHours: 48,     deployed: true },
   };
 
-  const [dataReliability, setDataReliability] = useState<DataReliabilityReport | undefined>(undefined);
+  // Fetch national-summary and federal-briefing-metrics on mount
   useEffect(() => {
     let cancelled = false;
-
-    const fetchReliability = async () => {
+    (async () => {
       try {
-        const [res, summaryRes, briefingRes] = await Promise.all([
-          fetch('/api/cache-status'),
+        const [summaryRes, briefingRes] = await Promise.all([
           fetch('/api/national-summary'),
           fetch('/api/federal-briefing-metrics'),
         ]);
-        if (summaryRes.ok && !cancelled) {
-          setNationalSummary(await summaryRes.json());
-        }
-        if (briefingRes.ok && !cancelled) {
-          setFederalBriefingMetrics(await briefingRes.json());
-        }
-        if (!res.ok || cancelled) return;
-        const json = await res.json();
-        const caches = json.caches as Record<string, any>;
-        const staleCaches: string[] = [];
-        const missingCaches: string[] = [];
-        const pendingCaches: string[] = [];
-        const healthyCaches: string[] = [];
-        let staleStateCount = 0;
-        let deployedTotal = 0;
-        let deployedLoaded = 0;
+        if (summaryRes.ok && !cancelled) setNationalSummary(await summaryRes.json());
+        if (briefingRes.ok && !cancelled) setFederalBriefingMetrics(await briefingRes.json());
+      } catch { /* non-critical */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
-        for (const [key, c] of Object.entries(caches)) {
-          const cfg = CACHE_REFRESH_CONFIG[key];
-          if (!cfg || !cfg.deployed) continue;              // skip unknown / undeployed
-          deployedTotal++;
+  // Derive DataReliabilityReport from shared cache-status hook data (no separate polling needed)
+  const dataReliability = useMemo((): DataReliabilityReport | undefined => {
+    if (!_cacheStatusData?.caches) return undefined;
+    const caches = _cacheStatusData.caches as Record<string, any>;
+    const staleCaches: string[] = [];
+    const missingCaches: string[] = [];
+    const pendingCaches: string[] = [];
+    const healthyCaches: string[] = [];
+    let staleStateCount = 0;
+    let deployedTotal = 0;
+    let deployedLoaded = 0;
 
-          const loaded = c.loaded !== false && c.status !== 'cold' && c.status !== 'idle';
-          if (!loaded) {
-            // Distinguish "never built" (pending first cron run) from "was built but lost"
-            const hasEverBuilt = c.built || c.ageHours != null;
-            if (hasEverBuilt) {
-              missingCaches.push(cfg.label);                // had data but failed to reload
-            } else {
-              pendingCaches.push(cfg.label);                // awaiting first cron run
-            }
-            continue;
-          }
-          deployedLoaded++;
+    for (const [key, c] of Object.entries(caches)) {
+      const cfg = CACHE_REFRESH_CONFIG[key];
+      if (!cfg || !cfg.deployed) continue;
+      deployedTotal++;
 
-          const age = c.ageHours as number | null;
-          if (age != null && age > cfg.staleAfterHours) {
-            staleCaches.push(`${cfg.label} (${Math.round(age)}h old)`);
-          } else {
-            const ageStr = age != null ? ` (${Math.round(age)}h)` : '';
-            healthyCaches.push(`${cfg.label}${ageStr}`);
-          }
-        }
-
-        // Count ATTAINS states with missing data
-        if (caches.attains) {
-          staleStateCount = caches.attains.statesMissing || 0;
-        }
-
-        // Pending caches don't count as problems — they just haven't had their first run
-        const problemCount = staleCaches.length + missingCaches.length;
-        const overallReliable = problemCount <= Math.floor(deployedTotal * 0.25);
-        const recommendation = overallReliable
-          ? 'Data sufficient for reliable analysis'
-          : 'Repair data pipeline first — too many stale or failed sources for reliable recommendations';
-
-        if (!cancelled) {
-          setDataReliability({
-            overallReliable,
-            staleCaches,
-            missingCaches,
-            pendingCaches,
-            healthyCaches,
-            staleStateCount,
-            totalCacheCount: deployedTotal,
-            loadedCacheCount: deployedLoaded,
-            recommendation,
-          });
-        }
-      } catch {
-        // Silently fail — plan will generate without reliability banner
+      const loaded = c.loaded !== false && c.status !== 'cold' && c.status !== 'idle';
+      if (!loaded) {
+        const hasEverBuilt = c.built || c.ageHours != null;
+        if (hasEverBuilt) missingCaches.push(cfg.label);
+        else pendingCaches.push(cfg.label);
+        continue;
       }
+      deployedLoaded++;
+
+      const age = c.ageHours as number | null;
+      if (age != null && age > cfg.staleAfterHours) {
+        staleCaches.push(`${cfg.label} (${Math.round(age)}h old)`);
+      } else {
+        const ageStr = age != null ? ` (${Math.round(age)}h)` : '';
+        healthyCaches.push(`${cfg.label}${ageStr}`);
+      }
+    }
+
+    if (caches.attains) staleStateCount = caches.attains.statesMissing || 0;
+
+    const problemCount = staleCaches.length + missingCaches.length;
+    const overallReliable = problemCount <= Math.floor(deployedTotal * 0.25);
+    const recommendation = overallReliable
+      ? 'Data sufficient for reliable analysis'
+      : 'Repair data pipeline first — too many stale or failed sources for reliable recommendations';
+
+    return {
+      overallReliable, staleCaches, missingCaches, pendingCaches, healthyCaches,
+      staleStateCount, totalCacheCount: deployedTotal, loadedCacheCount: deployedLoaded,
+      recommendation,
     };
-
-    // Fetch immediately
-    fetchReliability();
-
-    // Re-poll every 60s while the planner lens is active so new sources show up
-    const plannerActive = viewLens === 'disaster-emergency';
-    const interval = plannerActive ? setInterval(fetchReliability, 60_000) : undefined;
-
-    return () => { cancelled = true; if (interval) clearInterval(interval); };
-  }, [viewLens]);
+  }, [_cacheStatusData]);
 
   const [showStateTable, setShowStateTable] = useState(false);
   const [showHotspotsSection, setShowHotspotsSection] = useState(false);
