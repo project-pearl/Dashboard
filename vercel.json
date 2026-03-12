@@ -223,6 +223,30 @@
     {
       "path": "/api/cron/rebuild-embassy-aqi",
       "schedule": "15 * * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-nfip-claims",
+      "schedule": "0 22 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-echo-effluent",
+      "schedule": "30 22 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-haz-mit",
+      "schedule": "0 22 * * 0"
+    },
+    {
+      "path": "/api/cron/rebuild-usbr",
+      "schedule": "15 */6 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-rcra",
+      "schedule": "0 23 * * 0"
+    },
+    {
+      "path": "/api/cron/rebuild-sems",
+      "schedule": "30 23 * * 0"
     }
   ]
 }

@@ -55,6 +55,12 @@ import { getFirmsCacheStatus, ensureWarmed as warmFirms } from '@/lib/firmsCache
 import { getSeismicCacheStatus, ensureWarmed as warmSeismic } from '@/lib/seismicCache';
 import { getDamCacheStatus, ensureWarmed as warmDam } from '@/lib/damCache';
 import { getEmbassyAqiCacheStatus, ensureWarmed as warmEmbassyAqi } from '@/lib/embassyAqiCache';
+import { getNfipClaimsCacheStatus, ensureWarmed as warmNfipClaims } from '@/lib/nfipClaimsCache';
+import { getHazMitCacheStatus, ensureWarmed as warmHazMit } from '@/lib/hazMitCache';
+import { getUsbrCacheStatus, ensureWarmed as warmUsbr } from '@/lib/usbrCache';
+import { getEchoEffluentCacheStatus, ensureWarmed as warmEchoEffluent } from '@/lib/echoEffluentCache';
+import { getRcraCacheStatus, ensureWarmed as warmRcra } from '@/lib/rcraCache';
+import { getSemsCacheStatus, ensureWarmed as warmSems } from '@/lib/semsCache';
 import { getHealthSummary, ensureWarmed as warmSentinelHealth } from '@/lib/sentinel/sentinelHealth';
 import { getQueueStats, ensureWarmed as warmSentinelQueue } from '@/lib/sentinel/eventQueue';
 import { getScoredHucsSummary, ensureWarmed as warmSentinelScores } from '@/lib/sentinel/scoringEngine';
@@ -81,6 +87,7 @@ export async function GET(request: NextRequest) {
     [warmTri, warmUSAs, warmGrantsGov, warmSam, warmSentinelHealth, warmSentinelQueue, warmSentinelScores],
     [warmFema, warmSuperfund, warmUsdm, warmUsgsDv, warmCoopsDerived, warmErddapSat],
     [warmNasaStream, warmNwm, warmIpac, warmNcei, warmHabsos, warmGlerl, warmHefs, warmBeacon, warmSsoCso, warmFirms, warmSeismic, warmDam, warmEmbassyAqi],
+    [warmNfipClaims, warmHazMit, warmUsbr, warmEchoEffluent, warmRcra, warmSems],
   ];
   for (const batch of warmBatches) {
     await Promise.allSettled(batch.map(fn => fn()));
@@ -134,6 +141,12 @@ export async function GET(request: NextRequest) {
   const seismic = getSeismicCacheStatus();
   const dam = getDamCacheStatus();
   const embassyAqi = getEmbassyAqiCacheStatus();
+  const nfipClaims = getNfipClaimsCacheStatus();
+  const hazMit = getHazMitCacheStatus();
+  const usbr = getUsbrCacheStatus();
+  const echoEffluent = getEchoEffluentCacheStatus();
+  const rcra = getRcraCacheStatus();
+  const sems = getSemsCacheStatus();
 
   const caches = {
     wqp: {
@@ -332,6 +345,30 @@ export async function GET(request: NextRequest) {
     embassyAqi: {
       ...embassyAqi,
       ...staleness(embassyAqi.loaded ? (embassyAqi as any).built : null),
+    },
+    nfipClaims: {
+      ...nfipClaims,
+      ...staleness(nfipClaims.loaded ? (nfipClaims as any).built : null),
+    },
+    hazMit: {
+      ...hazMit,
+      ...staleness(hazMit.loaded ? (hazMit as any).built : null),
+    },
+    usbr: {
+      ...usbr,
+      ...staleness(usbr.loaded ? (usbr as any).built : null),
+    },
+    echoEffluent: {
+      ...echoEffluent,
+      ...staleness(echoEffluent.loaded ? (echoEffluent as any).built : null),
+    },
+    rcra: {
+      ...rcra,
+      ...staleness(rcra.loaded ? (rcra as any).built : null),
+    },
+    sems: {
+      ...sems,
+      ...staleness(sems.loaded ? (sems as any).built : null),
     },
   };
 
