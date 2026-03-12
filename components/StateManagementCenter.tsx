@@ -66,7 +66,7 @@ import { AirQualityMonitoringCard } from '@/components/AirQualityMonitoringCard'
 import { UserManagementPanel } from './UserManagementPanel';
 import { getInvitableRoles } from '@/lib/adminHierarchy';
 import { BriefingQACard } from '@/components/BriefingQACard';
-import { DataProvenanceCard } from '@/components/DataProvenanceCard';
+
 
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
@@ -6383,10 +6383,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             case 'wqt': return NUTRIENT_TRADING_STATES.has(stateAbbr) ? DS(<>
               <WaterQualityTradingPanel stateAbbr={stateAbbr} mode="state" />
             </>) : null;
-
-            case 'data-provenance': return DS(
-              <DataProvenanceCard />
-            );
 
             case 'training': return DS(
               <RoleTrainingGuide rolePath="/dashboard/state" />

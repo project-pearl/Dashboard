@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useEffect, useState } from 'react';
-import { Flame, MapPin, AlertTriangle, Activity, ChevronUp, ChevronDown, ArrowUpDown } from 'lucide-react';
+import { Flame, MapPin, AlertTriangle, Activity, ChevronUp, ChevronDown, ArrowUpDown, Search, HelpCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -89,6 +89,7 @@ export function FireDetectionCard({
   const [dateFilter, setDateFilter] = useState<string>('all');
   const [regionSort, setRegionSort] = useState<{ col: RegionSortCol; dir: 'asc' | 'desc' }>({ col: 'detectionCount', dir: 'desc' });
   const [showCount, setShowCount] = useState(PAGE_SIZE);
+  const [instFireSearch, setInstFireSearch] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -216,17 +217,22 @@ export function FireDetectionCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Flame className="w-5 h-5 text-orange-500" />
-            <CardTitle className="text-base">{title}</CardTitle>
+            <CardTitle className="text-base font-semibold">{title}</CardTitle>
           </div>
-          {totalFires > 0 && (
-            <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
-              {totalFires} active fire{totalFires !== 1 ? 's' : ''}
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {totalFires > 0 && (
+              <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                {totalFires} active fire{totalFires !== 1 ? 's' : ''}
+              </Badge>
+            )}
+            <button className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm hover:bg-slate-50 transition-colors" title="Active fire detections from NASA FIRMS satellite data, updated every 3 hours.">
+              <HelpCircle className="w-4 h-4 text-slate-400" />
+            </button>
+          </div>
         </div>
         <CardDescription className="text-xs">{description}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="pt-0 space-y-4">
         {loading && <p className="text-sm text-slate-500">Loading fire detection data...</p>}
         {error && <p className="text-sm text-red-600">Error: {error}</p>}
 
@@ -282,27 +288,46 @@ export function FireDetectionCard({
             )}
 
             {/* ── Near-Installation Alerts ── */}
-            {nearInstFires.length > 0 && (
-              <div className="border border-red-200 bg-red-50 rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertTriangle className="w-4 h-4 text-red-600" />
-                  <span className="text-sm font-semibold text-red-700">
-                    {nearInstFires.length} fire{nearInstFires.length !== 1 ? 's' : ''} near military installations
-                  </span>
-                </div>
-                <div className="space-y-1">
-                  {nearInstFires.slice(0, 10).map((f, i) => (
-                    <div key={i} className="text-xs text-red-600 flex justify-between">
-                      <span>{f.nearestInstallation}</span>
-                      <span className="font-mono">{f.distanceToInstallationMi?.toFixed(1)}mi &middot; {f.frp.toFixed(1)} MW</span>
+            {nearInstFires.length > 0 && (() => {
+              const q = instFireSearch.toLowerCase();
+              const filtered = q
+                ? nearInstFires.filter(f =>
+                    f.nearestInstallation?.toLowerCase().includes(q) ||
+                    `${f.lat.toFixed(2)},${f.lng.toFixed(2)}`.includes(q)
+                  )
+                : nearInstFires;
+              return (
+                <div className="border border-red-200 bg-red-50 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertTriangle className="w-4 h-4 text-red-600" />
+                    <span className="text-sm font-semibold text-red-700">
+                      {nearInstFires.length} fire{nearInstFires.length !== 1 ? 's' : ''} near military installations
+                    </span>
+                    <div className="ml-auto relative">
+                      <Search className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-red-400" />
+                      <input
+                        type="text"
+                        value={instFireSearch}
+                        onChange={e => setInstFireSearch(e.target.value)}
+                        placeholder="Filter installations…"
+                        className="pl-6 pr-2 py-1 text-xs rounded border border-red-200 bg-white/80 text-red-700 placeholder:text-red-300 w-48 focus:outline-none focus:ring-1 focus:ring-red-300"
+                      />
                     </div>
-                  ))}
-                  {nearInstFires.length > 10 && (
-                    <p className="text-xs text-red-500">+ {nearInstFires.length - 10} more</p>
-                  )}
+                  </div>
+                  <div className="max-h-[180px] overflow-y-auto space-y-1">
+                    {filtered.map((f, i) => (
+                      <div key={i} className="text-xs text-red-600 flex justify-between">
+                        <span>{f.nearestInstallation}</span>
+                        <span className="font-mono">{f.distanceToInstallationMi?.toFixed(1)}mi &middot; {f.frp.toFixed(1)} MW</span>
+                      </div>
+                    ))}
+                    {q && filtered.length === 0 && (
+                      <p className="text-xs text-red-400 italic">No matches</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* ── Date Filter & Sort Controls (focus-region mode) ── */}
             {focusDetail && detections.length > 0 && (

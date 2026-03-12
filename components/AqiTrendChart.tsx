@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, HelpCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useJurisdictionContext } from '@/lib/jurisdiction-context';
 
@@ -118,15 +118,20 @@ export function AqiTrendChart({ selectedState }: { selectedState?: string }) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <TrendingUp className="w-5 h-5 text-blue-600" />
-          AQI Trend Analysis — {effectiveState}
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-blue-600" />
+            AQI Trend Analysis — {effectiveState}
+          </CardTitle>
+          <button className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm hover:bg-slate-50 transition-colors" title="Historical AQI trend analysis showing air quality patterns over time.">
+            <HelpCircle className="w-4 h-4 text-slate-400" />
+          </button>
+        </div>
         <CardDescription className="text-xs">
           Multi-pollutant trend with EPA threshold reference lines. Hover for exact values.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         {loading && <div className="text-xs text-slate-500">Loading trend data...</div>}
         {!loading && data.length < 2 && (
           <div className="text-xs text-slate-500">Not enough trend data yet. Trends populate after 2+ cron cycles.</div>

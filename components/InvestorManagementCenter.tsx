@@ -38,7 +38,7 @@ import { useAdminState } from '@/lib/adminStateContext';
 import { getRegionById } from '@/lib/regionsConfig';
 import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
-import { DataProvenanceCard } from '@/components/DataProvenanceCard';
+
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
@@ -1822,10 +1822,6 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
             // ─── DISCLAIMER ─────────────────────────────────────────────────
 
             case 'disclaimer': return null;
-
-            case 'data-provenance': return DS(
-              <DataProvenanceCard />
-            );
 
             case 'training': return DS(
               <RoleTrainingGuide rolePath="/dashboard/investor" />

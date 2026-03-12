@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Shield, Users, MapPin, Clock, Bomb, Zap, Factory, Flame, Skull } from 'lucide-react';
+import { AlertTriangle, Shield, Users, MapPin, Clock, Bomb, Zap, Factory, Flame, Skull, HelpCircle } from 'lucide-react';
 
 interface ThreatScenario {
   type: 'explosion' | 'chemical_release' | 'industrial_accident' | 'radiological' | 'biological' | 'burn_pit';
@@ -126,15 +126,20 @@ export default function InstallationThreatMonitoringCard() {
   if (loading) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="w-5 h-5" />
-            Installation Atmospheric Threat Monitoring
-          </CardTitle>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <Shield className="w-5 h-5" />
+              Installation Atmospheric Threat Monitoring
+            </CardTitle>
+            <button className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm hover:bg-slate-50 transition-colors" title="Multi-threat monitoring dashboard for military installation environmental hazards.">
+              <HelpCircle className="w-4 h-4 text-slate-400" />
+            </button>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           <div className="flex justify-center items-center h-40">
-            <div className="text-sm text-gray-500">Loading threat assessments...</div>
+            <div className="text-xs text-slate-500">Loading threat assessments...</div>
           </div>
         </CardContent>
       </Card>
@@ -144,16 +149,21 @@ export default function InstallationThreatMonitoringCard() {
   if (error) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="w-5 h-5" />
-            Installation Atmospheric Threat Monitoring
-          </CardTitle>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <Shield className="w-5 h-5" />
+              Installation Atmospheric Threat Monitoring
+            </CardTitle>
+            <button className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm hover:bg-slate-50 transition-colors" title="Multi-threat monitoring dashboard for military installation environmental hazards.">
+              <HelpCircle className="w-4 h-4 text-slate-400" />
+            </button>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           <div className="text-center text-red-600 p-4">
             <AlertTriangle className="w-8 h-8 mx-auto mb-2" />
-            <div className="text-sm">Failed to load threat data: {error}</div>
+            <div className="text-xs text-red-600">Failed to load threat data: {error}</div>
             <button
               onClick={fetchDashboard}
               className="mt-2 px-4 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
@@ -187,19 +197,24 @@ export default function InstallationThreatMonitoringCard() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
             <Shield className="w-5 h-5" />
             Installation Atmospheric Threat Monitoring
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1 text-xs text-slate-500">
+              <Clock className="w-4 h-4" />
+              Updated: {lastUpdate}
+            </span>
+            <button className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm hover:bg-slate-50 transition-colors" title="Multi-threat monitoring dashboard for military installation environmental hazards.">
+              <HelpCircle className="w-4 h-4 text-slate-400" />
+            </button>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Clock className="w-4 h-4" />
-            Updated: {lastUpdate}
-          </div>
-        </CardTitle>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="pt-0 space-y-4">
         {/* Critical Alerts */}
         {criticalInstallations.length > 0 && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -237,22 +252,22 @@ export default function InstallationThreatMonitoringCard() {
         )}
 
         {/* Summary Statistics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-gray-50 rounded-lg p-3 text-center">
-            <div className="text-2xl font-bold text-gray-900">{dashboard.totalInstallations}</div>
-            <div className="text-sm text-gray-600">Total Installations</div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="bg-slate-50 rounded-lg p-3 text-center">
+            <div className="text-lg font-bold text-slate-800">{dashboard.totalInstallations}</div>
+            <div className="text-2xs font-medium text-slate-500 uppercase tracking-wide">Total Installations</div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-3 text-center">
-            <div className="text-2xl font-bold text-red-600">{dashboard.summary.installationsAtRisk}</div>
-            <div className="text-sm text-gray-600">At Risk</div>
+          <div className="bg-slate-50 rounded-lg p-3 text-center">
+            <div className="text-lg font-bold text-red-600">{dashboard.summary.installationsAtRisk}</div>
+            <div className="text-2xs font-medium text-slate-500 uppercase tracking-wide">At Risk</div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-3 text-center">
-            <div className="text-2xl font-bold text-blue-600">{dashboard.summary.totalPersonnel.toLocaleString()}</div>
-            <div className="text-sm text-gray-600">Personnel Protected</div>
+          <div className="bg-slate-50 rounded-lg p-3 text-center">
+            <div className="text-lg font-bold text-blue-600">{dashboard.summary.totalPersonnel.toLocaleString()}</div>
+            <div className="text-2xs font-medium text-slate-500 uppercase tracking-wide">Personnel Protected</div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-3 text-center">
-            <div className="text-2xl font-bold text-orange-600">{dashboard.alerts.length}</div>
-            <div className="text-sm text-gray-600">Active Alerts</div>
+          <div className="bg-slate-50 rounded-lg p-3 text-center">
+            <div className="text-lg font-bold text-orange-600">{dashboard.alerts.length}</div>
+            <div className="text-2xs font-medium text-slate-500 uppercase tracking-wide">Active Alerts</div>
           </div>
         </div>
 

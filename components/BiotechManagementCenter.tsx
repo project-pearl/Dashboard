@@ -41,7 +41,7 @@ import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
 import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
 import { BrandedPrintBtn } from '@/lib/brandedPrint';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
-import { DataProvenanceCard } from '@/components/DataProvenanceCard';
+
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
@@ -1973,9 +1973,6 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
 
             case 'disclaimer': return null;
 
-            case 'data-provenance': return DS(
-              <DataProvenanceCard />
-            );
             case 'training': return DS(
               <RoleTrainingGuide rolePath="/dashboard/biotech" />
             );

@@ -574,6 +574,12 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
           </div>
         </CardHeader>
         <CardContent className="pt-4 space-y-4">
+          {/* Immediate Actions — elevated above situation summary */}
+          <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 p-3">
+            <div className="text-xs uppercase tracking-wider text-red-700 dark:text-red-400 mb-2">Immediate Actions Required</div>
+            <div className="space-y-1.5 text-xs text-red-600 dark:text-red-300">{commanderBrief.immediateActions.map((a) => <div key={a}>{a}</div>)}</div>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50/80 dark:bg-slate-800/60 p-4">
               <div className="text-xs uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-2 flex items-center gap-2">
@@ -676,11 +682,7 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-            <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 p-3">
-              <div className="text-xs uppercase tracking-wider text-red-700 dark:text-red-400 mb-2">Immediate</div>
-              <div className="space-y-1.5 text-xs text-red-600 dark:text-red-300">{commanderBrief.immediateActions.map((a) => <div key={a}>{a}</div>)}</div>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-3">
               <div className="text-xs uppercase tracking-wider text-amber-700 dark:text-amber-400 mb-2">Within 2 Hrs</div>
               <div className="space-y-1.5 text-xs text-amber-700 dark:text-amber-300">{commanderBrief.within2h.map((a) => <div key={a}>{a}</div>)}</div>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Wind, MapPin, Activity, AlertTriangle } from 'lucide-react';
+import { Wind, MapPin, Activity, AlertTriangle, HelpCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useJurisdictionContext } from '@/lib/jurisdiction-context';
@@ -111,14 +111,19 @@ export function AirQualityMonitoringCard({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Wind className="h-5 w-5 text-cyan-600" />
-          {title}
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <Wind className="h-5 w-5 text-cyan-600" />
+            {title}
+          </CardTitle>
+          <button className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm hover:bg-slate-50 transition-colors" title="Air quality index monitoring across military installations from AirNow EPA data.">
+            <HelpCircle className="w-4 h-4 text-slate-400" />
+          </button>
+        </div>
+        <CardDescription className="text-xs">{description}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="pt-0 space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" className={band.className}>{band.label}</Badge>
           <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">

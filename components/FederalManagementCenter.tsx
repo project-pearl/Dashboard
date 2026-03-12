@@ -10,7 +10,7 @@ import type { MapRef } from 'react-map-gl/mapbox';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, AlertTriangle, AlertCircle, CheckCircle, MapPin, Droplets, Leaf, DollarSign, Users, TrendingUp, BarChart3, Gauge, Shield, LogOut, Building2, Info, ChevronDown, ChevronLeft, Minus, Clock, Target, ArrowRight, Eye, Sparkles, Scale, Activity, Banknote, HardHat, Wrench, Megaphone, Heart, Trophy } from 'lucide-react';
+import { X, AlertTriangle, AlertCircle, CheckCircle, MapPin, Droplets, Leaf, DollarSign, Users, TrendingUp, BarChart3, Gauge, Shield, LogOut, Building2, Info, ChevronDown, ChevronLeft, Minus, Clock, Target, ArrowRight, Eye, Sparkles, Scale, Activity, Banknote, HardHat, Wrench, Megaphone, Heart, Trophy, HelpCircle } from 'lucide-react';
 import { brandedPrintSection, BrandedPrintBtn } from '@/lib/brandedPrint';
 import { useRouter } from 'next/navigation';
 import { getRegionById } from '@/lib/regionsConfig';
@@ -92,7 +92,7 @@ import ScorecardDashboard from '@/components/federal/ScorecardDashboard';
 import StateRollupTable from '@/components/federal/StateRollupTable';
 import NationalMapSection from '@/components/federal/NationalMapSection';
 import { SectionLoader, isSectionExtracted } from '@/components/federal/sections';
-import { DataProvenanceCard } from '@/components/DataProvenanceCard';
+
 
 import hucNamesData from '@/data/huc8-names.json';
 import centroidsData from '@/data/huc8-centroids.json';
@@ -358,7 +358,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['fire-aq-intel', 'fire-aq-correlation', 'installation-risk-scorecard', 'aqi-trend-chart', 'weather-alerts', 'briefing-qa']),
+    sections: new Set(['fire-aq-intel', 'fire-aq-correlation', 'installation-risk-scorecard', 'aqi-trend-chart', 'weather-alerts']),
   },
   scorecard: {
     label: 'Scorecard',
@@ -4021,13 +4021,20 @@ export function FederalManagementCenter(props: Props) {
 
         case 'reports-hub': return DS(
         <Card>
-          <CardHeader className="border-b border-slate-200/80 bg-slate-50/70">
-            <CardTitle className="text-slate-900">Federal Reports</CardTitle>
-            <CardDescription>Read-only oversight exports for national program management, regional coordination, and analysis teams</CardDescription>
+          <CardHeader className="pb-3 border-b border-slate-200/80 bg-slate-50/70">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base font-semibold text-slate-900">Federal Reports</CardTitle>
+                <CardDescription>Read-only oversight exports for national program management, regional coordination, and analysis teams</CardDescription>
+              </div>
+              <button className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm hover:bg-slate-50 transition-colors" title="Federal oversight report library. Download compliance, water quality, and planning reports in PDF/CSV/Excel formats.">
+                <HelpCircle className="w-4 h-4 text-slate-400" />
+              </button>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="pt-0 space-y-3">
             <div className="rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-xs text-slate-700 flex flex-wrap items-center justify-between gap-2">
-              <span className="font-semibold">Data freshness: Mar 2, 2026 08:07 AM EST</span>
+              <span className="font-semibold">Data freshness: {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
               <span>Coverage: 3 active national source streams</span>
             </div>
             {[
@@ -4054,7 +4061,7 @@ export function FederalManagementCenter(props: Props) {
               },
             ].map((section) => (
               <div key={section.group} className="rounded-lg border border-slate-200 bg-white p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">{section.group}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2.5">{section.group}</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {section.reports.map((report) => (
                     <div key={report.title} className="border border-slate-200 rounded-lg p-4 hover:border-slate-400 hover:shadow-sm transition-all">
@@ -4447,11 +4454,16 @@ export function FederalManagementCenter(props: Props) {
         case 'funding-landscape': return DS(<>
         {/* ── FUNDING & GRANT LANDSCAPE ── */}
         <Card>
-          <CardHeader>
-            <CardTitle>Funding & Grant Landscape</CardTitle>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-semibold">Funding & Grant Landscape</CardTitle>
+              <button className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm hover:bg-slate-50 transition-colors" title="Overview of federal water infrastructure funding programs, grant opportunities, and application deadlines.">
+                <HelpCircle className="w-4 h-4 text-slate-400" />
+              </button>
+            </div>
             <CardDescription>Federal water infrastructure funding, grant opportunities, and deadline tracking</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="pt-0 space-y-3">
             {/* Funding KPI Strip */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
@@ -4470,7 +4482,7 @@ export function FederalManagementCenter(props: Props) {
 
             {/* Major Funding Programs */}
             <div>
-              <h3 className="text-sm font-semibold text-slate-800 mb-3">Major Federal Funding Programs</h3>
+              <h3 className="text-base font-semibold text-slate-800 mb-3">Major Federal Funding Programs</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {[
                   { program: 'Clean Water State Revolving Fund (CWSRF)', amount: '$7.4B', agency: 'EPA', eligible: 'States, municipalities', desc: 'Low-interest loans for wastewater, stormwater, and nonpoint source projects.' },
@@ -4530,7 +4542,7 @@ export function FederalManagementCenter(props: Props) {
         <Card id="section-funding-deadlines" className="border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-white">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg flex items-center gap-2">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Clock className="h-5 w-5 text-amber-600" />
                 Upcoming Funding Deadlines
                 <span className="text-2xs font-normal text-slate-400 ml-1">
@@ -4653,7 +4665,7 @@ export function FederalManagementCenter(props: Props) {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <CardTitle className="text-lg flex items-center gap-2">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
                   <MapPin className="h-5 w-5 text-sky-600" />
                   Your State Funding Snapshot
                 </CardTitle>
@@ -4755,7 +4767,7 @@ export function FederalManagementCenter(props: Props) {
         <Card id="section-funding-matrix" className="border-2 border-slate-200 bg-gradient-to-br from-slate-50 to-white">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg flex items-center gap-2">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Target className="h-5 w-5 text-slate-600" />
                 Impairment-to-Program Matrix
               </CardTitle>
@@ -4845,7 +4857,7 @@ export function FederalManagementCenter(props: Props) {
         <Card id="section-funding-gap" className="border-2 border-rose-200 bg-gradient-to-br from-rose-50 to-white">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg flex items-center gap-2">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-rose-600" />
                 Funding Gap Analysis
               </CardTitle>
@@ -5240,14 +5252,19 @@ export function FederalManagementCenter(props: Props) {
         // ── Infrastructure / Funding national aggregate cards ──────────────
         case 'fund-srf': return DS(
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Banknote className="h-5 w-5 text-blue-600" />
-                SRF Program — National Aggregate
-              </CardTitle>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <Banknote className="h-5 w-5 text-blue-600" />
+                  SRF Program — National Aggregate
+                </CardTitle>
+                <button className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm hover:bg-slate-50 transition-colors" title="State Revolving Fund capitalization, lending volume, and utilization rates across all states.">
+                  <HelpCircle className="w-4 h-4 text-slate-400" />
+                </button>
+              </div>
               <CardDescription>State Revolving Fund capitalization, lending, and utilization across all states</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="pt-0 space-y-3">
               <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Capitalization</div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
@@ -5282,14 +5299,19 @@ export function FederalManagementCenter(props: Props) {
 
         case 'infra-capital': return DS(
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <HardHat className="h-5 w-5 text-orange-600" />
-                Capital Improvement Planning — National Aggregate
-              </CardTitle>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <HardHat className="h-5 w-5 text-orange-600" />
+                  Capital Improvement Planning — National Aggregate
+                </CardTitle>
+                <button className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm hover:bg-slate-50 transition-colors" title="Infrastructure investment pipeline showing priority projects, funding needs, and gaps across all states.">
+                  <HelpCircle className="w-4 h-4 text-slate-400" />
+                </button>
+              </div>
               <CardDescription>Infrastructure investment pipeline across all states</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0 space-y-3">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
                   { label: 'Priority Projects', value: '1,400+', bg: 'bg-orange-50 border-orange-200' },
@@ -5309,14 +5331,19 @@ export function FederalManagementCenter(props: Props) {
 
         case 'infra-construction': return DS(
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Wrench className="h-5 w-5 text-slate-600" />
-                Construction Activity — National Aggregate
-              </CardTitle>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <Wrench className="h-5 w-5 text-slate-600" />
+                  Construction Activity — National Aggregate
+                </CardTitle>
+                <button className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm hover:bg-slate-50 transition-colors" title="Active construction projects funded by SRF and BIL across all states with schedule tracking.">
+                  <HelpCircle className="w-4 h-4 text-slate-400" />
+                </button>
+              </div>
               <CardDescription>Active construction projects funded by SRF and BIL across all states</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0 space-y-3">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
                   { label: 'Active Projects', value: '3,200+', bg: 'bg-blue-50 border-blue-200' },
@@ -5845,9 +5872,6 @@ export function FederalManagementCenter(props: Props) {
           </Card>
         );
 
-        case 'data-provenance': return DS(
-          <DataProvenanceCard />
-        );
         case 'training': return DS(
           <RoleTrainingGuide rolePath="/dashboard/federal" />
         );

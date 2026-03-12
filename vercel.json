@@ -257,6 +257,10 @@
       "schedule": "30 5 * * *"
     },
     {
+      "path": "/api/cron/rebuild-dod-pfas",
+      "schedule": "0 22 * * 0"
+    },
+    {
       "path": "/api/cron/rebuild-embassy-aqi",
       "schedule": "15 * * * *"
     },

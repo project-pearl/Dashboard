@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Zap, Wind, AlertTriangle, Heart } from 'lucide-react';
+import { Zap, Wind, AlertTriangle, Heart, HelpCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -190,15 +190,20 @@ export function FireAqCorrelationCard() {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Zap className="w-5 h-5 text-amber-500" />
-          Fire-AQ Correlation Intelligence
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <Zap className="w-5 h-5 text-amber-500" />
+            Fire-AQ Correlation Intelligence
+          </CardTitle>
+          <button className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm hover:bg-slate-50 transition-colors" title="Correlation analysis between fire detections and air quality degradation near installations.">
+            <HelpCircle className="w-4 h-4 text-slate-400" />
+          </button>
+        </div>
         <CardDescription className="text-xs">
           Cross-source narratives correlating fire detections, air quality, wind patterns, and installation proximity.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="pt-0 space-y-2">
         {!data && <div className="text-xs text-slate-500">Loading correlation data...</div>}
         {data && insights.length === 0 && (
           <div className="text-xs text-slate-500 bg-green-50 border border-green-200 rounded-lg p-3">

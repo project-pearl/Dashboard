@@ -45,7 +45,7 @@ import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
-import { DataProvenanceCard } from '@/components/DataProvenanceCard';
+
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { UserManagementPanel } from './UserManagementPanel';
 import { getInvitableRoles } from '@/lib/adminHierarchy';
@@ -2480,9 +2480,6 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
             );
 
             case 'disclaimer': return null;
-            case 'data-provenance': return DS(
-              <DataProvenanceCard />
-            );
             case 'training': return DS(
               <RoleTrainingGuide rolePath="/dashboard/k12" />
             );

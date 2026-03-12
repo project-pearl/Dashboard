@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Shield, ChevronDown, ChevronRight } from 'lucide-react';
+import { Shield, ChevronDown, ChevronRight, HelpCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sparkline } from './Sparkline';
@@ -119,15 +119,20 @@ export function InstallationRiskScorecard() {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Shield className="w-5 h-5 text-indigo-600" />
-          Installation Risk Scorecard
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <Shield className="w-5 h-5 text-indigo-600" />
+            Installation Risk Scorecard
+          </CardTitle>
+          <button className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm hover:bg-slate-50 transition-colors" title="Composite risk scores for installations based on fire, air quality, and environmental factors.">
+            <HelpCircle className="w-4 h-4 text-slate-400" />
+          </button>
+        </div>
         <CardDescription className="text-xs">
           Composite risk ranking across fire, AQI, burn pit, wind, drought, seismic, and dam proximity. Click rows for detail.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         {loading && <div className="text-xs text-slate-500">Loading installation scores...</div>}
         {!loading && data.length === 0 && (
           <div className="text-xs text-slate-500">No installation data available.</div>

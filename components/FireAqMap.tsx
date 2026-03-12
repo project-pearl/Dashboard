@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MapPin } from 'lucide-react';
+import { MapPin, HelpCircle } from 'lucide-react';
 
 const MapboxMapShell = dynamic(
   () => import('@/components/MapboxMapShell').then(m => m.MapboxMapShell),
@@ -103,10 +103,18 @@ export function FireAqMap({ data }: { data: MapData | null }) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <MapPin className="w-5 h-5 text-red-500" />
-          Fire & Air Quality Situational Map
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <MapPin className="w-5 h-5 text-red-500" />
+            Fire & Air Quality Situational Map
+          </CardTitle>
+          <button
+            title="Geographic distribution of fire/air quality metrics by region. Color intensity indicates severity. Data from NASA FIRMS, refreshed every 3 hours."
+            className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm hover:bg-slate-50 transition-colors"
+          >
+            <HelpCircle className="w-4 h-4 text-slate-400" />
+          </button>
+        </div>
       </CardHeader>
       <CardContent className="p-0 overflow-hidden rounded-b-lg" style={{ height: 400 }}>
         <MapboxMapShell

@@ -62,7 +62,6 @@ export const LENS_ICON_NAMES: Record<string, string> = {
   interagency: 'Network',
   funding: 'Banknote',
   full: 'LayoutDashboard',
-  'data-provenance': 'FileCheck',
   // ── State ──────────────────────────────────────────────────────────────────
   coverage: 'Activity',
   programs: 'Landmark',
@@ -224,12 +223,6 @@ function buildNavGroups(stateCode: string): NavGroup[] { return [
     title: 'PEARL',
     items: [
       { label: 'PEARL Admin', href: '/dashboard/pearl', icon: Crown, accent: 'text-purple-700', accentBg: 'bg-purple-50 border-purple-200' },
-    ],
-  },
-  {
-    title: 'Resources',
-    items: [
-      { label: 'Data Provenance', href: '/dashboard/data-provenance', icon: FileCheck, accent: 'text-cyan-700', accentBg: 'bg-cyan-50 border-cyan-200' },
     ],
   },
 ]; }
@@ -611,6 +604,19 @@ export function DashboardSidebar() {
 
       {/* Bottom section */}
       <div className="border-t border-slate-200 dark:border-[rgba(58,189,176,0.12)] p-3 space-y-2">
+        <Link
+          href="/dashboard/data-provenance"
+          onClick={() => setMobileOpen(false)}
+          title={collapsed ? 'Data Provenance' : undefined}
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+            pathname === '/dashboard/data-provenance'
+              ? 'bg-cyan-50 border-cyan-200 text-cyan-700 font-semibold border shadow-sm'
+              : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+          }`}
+        >
+          <FileCheck className={`w-4 h-4 flex-shrink-0 ${pathname === '/dashboard/data-provenance' ? 'text-cyan-700' : ''}`} />
+          {!collapsed && <span>Data Provenance</span>}
+        </Link>
         <Link
           href="/account"
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"

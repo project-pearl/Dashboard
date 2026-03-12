@@ -77,6 +77,7 @@ import { getMyHealthfinderCacheStatus, ensureWarmed as warmMyHealthfinder } from
 import { getATSDRToxicologyCacheStatus, ensureWarmed as warmATSDRToxicology } from '@/lib/atsdrToxicologyCache';
 import { getUSGSWQPCacheStatus, ensureWarmed as warmUSGSWQP } from '@/lib/usgsWqpCache';
 import { getDataCDCGovCacheStatus, ensureWarmed as warmDataCDCGov } from '@/lib/dataCdcGovCache';
+import { getDoDPFASCacheStatus, ensureWarmed as warmDoDPFAS } from '@/lib/dodPfasCache';
 import { getHealthSummary, ensureWarmed as warmSentinelHealth } from '@/lib/sentinel/sentinelHealth';
 import { getQueueStats, ensureWarmed as warmSentinelQueue } from '@/lib/sentinel/eventQueue';
 import { getScoredHucsSummary, ensureWarmed as warmSentinelScores } from '@/lib/sentinel/scoringEngine';
@@ -107,7 +108,7 @@ export async function GET(request: NextRequest) {
     [warmHospitals, warmOutbreaks, warmEnvironmentalHealth, warmCDCWonder, warmEnvironmentalTracking, warmHealthDataGov, warmOpenFDA],
     [warmHrsaHpsa],
     [warmEJScreen, warmCampd, warmClimateNormals],
-    [warmMyHealthfinder, warmATSDRToxicology, warmUSGSWQP, warmDataCDCGov],
+    [warmMyHealthfinder, warmATSDRToxicology, warmUSGSWQP, warmDataCDCGov, warmDoDPFAS],
   ];
   for (const batch of warmBatches) {
     await Promise.allSettled(batch.map(fn => fn()));
@@ -183,6 +184,7 @@ export async function GET(request: NextRequest) {
   const atsdrToxicology = getATSDRToxicologyCacheStatus();
   const usgsWqp = getUSGSWQPCacheStatus();
   const dataCdcGov = getDataCDCGovCacheStatus();
+  const dodPfas = getDoDPFASCacheStatus();
 
   const caches = {
     wqp: {
@@ -469,6 +471,10 @@ export async function GET(request: NextRequest) {
     dataCdcGov: {
       ...dataCdcGov,
       ...staleness(dataCdcGov.loaded ? (dataCdcGov as any).built : null),
+    },
+    dodPfas: {
+      ...dodPfas,
+      ...staleness(dodPfas.loaded ? (dodPfas as any).built : null),
     },
   };
 

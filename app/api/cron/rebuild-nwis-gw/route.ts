@@ -33,6 +33,10 @@ import { isCronAuthorized } from '@/lib/apiAuth';
 import * as Sentry from '@sentry/nextjs';
 import { notifySlackCronFailure } from '@/lib/slackNotify';
 import { recordCronRun } from '@/lib/cronHealth';
+import {
+  useOgcApi, fetchOgcMultiParam, fetchOgcCollection,
+  fetchMonitoringLocations, parseOgcObservation,
+} from '@/lib/usgsOgcClient';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -281,6 +285,130 @@ async function fetchStateGw(stateAbbr: string): Promise<{
 }
 
 /**
+ * Fetch GW data for a single state via USGS OGC API (modern endpoint).
+ * 3 data sources:
+ *  - field-measurements (gwlevels)
+ *  - latest-continuous with site_type_code=GW (IV-GW)
+ *  - daily with site_type_code=GW (DV-GW)
+ */
+async function fetchStateGwOgc(stateAbbr: string): Promise<{
+  sites: NwisGwSite[];
+  levels: NwisGwLevel[];
+  trends: NwisGwTrend[];
+}> {
+  const gwParamCodes = GW_PARAMS.split(',');
+  const siteMap = new Map<string, NwisGwSite>();
+  let stateLevels: NwisGwLevel[] = [];
+  let dvLevels: NwisGwLevel[] = [];
+
+  // Fetch site metadata for GW wells
+  const siteMeta = await fetchMonitoringLocations(stateAbbr, ['GW']);
+
+  // Fetch all 3 sources in parallel
+  const [fieldResult, ivResult, dvResult] = await Promise.allSettled([
+    // Field measurements (gwlevels equivalent)
+    fetchOgcCollection('field-measurements', {
+      monitoring_location_state_code: stateAbbr,
+    }, { timeoutMs: 45_000 }),
+    // Latest continuous for GW sites
+    fetchOgcMultiParam('latest-continuous', {
+      monitoring_location_state_code: stateAbbr,
+      site_type_code: 'GW',
+    }, gwParamCodes, { timeoutMs: 45_000 }),
+    // Daily values for GW sites (90-day equivalent)
+    fetchOgcMultiParam('daily', {
+      monitoring_location_state_code: stateAbbr,
+      site_type_code: 'GW',
+    }, gwParamCodes, { timeoutMs: 45_000 }),
+  ]);
+
+  function processFeaturesIntoLevels(
+    features: any[],
+    isRealtime: boolean,
+  ): NwisGwLevel[] {
+    const levels: NwisGwLevel[] = [];
+    for (const feature of features) {
+      const obs = parseOgcObservation(feature);
+      if (!obs || obs.value === null) continue;
+
+      // Register site
+      if (!siteMap.has(obs.siteNumber)) {
+        const meta = siteMeta.get(obs.siteNumber);
+        siteMap.set(obs.siteNumber, {
+          siteNumber: obs.siteNumber,
+          siteName: meta?.siteName || '',
+          aquiferCode: '',
+          wellDepth: null,
+          state: stateAbbr,
+          county: '',
+          huc: meta?.huc || '',
+          lat: obs.lat,
+          lng: obs.lng,
+        });
+      }
+
+      levels.push({
+        siteNumber: obs.siteNumber,
+        dateTime: obs.dateTime,
+        value: obs.value,
+        unit: obs.unit || 'ft',
+        parameterCd: obs.parameterCode,
+        parameterName: obs.parameterCode === '72019' ? 'Depth to water level, ft below land surface'
+          : obs.parameterCode === '62610' ? 'GW level NGVD29, ft'
+          : obs.parameterCode === '62611' ? 'GW level NAVD88, ft'
+          : obs.parameterCode,
+        qualifier: obs.qualifier,
+        isRealtime,
+        lat: obs.lat,
+        lng: obs.lng,
+      });
+    }
+    return levels;
+  }
+
+  // Process field measurements
+  if (fieldResult.status === 'fulfilled') {
+    stateLevels.push(...processFeaturesIntoLevels(fieldResult.value.features, false));
+  }
+
+  // Process IV GW
+  if (ivResult.status === 'fulfilled') {
+    stateLevels.push(...processFeaturesIntoLevels(ivResult.value.features, true));
+  }
+
+  // Process DV GW (used for trend computation)
+  if (dvResult.status === 'fulfilled') {
+    dvLevels = processFeaturesIntoLevels(dvResult.value.features, false);
+  }
+
+  const dedupedSites = Array.from(siteMap.values());
+
+  // Deduplicate levels by siteNumber|dateTime|parameterCd
+  const levelMap = new Map<string, NwisGwLevel>();
+  for (const l of stateLevels) {
+    const key = `${l.siteNumber}|${l.dateTime}|${l.parameterCd}`;
+    if (!levelMap.has(key)) levelMap.set(key, l);
+  }
+
+  // Cap levels per site to limit cache size
+  const latestPerSite = new Map<string, NwisGwLevel[]>();
+  for (const l of levelMap.values()) {
+    const arr = latestPerSite.get(l.siteNumber) || [];
+    arr.push(l);
+    latestPerSite.set(l.siteNumber, arr);
+  }
+  const cappedLevels: NwisGwLevel[] = [];
+  for (const [, siteLevelsArr] of latestPerSite) {
+    siteLevelsArr.sort((a, b) => (b.dateTime || '').localeCompare(a.dateTime || ''));
+    cappedLevels.push(...siteLevelsArr.slice(0, 30));
+  }
+
+  const trends = computeTrends(siteMap, dvLevels);
+
+  return { sites: dedupedSites, levels: cappedLevels, trends };
+}
+
+/**
  * Trigger the next chunk via self-chain.
  */
 async function triggerNextChunk(
@@ -399,10 +527,14 @@ export async function GET(request: NextRequest) {
           if (!isRetry) statesConsumed++;
           runningCount++;
 
+          const ogcMode = useOgcApi();
+
           (async () => {
             try {
-              console.log(`[NWIS-GW Cron] Fetching ${stateAbbr}${isRetry ? ' (retry)' : ''}...`);
-              const result = await fetchStateGw(stateAbbr);
+              console.log(`[NWIS-GW Cron] Fetching ${stateAbbr}${isRetry ? ' (retry)' : ''}${ogcMode ? ' (OGC)' : ''}...`);
+              const result = ogcMode
+                ? await fetchStateGwOgc(stateAbbr)
+                : await fetchStateGw(stateAbbr);
 
               allSites.push(...result.sites);
               allLevels.push(...result.levels);

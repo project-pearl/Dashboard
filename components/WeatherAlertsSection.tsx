@@ -77,7 +77,7 @@ function relativeTime(iso: string | null): string {
   return `${Math.round(hrs / 24)}d`;
 }
 
-const PREVIEW_COUNT = 5;
+const PREVIEW_COUNT = 3;
 
 /* ── Component ──────────────────────────────────────────────────────── */
 
@@ -151,9 +151,9 @@ export function WeatherAlertsSection({ userState }: Props) {
 
   /* ── Active warnings ───────────────────────────────────────────── */
   return (
-    <Card className="border" style={{ borderColor: 'var(--border-primary)' }}>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+    <Card className="border border-slate-200/80">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
           <AlertTriangle size={16} className="text-amber-500" />
           Severe Weather Warnings
           <span className="ml-1 text-xs font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
@@ -167,7 +167,7 @@ export function WeatherAlertsSection({ userState }: Props) {
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="space-y-2 pt-0">
+      <CardContent className="pt-0 space-y-3">
         {groups.map(({ category, alerts }) => {
           const meta = CATEGORY_META[category] ?? CATEGORY_META.Other;
           const expanded = expandedCats.has(category);
@@ -180,7 +180,7 @@ export function WeatherAlertsSection({ userState }: Props) {
               <button
                 type="button"
                 onClick={() => toggle(category)}
-                className="w-full flex items-center gap-2 text-xs font-semibold py-1 px-1 rounded hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                className="w-full flex items-center gap-2 text-sm font-medium py-1 px-1 rounded hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                 style={{ color: 'var(--text-primary)' }}
               >
                 <span className={`inline-block w-2.5 h-2.5 rounded-full shrink-0 ${meta.dot}`} />

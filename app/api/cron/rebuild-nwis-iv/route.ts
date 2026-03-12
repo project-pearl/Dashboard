@@ -21,6 +21,10 @@ import { isCronAuthorized } from '@/lib/apiAuth';
 import * as Sentry from '@sentry/nextjs';
 import { notifySlackCronFailure } from '@/lib/slackNotify';
 import { recordCronRun } from '@/lib/cronHealth';
+import {
+  useOgcApi, fetchOgcMultiParam, fetchMonitoringLocations,
+  parseOgcObservation, type ParsedOgcSite,
+} from '@/lib/usgsOgcClient';
 
 // Allow up to 5 minutes on Vercel Pro
 export const maxDuration = 300;
@@ -159,6 +163,85 @@ async function fetchStateIv(
 }
 
 /**
+ * Fetch IV data for a single state via USGS OGC API (modern endpoint).
+ * Iterates over parameter codes (one per request) and merges results.
+ */
+async function fetchStateIvOgc(
+  stateAbbr: string,
+  siteMetaCache: Map<string, ParsedOgcSite>,
+): Promise<{ sites: UsgsIvSite[]; readings: UsgsIvReading[] }> {
+  const paramCodes = Object.keys(USGS_PARAM_MAP);
+
+  // Fetch site metadata if not already cached for this state
+  if (![...siteMetaCache.values()].some(s => s.state === stateAbbr)) {
+    const stateSites = await fetchMonitoringLocations(stateAbbr, ['ST', 'LK', 'ES']);
+    for (const [id, site] of stateSites) {
+      siteMetaCache.set(id, site);
+    }
+  }
+
+  // Fetch latest observations for all param codes in parallel
+  const data = await fetchOgcMultiParam(
+    'latest-continuous',
+    { monitoring_location_state_code: stateAbbr },
+    paramCodes,
+    { timeoutMs: 45_000 },
+  );
+
+  const siteMap = new Map<string, UsgsIvSite>();
+  const latestReading = new Map<string, UsgsIvReading>();
+
+  for (const feature of data.features) {
+    const obs = parseOgcObservation(feature);
+    if (!obs || obs.value === null) continue;
+
+    const paramName = USGS_PARAM_MAP[obs.parameterCode] || obs.parameterCode;
+
+    // Build site record from monitoring-locations metadata or feature coords
+    if (!siteMap.has(obs.siteNumber)) {
+      const meta = siteMetaCache.get(obs.siteNumber);
+      siteMap.set(obs.siteNumber, {
+        siteNumber: obs.siteNumber,
+        siteName: meta?.siteName || '',
+        siteType: meta?.siteType || 'ST',
+        state: stateAbbr,
+        huc: meta?.huc || '',
+        lat: obs.lat,
+        lng: obs.lng,
+        parameterCodes: [],
+      });
+    }
+
+    const site = siteMap.get(obs.siteNumber)!;
+    if (!site.parameterCodes.includes(obs.parameterCode)) {
+      site.parameterCodes.push(obs.parameterCode);
+    }
+
+    // Deduplicate: keep latest reading per site+param
+    const dedupeKey = `${obs.siteNumber}|${obs.parameterCode}`;
+    const existing = latestReading.get(dedupeKey);
+    if (!existing || obs.dateTime > existing.dateTime) {
+      latestReading.set(dedupeKey, {
+        siteNumber: obs.siteNumber,
+        dateTime: obs.dateTime,
+        parameterCd: obs.parameterCode,
+        parameterName: paramName,
+        value: obs.value,
+        unit: obs.unit,
+        qualifier: obs.qualifier,
+        lat: obs.lat,
+        lng: obs.lng,
+      });
+    }
+  }
+
+  return {
+    sites: Array.from(siteMap.values()),
+    readings: Array.from(latestReading.values()),
+  };
+}
+
+/**
  * Process states in batches of CONCURRENCY.
  */
 async function fetchAllStates(states: readonly string[]): Promise<{
@@ -201,6 +284,49 @@ async function fetchAllStates(states: readonly string[]): Promise<{
   return { allSites, allReadings, processedStates, stateResults };
 }
 
+/**
+ * Process states via OGC API in batches of CONCURRENCY.
+ */
+async function fetchAllStatesOgc(states: readonly string[]): Promise<{
+  allSites: UsgsIvSite[];
+  allReadings: UsgsIvReading[];
+  processedStates: string[];
+  stateResults: Record<string, { sites: number; readings: number }>;
+}> {
+  const allSites: UsgsIvSite[] = [];
+  const allReadings: UsgsIvReading[] = [];
+  const processedStates: string[] = [];
+  const stateResults: Record<string, { sites: number; readings: number }> = {};
+  const siteMetaCache = new Map<string, ParsedOgcSite>();
+
+  for (let i = 0; i < states.length; i += CONCURRENCY) {
+    const batch = states.slice(i, i + CONCURRENCY);
+
+    const results = await Promise.allSettled(
+      batch.map(st => fetchStateIvOgc(st, siteMetaCache)),
+    );
+
+    for (let j = 0; j < batch.length; j++) {
+      const stateAbbr = batch[j];
+      const result = results[j];
+
+      if (result.status === 'fulfilled') {
+        const { sites, readings } = result.value;
+        allSites.push(...sites);
+        allReadings.push(...readings);
+        processedStates.push(stateAbbr);
+        stateResults[stateAbbr] = { sites: sites.length, readings: readings.length };
+        console.log(`[NWIS-IV Cron OGC] ${stateAbbr}: ${sites.length} sites, ${readings.length} readings`);
+      } else {
+        console.warn(`[NWIS-IV Cron OGC] ${stateAbbr} failed: ${result.reason?.message || result.reason}`);
+        stateResults[stateAbbr] = { sites: 0, readings: 0 };
+      }
+    }
+  }
+
+  return { allSites, allReadings, processedStates, stateResults };
+}
+
 // ── GET Handler ──────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
@@ -221,18 +347,26 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    // ── Fetch all states ────────────────────────────────────────────────
+    // ── Fetch all states (OGC or legacy) ────────────────────────────────
+    const ogcMode = useOgcApi();
+    if (ogcMode) console.log('[NWIS-IV Cron] Using USGS OGC API (modern endpoint)');
+
     const { allSites, allReadings, processedStates, stateResults } =
-      await fetchAllStates(ALL_STATES);
+      ogcMode
+        ? await fetchAllStatesOgc(ALL_STATES)
+        : await fetchAllStates(ALL_STATES);
 
     // ── Retry failed states ─────────────────────────────────────────────
+    const siteMetaCacheRetry = new Map<string, ParsedOgcSite>();
     const failedStates = ALL_STATES.filter(s => !processedStates.includes(s));
     if (failedStates.length > 0) {
       console.log(`[NWIS-IV Cron] Retrying ${failedStates.length} failed states...`);
       await delay(RETRY_DELAY_MS);
 
       const retryResults = await Promise.allSettled(
-        failedStates.map(st => fetchStateIv(st, 60_000)),
+        failedStates.map(st =>
+          ogcMode ? fetchStateIvOgc(st, siteMetaCacheRetry) : fetchStateIv(st, 60_000),
+        ),
       );
 
       for (let i = 0; i < failedStates.length; i++) {

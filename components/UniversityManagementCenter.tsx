@@ -42,7 +42,7 @@ import { getEpaRegionForState } from '@/lib/epa-regions';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
-import { DataProvenanceCard } from '@/components/DataProvenanceCard';
+
 import dynamic from 'next/dynamic';
 const MapboxMapShell = dynamic(
   () => import('@/components/MapboxMapShell').then(m => m.MapboxMapShell),
@@ -2208,9 +2208,6 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
             );
 
             case 'disclaimer': return null;
-            case 'data-provenance': return DS(
-              <DataProvenanceCard />
-            );
             case 'training': return DS(
               <RoleTrainingGuide rolePath="/dashboard/university" />
             );

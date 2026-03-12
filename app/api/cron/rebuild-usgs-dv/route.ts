@@ -17,6 +17,10 @@ import { isCronAuthorized } from '@/lib/apiAuth';
 import * as Sentry from '@sentry/nextjs';
 import { notifySlackCronFailure } from '@/lib/slackNotify';
 import { recordCronRun } from '@/lib/cronHealth';
+import {
+  useOgcApi, fetchOgcMultiParam, fetchMonitoringLocations,
+  parseOgcObservation,
+} from '@/lib/usgsOgcClient';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -119,6 +123,93 @@ function parseUsgsResponse(json: any, stateCode: string): UsgsDvStation[] {
   }));
 }
 
+// ── OGC API Fetcher ─────────────────────────────────────────────────────────
+
+/**
+ * Fetch daily value data for a single state via USGS OGC API.
+ * OGC daily collection includes statistic_id: 00001=max, 00002=min, 00003=mean.
+ */
+async function fetchStateDvOgc(stateCode: string): Promise<UsgsDvStation[]> {
+  const paramCodes = PARAM_CODES.split(',');
+
+  const data = await fetchOgcMultiParam(
+    'daily',
+    { monitoring_location_state_code: stateCode },
+    paramCodes,
+    { timeoutMs: 30_000 },
+  );
+
+  // Group by site, then by param, then collect stats
+  const siteMap: Record<string, {
+    siteId: string;
+    name: string;
+    lat: number;
+    lng: number;
+    params: Record<string, { mean: number | null; min: number | null; max: number | null; unit: string; date: string }>;
+  }> = {};
+
+  // Fetch site metadata for names
+  const siteMeta = await fetchMonitoringLocations(stateCode, ['ST']);
+
+  for (const feature of data.features) {
+    const obs = parseOgcObservation(feature);
+    if (!obs || obs.value === null) continue;
+
+    const paramName = PARAM_NAMES[obs.parameterCode] || obs.parameterCode;
+
+    if (!siteMap[obs.siteNumber]) {
+      const meta = siteMeta.get(obs.siteNumber);
+      siteMap[obs.siteNumber] = {
+        siteId: obs.siteNumber,
+        name: meta?.siteName || '',
+        lat: obs.lat,
+        lng: obs.lng,
+        params: {},
+      };
+    }
+
+    if (!siteMap[obs.siteNumber].params[paramName]) {
+      siteMap[obs.siteNumber].params[paramName] = {
+        mean: null,
+        min: null,
+        max: null,
+        unit: obs.unit,
+        date: obs.dateTime,
+      };
+    }
+
+    const p = siteMap[obs.siteNumber].params[paramName];
+    const v = Math.round(obs.value * 1000) / 1000;
+
+    // Update date to latest
+    if (obs.dateTime > p.date) p.date = obs.dateTime;
+
+    // OGC daily uses statistic_id to differentiate
+    if (obs.statisticId === '00003' || !obs.statisticId) {
+      // Mean (or default if no stat ID — accumulate for averaging)
+      if (p.mean === null) p.mean = v;
+      else p.mean = Math.round(((p.mean + v) / 2) * 1000) / 1000;
+    }
+    if (obs.statisticId === '00001') {
+      if (p.max === null || v > p.max) p.max = v;
+    }
+    if (obs.statisticId === '00002') {
+      if (p.min === null || v < p.min) p.min = v;
+    }
+
+    // If no separate stat IDs, compute from raw values
+    if (!obs.statisticId) {
+      if (p.min === null || v < p.min) p.min = v;
+      if (p.max === null || v > p.max) p.max = v;
+    }
+  }
+
+  return Object.values(siteMap).map(s => ({
+    ...s,
+    state: stateCode,
+  }));
+}
+
 // ── GET Handler ──────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
@@ -138,6 +229,8 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now();
 
   try {
+    const ogcMode = useOgcApi();
+    if (ogcMode) console.log('[USGS-DV Cron] Using USGS OGC API (modern endpoint)');
     console.log(`[USGS-DV Cron] Fetching daily values for ${ALL_STATES.length} states (concurrency=${CONCURRENCY})...`);
 
     const allStations: UsgsDvStation[] = [];
@@ -149,8 +242,12 @@ export async function GET(request: NextRequest) {
       const batch = ALL_STATES.slice(i, i + CONCURRENCY);
       const results = await Promise.allSettled(
         batch.map(async (st) => {
-          const url = `${DV_URL}?stateCd=${st}&parameterCd=${PARAM_CODES}&period=P7D&format=json&siteType=ST`;
           try {
+            if (ogcMode) {
+              const stations = await fetchStateDvOgc(st);
+              return { state: st, stations, error: false };
+            }
+            const url = `${DV_URL}?stateCd=${st}&parameterCd=${PARAM_CODES}&period=P7D&format=json&siteType=ST`;
             const res = await fetch(url, {
               headers: { 'User-Agent': 'PEARL-Platform/1.0' },
               signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
@@ -190,6 +287,13 @@ export async function GET(request: NextRequest) {
       await delay(5000);
       for (const st of failedStates) {
         try {
+          if (ogcMode) {
+            const stations = await fetchStateDvOgc(st);
+            allStations.push(...stations);
+            fetchErrors--;
+            console.log(`[USGS-DV Cron] Retry ${st}: OK (${stations.length} stations)`);
+            continue;
+          }
           const url = `${DV_URL}?stateCd=${st}&parameterCd=${PARAM_CODES}&period=P7D&format=json&siteType=ST`;
           const res = await fetch(url, {
             headers: { 'User-Agent': 'PEARL-Platform/1.0' },

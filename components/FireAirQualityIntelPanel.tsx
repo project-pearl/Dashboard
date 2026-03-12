@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Flame, Wind, Shield, AlertTriangle, Heart } from 'lucide-react';
+import { Flame, Wind, Shield, AlertTriangle, Heart, HelpCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { FireDetectionCard } from './FireDetectionCard';
@@ -93,11 +93,16 @@ export function FireAirQualityIntelPanel({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-blue-600" />
-              <CardTitle className="text-base">Fire & Air Quality Threat Assessment</CardTitle>
+              <CardTitle className="text-base font-semibold">Fire & Air Quality Threat Assessment</CardTitle>
             </div>
-            <Badge variant="outline" className={`${style.bg} ${style.text} ${style.border}`}>
-              {style.label}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className={`${style.bg} ${style.text} ${style.border}`}>
+                {style.label}
+              </Badge>
+              <button className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm hover:bg-slate-50 transition-colors" title="Real-time fire detection and air quality monitoring intelligence for military installations.">
+                <HelpCircle className="w-4 h-4 text-slate-400" />
+              </button>
+            </div>
           </div>
           <CardDescription className="text-xs">
             Combined satellite fire detection and air quality intelligence for military force health protection.
@@ -108,7 +113,7 @@ export function FireAirQualityIntelPanel({
             )}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0 space-y-3">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className={`rounded-lg px-3 py-2 text-center border ${style.border} ${style.bg}`}>
               <Flame className={`w-4 h-4 mx-auto mb-1 ${style.text}`} />
@@ -189,15 +194,20 @@ function HealthAdvisoryCard({
   return (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex items-center gap-2">
-          <Heart className="w-5 h-5 text-rose-500" />
-          <CardTitle className="text-base">Burn Pit & Smoke Health Advisory</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <Heart className="w-5 h-5 text-rose-500" />
+            Burn Pit & Smoke Health Advisory
+          </CardTitle>
+          <button className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm hover:bg-slate-50 transition-colors" title="PM2.5 exposure guidance, PACT Act context, and protective action recommendations for military personnel.">
+            <HelpCircle className="w-4 h-4 text-slate-400" />
+          </button>
         </div>
         <CardDescription className="text-xs">
           PM2.5 exposure guidance, PACT Act context, and protective action recommendations.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="pt-0 space-y-3">
         {/* ── PM2.5 Thresholds Reference ── */}
         <div className="border rounded-lg overflow-hidden">
           <table className="w-full text-xs">

@@ -149,13 +149,13 @@ export function AtRiskFacilitiesCard() {
 
   return (
     <Card className="border-slate-200">
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-1">
         <CardTitle className="flex items-center gap-2 text-sm">
           <ShieldAlert size={16} className="text-amber-600" />
           At-Risk Installations &amp; Embassies
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-0 space-y-2">
+      <CardContent className="pt-0 space-y-1.5">
         {/* NTAS pill */}
         {ntas && ntas.status !== 'none' && (
           <div className="mb-1">
