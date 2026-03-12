@@ -2,8 +2,9 @@
  * PFAS Cache — Server-side spatial cache for EPA UCMR PFAS screening data.
  *
  * Populated by /api/cron/rebuild-pfas (daily cron).
- * Probes multiple UCMR table names at build time; returns empty cache if
- * none are available (UCMR4_ALL returned 404 as of 2025).
+ * Downloads UCMR5 ZIP from EPA UCMR data portal, extracts analytical
+ * results, and indexes by lat/lng grid. UCMR4_ALL endpoint was deprecated
+ * (404 since 2025); the cron now uses the UCMR5 ZIP download.
  * Grid resolution: 0.1° (~11km). Lookup checks target cell + 8 neighbors.
  */
 

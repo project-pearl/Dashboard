@@ -28,6 +28,7 @@
  */
 
 import { getEJData, type EJStateData } from './ejVulnerability';
+import { getEJScreenNearest } from './ejscreenCache';
 
 // ── Endpoint URLs ──────────────────────────────────────────────────────────────
 
@@ -137,6 +138,32 @@ export async function ejscreenFetch(
   lng: number,
   state?: string,
 ): Promise<EJScreenResult | null> {
+  // Tier 0: Cached bulk data from Harvard DataVerse (block-group level)
+  const cached = getEJScreenNearest(lat, lng);
+  if (cached) {
+    return {
+      data: {
+        LOWINCPCT: cached.lowIncomePct,
+        MINORPCT: cached.minorityPct,
+        LINGISOPCT: cached.lingIsolatedPct,
+        EJINDEX: cached.ejIndex,
+        P_LDPNT_D2: cached.ejIndex,
+        P_DWATER: cached.waterDischarge ?? 0,
+        D_DWATER_2: cached.waterDischarge ?? 0,
+        PM25: cached.pm25,
+        OZONE: cached.ozone,
+        DSLPM: cached.dieselPm,
+        PNPL: cached.superfundProx,
+        PRMP: cached.rmpProx,
+        _source: 'harvard-dataverse-cache',
+        _degraded: false,
+        _blockGroupId: cached.blockGroupId,
+      },
+      source: 'epa-ejscreen',
+      degraded: false,
+    };
+  }
+
   // Tier 1 + 2: Try remote endpoints
   const remote = await tryRemoteEjscreen(lat, lng);
   if (remote) return remote;

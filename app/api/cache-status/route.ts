@@ -62,6 +62,10 @@ import { getEchoEffluentCacheStatus, ensureWarmed as warmEchoEffluent } from '@/
 import { getRcraCacheStatus, ensureWarmed as warmRcra } from '@/lib/rcraCache';
 import { getSemsCacheStatus, ensureWarmed as warmSems } from '@/lib/semsCache';
 import { getAdvocacyCacheStatus, ensureWarmed as warmAdvocacy } from '@/lib/advocacyCache';
+import { getHospitalCacheStatus, ensureWarmed as warmHospitals } from '@/lib/hospitalCache';
+import { getWaterborneOutbreakCacheStatus, ensureWarmed as warmOutbreaks } from '@/lib/waterborneIllnessCache';
+import { getEnvironmentalHealthCacheStatus, ensureWarmed as warmEnvironmentalHealth } from '@/lib/environmentalHealthCache';
+import { getCDCWonderCacheStatus, ensureWarmed as warmCDCWonder } from '@/lib/cdcWonderCache';
 import { getHealthSummary, ensureWarmed as warmSentinelHealth } from '@/lib/sentinel/sentinelHealth';
 import { getQueueStats, ensureWarmed as warmSentinelQueue } from '@/lib/sentinel/eventQueue';
 import { getScoredHucsSummary, ensureWarmed as warmSentinelScores } from '@/lib/sentinel/scoringEngine';
@@ -89,6 +93,7 @@ export async function GET(request: NextRequest) {
     [warmFema, warmSuperfund, warmUsdm, warmUsgsDv, warmCoopsDerived, warmErddapSat],
     [warmNasaStream, warmNwm, warmIpac, warmNcei, warmHabsos, warmGlerl, warmHefs, warmBeacon, warmSsoCso, warmFirms, warmSeismic, warmDam, warmEmbassyAqi],
     [warmNfipClaims, warmHazMit, warmUsbr, warmEchoEffluent, warmRcra, warmSems, warmAdvocacy],
+    [warmHospitals, warmOutbreaks, warmEnvironmentalHealth, warmCDCWonder],
   ];
   for (const batch of warmBatches) {
     await Promise.allSettled(batch.map(fn => fn()));
@@ -149,6 +154,10 @@ export async function GET(request: NextRequest) {
   const rcra = getRcraCacheStatus();
   const sems = getSemsCacheStatus();
   const advocacy = getAdvocacyCacheStatus();
+  const hospitals = getHospitalCacheStatus();
+  const outbreaks = getWaterborneOutbreakCacheStatus();
+  const environmentalHealth = getEnvironmentalHealthCacheStatus();
+  const cdcWonder = getCDCWonderCacheStatus();
 
   const caches = {
     wqp: {
@@ -375,6 +384,22 @@ export async function GET(request: NextRequest) {
     advocacy: {
       ...advocacy,
       ...staleness(advocacy.loaded ? (advocacy as any).built : null),
+    },
+    hospitals: {
+      ...hospitals,
+      ...staleness(hospitals.loaded ? (hospitals as any).built : null),
+    },
+    outbreaks: {
+      ...outbreaks,
+      ...staleness(outbreaks.loaded ? (outbreaks as any).built : null),
+    },
+    environmentalHealth: {
+      ...environmentalHealth,
+      ...staleness(environmentalHealth.loaded ? (environmentalHealth as any).built : null),
+    },
+    cdcWonder: {
+      ...cdcWonder,
+      ...staleness(cdcWonder.loaded ? (cdcWonder as any).built : null),
     },
   };
 

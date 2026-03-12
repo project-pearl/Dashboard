@@ -33,12 +33,24 @@
       "schedule": "0 6 * * *"
     },
     {
+      "path": "/api/cron/rebuild-hospitals",
+      "schedule": "30 6 * * *"
+    },
+    {
       "path": "/api/cron/rebuild-sdwis",
       "schedule": "0 7 * * *"
     },
     {
+      "path": "/api/cron/rebuild-outbreaks",
+      "schedule": "30 7 * * *"
+    },
+    {
       "path": "/api/cron/rebuild-nwis-gw",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-environmental-health",
+      "schedule": "30 8 * * *"
     },
     {
       "path": "/api/cron/rebuild-echo",
@@ -47,6 +59,10 @@
     {
       "path": "/api/cron/rebuild-mde",
       "schedule": "30 9 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-cdc-wonder",
+      "schedule": "45 9 * * *"
     },
     {
       "path": "/api/cron/rebuild-frs",
