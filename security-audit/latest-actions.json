@@ -1,0 +1,11 @@
+﻿{
+    "id":  "A0001",
+    "kind":  "disable-task",
+    "risk":  "safe",
+    "title":  "Disable scheduled task \u0027ZoomUpdateTaskUser-S-1-5-21-1979906780-3942826475-1405488816-1001\u0027",
+    "detail":  "\\",
+    "payload":  {
+                    "taskName":  "ZoomUpdateTaskUser-S-1-5-21-1979906780-3942826475-1405488816-1001",
+                    "taskPath":  "\\"
+                }
+}

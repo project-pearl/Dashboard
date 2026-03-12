@@ -8,6 +8,7 @@ import { FireDetectionCard } from './FireDetectionCard';
 import { AirQualityMonitoringCard } from './AirQualityMonitoringCard';
 import { Sparkline } from './Sparkline';
 import { FireAqMap } from './FireAqMap';
+import BurnPitMonitoringCard from './BurnPitMonitoringCard';
 
 interface RegionSummary {
   region: string;
@@ -156,6 +157,9 @@ export function FireAirQualityIntelPanel({
         title="Air Quality - Force Health Context"
         description="Jurisdiction-aware air quality monitoring for smoke exposure and force health protection."
       />
+
+      {/* ── Burn Pit Atmospheric Monitoring ── */}
+      <BurnPitMonitoringCard />
 
       {/* ── Health Advisory ── */}
       <HealthAdvisoryCard threatLevel={threatLevel} totalFires={totalFires} maxFrp={maxFrp} />

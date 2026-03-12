@@ -1,0 +1,363 @@
+﻿{
+    "generatedAt":  "2026-03-11T20:17:36.7294748-04:00",
+    "hostname":  "DOUGLAS",
+    "user":  "DOUGLAS\\Doug",
+    "isAdmin":  false,
+    "findings":  [
+                     {
+                         "id":  "F-DEFENDER",
+                         "severity":  "info",
+                         "title":  "Windows Defender status",
+                         "detail":  "RTP=True, SigAgeDays=0, QuickScanAgeDays=0",
+                         "data":  {
+                                      "realTimeProtection":  true,
+                                      "amServiceEnabled":  true,
+                                      "antispywareEnabled":  true,
+                                      "antivirusEnabled":  true,
+                                      "quickScanAgeDays":  0,
+                                      "fullScanAgeDays":  4294967295,
+                                      "sigAgeDays":  0,
+                                      "engineVersion":  "1.1.26010.1"
+                                  }
+                     },
+                     {
+                         "id":  "F-DEFENDER-SCAN",
+                         "severity":  "info",
+                         "title":  "Defender quick scan started",
+                         "detail":  "Quick scan launched asynchronously in background."
+                     },
+                     {
+                         "id":  "F-TASK-ZoomUpdateTaskUser-S-1-5-21-1979906780-3942826475-1405488816-1001",
+                         "severity":  "medium",
+                         "title":  "Suspicious scheduled task: ZoomUpdateTaskUser-S-1-5-21-1979906780-3942826475-1405488816-1001",
+                         "detail":  "\\ZoomUpdateTaskUser-S-1-5-21-1979906780-3942826475-1405488816-1001 -\u003e \"C:\\Users\\Doug\\AppData\\Roaming\\Zoom\\bin\\Zoom.exe\" --action=UpdateSchedule"
+                     }
+                 ],
+    "actions":  [
+                    {
+                        "id":  "A0001",
+                        "kind":  "disable-task",
+                        "risk":  "safe",
+                        "title":  "Disable scheduled task \u0027ZoomUpdateTaskUser-S-1-5-21-1979906780-3942826475-1405488816-1001\u0027",
+                        "detail":  "\\",
+                        "payload":  {
+                                        "taskName":  "ZoomUpdateTaskUser-S-1-5-21-1979906780-3942826475-1405488816-1001",
+                                        "taskPath":  "\\"
+                                    }
+                    }
+                ],
+    "listeners":  [
+                      {
+                          "localAddress":  "::",
+                          "localPort":  54288,
+                          "processId":  4,
+                          "processName":  "System"
+                      },
+                      {
+                          "localAddress":  "::",
+                          "localPort":  49680,
+                          "processId":  1612,
+                          "processName":  "services"
+                      },
+                      {
+                          "localAddress":  "::",
+                          "localPort":  49668,
+                          "processId":  4248,
+                          "processName":  "spoolsv"
+                      },
+                      {
+                          "localAddress":  "::",
+                          "localPort":  49667,
+                          "processId":  3500,
+                          "processName":  "svchost"
+                      },
+                      {
+                          "localAddress":  "::",
+                          "localPort":  49666,
+                          "processId":  3060,
+                          "processName":  "svchost"
+                      },
+                      {
+                          "localAddress":  "::",
+                          "localPort":  49665,
+                          "processId":  1536,
+                          "processName":  "wininit"
+                      },
+                      {
+                          "localAddress":  "::",
+                          "localPort":  49664,
+                          "processId":  1632,
+                          "processName":  "lsass"
+                      },
+                      {
+                          "localAddress":  "::1",
+                          "localPort":  42050,
+                          "processId":  26836,
+                          "processName":  "OneDrive.Sync.Service"
+                      },
+                      {
+                          "localAddress":  "::",
+                          "localPort":  35447,
+                          "processId":  4,
+                          "processName":  "System"
+                      },
+                      {
+                          "localAddress":  "::",
+                          "localPort":  7680,
+                          "processId":  3624,
+                          "processName":  "svchost"
+                      },
+                      {
+                          "localAddress":  "::",
+                          "localPort":  2869,
+                          "processId":  4,
+                          "processName":  "System"
+                      },
+                      {
+                          "localAddress":  "::",
+                          "localPort":  445,
+                          "processId":  4,
+                          "processName":  "System"
+                      },
+                      {
+                          "localAddress":  "::",
+                          "localPort":  135,
+                          "processId":  1972,
+                          "processName":  "svchost"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  61937,
+                          "processId":  37164,
+                          "processName":  "Code"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  61080,
+                          "processId":  15004,
+                          "processName":  "steam"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  61078,
+                          "processId":  15004,
+                          "processName":  "steam"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  57878,
+                          "processId":  41124,
+                          "processName":  "Agent"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  53005,
+                          "processId":  14044,
+                          "processName":  "ADU"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  53000,
+                          "processId":  14044,
+                          "processName":  "ADU"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  51100,
+                          "processId":  14064,
+                          "processName":  "ArmouryCrate.UserSessionHelper"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  50100,
+                          "processId":  4784,
+                          "processName":  "ArmouryCrate.Service"
+                      },
+                      {
+                          "localAddress":  "0.0.0.0",
+                          "localPort":  49680,
+                          "processId":  1612,
+                          "processName":  "services"
+                      },
+                      {
+                          "localAddress":  "0.0.0.0",
+                          "localPort":  49668,
+                          "processId":  4248,
+                          "processName":  "spoolsv"
+                      },
+                      {
+                          "localAddress":  "0.0.0.0",
+                          "localPort":  49667,
+                          "processId":  3500,
+                          "processName":  "svchost"
+                      },
+                      {
+                          "localAddress":  "0.0.0.0",
+                          "localPort":  49666,
+                          "processId":  3060,
+                          "processName":  "svchost"
+                      },
+                      {
+                          "localAddress":  "0.0.0.0",
+                          "localPort":  49665,
+                          "processId":  1536,
+                          "processName":  "wininit"
+                      },
+                      {
+                          "localAddress":  "0.0.0.0",
+                          "localPort":  49664,
+                          "processId":  1632,
+                          "processName":  "lsass"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  41951,
+                          "processId":  14948,
+                          "processName":  "DYMO.WebApi.Win.Host"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  28390,
+                          "processId":  4,
+                          "processName":  "System"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  28385,
+                          "processId":  4,
+                          "processName":  "System"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  27060,
+                          "processId":  15004,
+                          "processName":  "steam"
+                      },
+                      {
+                          "localAddress":  "0.0.0.0",
+                          "localPort":  27036,
+                          "processId":  15004,
+                          "processName":  "steam"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  22885,
+                          "processId":  23244,
+                          "processName":  "Battle.net"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  22112,
+                          "processId":  4916,
+                          "processName":  "ROGLiveService"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  19191,
+                          "processId":  9336,
+                          "processName":  "pCloud"
+                      },
+                      {
+                          "localAddress":  "0.0.0.0",
+                          "localPort":  18971,
+                          "processId":  5088,
+                          "processName":  "tmagent"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  13032,
+                          "processId":  4784,
+                          "processName":  "ArmouryCrate.Service"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  13031,
+                          "processId":  4784,
+                          "processName":  "ArmouryCrate.Service"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  13030,
+                          "processId":  4916,
+                          "processName":  "ROGLiveService"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  9527,
+                          "processId":  24372,
+                          "processName":  "SRManager"
+                      },
+                      {
+                          "localAddress":  "0.0.0.0",
+                          "localPort":  9223,
+                          "processId":  20356,
+                          "processName":  "MagnetEngine"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  9013,
+                          "processId":  16268,
+                          "processName":  "ArmourySocketServer"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  9012,
+                          "processId":  16268,
+                          "processName":  "ArmourySocketServer"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  8763,
+                          "processId":  24372,
+                          "processName":  "SRManager"
+                      },
+                      {
+                          "localAddress":  "0.0.0.0",
+                          "localPort":  6783,
+                          "processId":  24372,
+                          "processName":  "SRManager"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  6463,
+                          "processId":  24360,
+                          "processName":  "Discord"
+                      },
+                      {
+                          "localAddress":  "0.0.0.0",
+                          "localPort":  5040,
+                          "processId":  14488,
+                          "processName":  "svchost"
+                      },
+                      {
+                          "localAddress":  "0.0.0.0",
+                          "localPort":  1236,
+                          "processId":  4756,
+                          "processName":  "AsusUpdateCheck"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  1043,
+                          "processId":  18928,
+                          "processName":  "asus_framework"
+                      },
+                      {
+                          "localAddress":  "127.0.0.1",
+                          "localPort":  1042,
+                          "processId":  18928,
+                          "processName":  "asus_framework"
+                      },
+                      {
+                          "localAddress":  "192.168.1.104",
+                          "localPort":  139,
+                          "processId":  4,
+                          "processName":  "System"
+                      },
+                      {
+                          "localAddress":  "0.0.0.0",
+                          "localPort":  135,
+                          "processId":  1972,
+                          "processName":  "svchost"
+                      }
+                  ]
+}

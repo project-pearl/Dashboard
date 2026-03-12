@@ -1,0 +1,44 @@
+﻿{
+    "generatedAt":  "2026-03-09T10:05:27.4658506-04:00",
+    "hostname":  "DOUGLAS",
+    "user":  "DOUGLAS\\Doug",
+    "isAdmin":  false,
+    "findings":  [
+                     {
+                         "id":  "F-DEFENDER",
+                         "severity":  "high",
+                         "title":  "Windows Defender status",
+                         "detail":  "Access denied ",
+                         "data":  {
+                                      "error":  "Access denied "
+                                  }
+                     },
+                     {
+                         "id":  "F-DEFENDER-SCAN",
+                         "severity":  "medium",
+                         "title":  "Unable to start Defender quick scan",
+                         "detail":  "Access denied "
+                     },
+                     {
+                         "id":  "F-STARTUP-Luminar Neo.lnk",
+                         "severity":  "medium",
+                         "title":  "Suspicious startup file: Luminar Neo.lnk",
+                         "detail":  "C:\\Users\\Doug\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\Luminar Neo.lnk"
+                     }
+                 ],
+    "actions":  [
+                    {
+                        "id":  "A0001",
+                        "kind":  "quarantine-file",
+                        "risk":  "safe",
+                        "title":  "Quarantine startup file \u0027Luminar Neo.lnk\u0027",
+                        "detail":  "C:\\Users\\Doug\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\Luminar Neo.lnk",
+                        "payload":  {
+                                        "path":  "C:\\Users\\Doug\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\Luminar Neo.lnk"
+                                    }
+                    }
+                ],
+    "listeners":  {
+
+                  }
+}
