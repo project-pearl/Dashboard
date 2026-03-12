@@ -142,7 +142,7 @@ export function ForecastChart({ data, removalEfficiencies, userRole }: ForecastC
               </div>
 
               <div className="relative">
-                <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 120 }}>
+                <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[80px] sm:h-[100px] md:h-[120px]" preserveAspectRatio="xMidYMid meet">
                   {/* Grid lines */}
                   <line x1={PAD_L} y1={PAD_T} x2={PAD_L} y2={H-PAD_B} stroke="#e2e8f0" strokeWidth="1" />
                   <line x1={PAD_L} y1={H-PAD_B} x2={W-PAD_R} y2={H-PAD_B} stroke="#e2e8f0" strokeWidth="1" />

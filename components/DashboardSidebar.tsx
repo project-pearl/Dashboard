@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect, useCallback, useTransition } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useTransition, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
@@ -293,6 +293,27 @@ export function DashboardSidebar() {
   const [expandedRoles, setExpandedRoles] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
 
+  // Swipe-to-close gesture for mobile sidebar (#11)
+  const touchStartX = useRef(0);
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  }, []);
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (dx < -60) setMobileOpen(false); // swipe left to close
+  }, []);
+
+  // Save last-visited lens to localStorage (#49)
+  useEffect(() => {
+    if (pathname && pathname !== '/') {
+      const sp = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+      const lens = sp?.get('lens');
+      const key = 'pin-last-visited';
+      const val = lens ? `${pathname}?lens=${lens}` : pathname;
+      try { localStorage.setItem(key, val); } catch {}
+    }
+  }, [pathname, searchParams]);
+
   // Navigate to a lens — uses replace for same-page, push for cross-page, wrapped in startTransition
   const navigateToLens = useCallback((itemHref: string, lensId: string) => {
     setMobileOpen(false);
@@ -456,14 +477,27 @@ export function DashboardSidebar() {
         </div>
         {/* Sub-items */}
         {isExpanded && (
-          <div className="ml-4 pl-3 border-l border-slate-200 mt-0.5 space-y-0.5">
+          <div
+            className="ml-4 pl-3 border-l border-slate-200 mt-0.5 space-y-0.5"
+            role="group"
+            aria-label={`${item.label} lenses`}
+            onKeyDown={(e) => {
+              const btns = e.currentTarget.querySelectorAll<HTMLButtonElement>('button');
+              const idx = Array.from(btns).indexOf(e.target as HTMLButtonElement);
+              if (idx < 0) return;
+              if (e.key === 'ArrowDown') { e.preventDefault(); btns[Math.min(idx + 1, btns.length - 1)]?.focus(); }
+              if (e.key === 'ArrowUp') { e.preventDefault(); btns[Math.max(idx - 1, 0)]?.focus(); }
+              if (e.key === 'Escape') { e.preventDefault(); toggleExpanded(item.href); }
+            }}
+          >
             {lenses.map((lens) => {
               const lensActive = isLensActive(item.href, lens.id);
               return (
                 <button
                   key={lens.id}
                   onClick={() => navigateToLens(item.href, lens.id)}
-                  className={`block w-full text-left px-3 py-1.5 rounded-md text-xs transition-all ${
+                  aria-current={lensActive ? 'page' : undefined}
+                  className={`block w-full text-left px-3 py-1.5 rounded-md text-xs transition-all min-h-[44px] flex items-center ${
                     lensActive
                       ? `${item.accent} font-semibold bg-slate-50`
                       : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
@@ -513,7 +547,7 @@ export function DashboardSidebar() {
       )}
 
       {/* Nav groups */}
-      <nav className={`flex-1 overflow-y-auto px-2 py-3 space-y-4 ${isPending ? 'opacity-70 pointer-events-none' : ''}`}>
+      <nav aria-label="Dashboard navigation" className={`flex-1 overflow-y-auto px-2 py-3 space-y-4 ${isPending ? 'opacity-70 pointer-events-none' : ''}`}>
         {isSingleRole && singleRoleItem && singleRoleLenses ? (
           /* ── Single-role mode: lenses as top-level nav items ── */
           <div className="space-y-0.5">
@@ -526,13 +560,14 @@ export function DashboardSidebar() {
                   key={lens.id}
                   onClick={() => navigateToLens(singleRoleItem.href, lens.id)}
                   title={collapsed ? lens.label : undefined}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all w-full text-left ${
+                  aria-current={lensActive ? 'page' : undefined}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all w-full text-left min-h-[44px] ${
                     lensActive
                       ? `${singleRoleItem.accentBg} ${singleRoleItem.accent} font-semibold border shadow-sm`
                       : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                   }`}
                 >
-                  <LensIcon className={`w-4 h-4 flex-shrink-0 ${lensActive ? singleRoleItem.accent : 'text-slate-400'}`} />
+                  <LensIcon className={`w-4 h-4 flex-shrink-0 ${lensActive ? singleRoleItem.accent : 'text-slate-400'}`} aria-hidden="true" />
                   {!collapsed && <span className="truncate">{lens.label}</span>}
                 </button>
               );
@@ -633,7 +668,7 @@ export function DashboardSidebar() {
       <button
         onClick={() => setMobileOpen(true)}
         aria-label="Open navigation menu"
-        className="lg:hidden fixed top-3 left-3 z-50 p-2 rounded-lg bg-white dark:bg-[#0D1526] shadow-md border border-slate-200 dark:border-[rgba(58,189,176,0.12)]"
+        className="lg:hidden fixed top-3 left-3 z-50 p-2 rounded-lg bg-white dark:bg-[#0D1526] shadow-md border border-slate-200 dark:border-[rgba(58,189,176,0.12)] min-w-[44px] min-h-[44px] flex items-center justify-center"
       >
         <Menu className="w-5 h-5 text-slate-700" />
       </button>
@@ -642,11 +677,15 @@ export function DashboardSidebar() {
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <div className="relative z-10 h-full shadow-2xl">
+          <div
+            className="relative z-10 h-full shadow-2xl"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
             <button
               onClick={() => setMobileOpen(false)}
               aria-label="Close navigation menu"
-              className="absolute top-4 right-4 z-20 p-1 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200"
+              className="absolute top-4 right-4 z-20 p-2 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
               <X className="w-4 h-4" />
             </button>

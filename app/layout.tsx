@@ -6,6 +6,9 @@ import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from '@/lib/authContext';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Toaster } from '@/components/ui/sonner';
+import { CommandSearch } from '@/components/CommandSearch';
+import { OfflineBanner } from '@/components/OfflineBanner';
+import { DynamicFavicon } from '@/components/DynamicFavicon';
 
 const inter = Inter({ subsets: ['latin'] });
 const jetbrainsMono = JetBrains_Mono({
@@ -108,6 +111,9 @@ export default async function RootLayout({
             {children}
             <SpeedInsights />
             <Toaster />
+            <CommandSearch />
+            <OfflineBanner />
+            <DynamicFavicon />
             <footer className="fixed bottom-0 left-0 right-0 z-40 border-t bg-white/95 backdrop-blur-sm px-4 py-2 flex items-center justify-between text-2xs text-slate-400" style={{ borderColor: 'var(--border-default)', background: 'var(--bg-card, white)' }}>
               <span>PIN synthesizes public EPA/Congressional/media signals into predictive intelligence — not official regulatory or legal advice.</span>
               <span className="flex items-center gap-3">

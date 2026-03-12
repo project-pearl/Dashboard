@@ -418,6 +418,8 @@ export default function WhatIfSimulator() {
                         <th
                           key={`${col.key}-${i}`}
                           onClick={i < 4 ? () => handleSort(col.key) : undefined}
+                          onKeyDown={i < 4 ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort(col.key); } } : undefined}
+                          tabIndex={i < 4 ? 0 : undefined}
                           className={`text-left py-2 px-2 text-slate-500 font-semibold uppercase tracking-wider ${
                             i < 4 ? 'cursor-pointer hover:text-slate-700' : ''
                           }`}

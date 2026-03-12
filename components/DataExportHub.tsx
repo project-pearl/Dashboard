@@ -158,6 +158,7 @@ export function DataExportHub({ context = 'ms4' }: Props) {
   const [copiedEndpoint, setCopiedEndpoint] = useState<string | null>(null);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat | null>(null);
   const [exportStatus, setExportStatus] = useState<'idle' | 'exporting' | 'done'>('idle');
+  const [exportProgress, setExportProgress] = useState(0);
   const [showApiDocs, setShowApiDocs] = useState(false);
   const [showBulkExport, setShowBulkExport] = useState(false);
   const [bulkDateStart, setBulkDateStart] = useState('2025-01-01');
@@ -170,8 +171,15 @@ export function DataExportHub({ context = 'ms4' }: Props) {
   const handleFormatExport = (format: ExportFormat) => {
     setSelectedFormat(format);
     setExportStatus('exporting');
+    setExportProgress(0);
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+      setExportProgress(prev => { if (prev >= 90) { clearInterval(progressInterval); return 90; } return prev + 15; });
+    }, 200);
     // Simulate export
     setTimeout(() => {
+      clearInterval(progressInterval);
+      setExportProgress(100);
       setExportStatus('done');
       const fmt = EXPORT_FORMATS.find(f => f.id === format);
       const ext = format === 'wqx' ? 'xml' : format === 'excel' ? 'xlsx' : format;
@@ -205,7 +213,13 @@ export function DataExportHub({ context = 'ms4' }: Props) {
 
   const handleBulkExport = () => {
     setExportStatus('exporting');
+    setExportProgress(0);
+    const progressInterval = setInterval(() => {
+      setExportProgress(prev => { if (prev >= 90) { clearInterval(progressInterval); return 90; } return prev + 10; });
+    }, 200);
     setTimeout(() => {
+      clearInterval(progressInterval);
+      setExportProgress(100);
       setExportStatus('done');
       const ext = bulkFormat === 'wqx' ? 'xml' : bulkFormat === 'excel' ? 'xlsx' : bulkFormat;
       const blob = new Blob(
@@ -483,7 +497,7 @@ export function DataExportHub({ context = 'ms4' }: Props) {
                 {exportStatus === 'exporting' ? (
                   <>
                     <Clock className="h-3.5 w-3.5 animate-spin" />
-                    Exporting...
+                    Exporting... {exportProgress}%
                   </>
                 ) : exportStatus === 'done' ? (
                   <>

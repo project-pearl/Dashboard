@@ -17,6 +17,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { Pencil, Save, RotateCcw, X } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useAuth } from '@/lib/authContext';
 import {
   type SectionDefinition,
@@ -54,14 +55,33 @@ export function LayoutEditor({ ccKey, children }: LayoutEditorProps) {
   const [snapshot, setSnapshot] = useState<SectionDefinition[] | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Collapse state (replaces per-CC inline collapsedSections)
+  // Collapse state — persisted to localStorage for lens-switch survival (#34)
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(`pin-collapsed-${ccKey}`);
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
     const defaults: Record<string, boolean> = {};
     DEFAULT_SECTIONS[ccKey].forEach(s => {
       if (!s.defaultExpanded) defaults[s.id] = true;
     });
     return defaults;
   });
+
+  // Persist collapsed state to localStorage
+  useEffect(() => {
+    try { localStorage.setItem(`pin-collapsed-${ccKey}`, JSON.stringify(collapsedSections)); } catch {}
+  }, [collapsedSections, ccKey]);
+
+  // Save & restore scroll position across lens transitions
+  useEffect(() => {
+    const key = `pin-scroll-${ccKey}`;
+    const saved = sessionStorage.getItem(key);
+    if (saved) { requestAnimationFrame(() => window.scrollTo(0, parseInt(saved, 10))); }
+    return () => { sessionStorage.setItem(key, String(window.scrollY)); };
+  }, [ccKey]);
 
   // Load saved layout from Supabase on mount
   useEffect(() => {
@@ -176,12 +196,18 @@ export function LayoutEditor({ ccKey, children }: LayoutEditorProps) {
                 <Save className="h-4 w-4" /> {saving ? 'Saving\u2026' : 'Save'}
               </button>
               <div className="w-px h-5 bg-slate-200" />
-              <button
-                onClick={resetToDefaults}
-                className="flex items-center gap-1 text-sm font-medium text-amber-700 hover:text-amber-900 transition-colors"
-              >
-                <RotateCcw className="h-4 w-4" /> Reset
-              </button>
+              <ConfirmDialog
+                trigger={
+                  <button className="flex items-center gap-1 text-sm font-medium text-amber-700 hover:text-amber-900 transition-colors">
+                    <RotateCcw className="h-4 w-4" /> Reset
+                  </button>
+                }
+                title="Reset layout to defaults?"
+                description="This will discard your custom section ordering and visibility settings. This action cannot be undone."
+                confirmLabel="Reset"
+                variant="destructive"
+                onConfirm={resetToDefaults}
+              />
               <div className="w-px h-5 bg-slate-200" />
               <button
                 onClick={cancelEdit}

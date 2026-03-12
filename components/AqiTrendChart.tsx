@@ -135,8 +135,8 @@ export function AqiTrendChart({ selectedState }: { selectedState?: string }) {
           <div className="relative">
             <svg
               viewBox={`0 0 ${CHART_W} ${CHART_H}`}
-              className="w-full"
-              style={{ height: 200 }}
+              className="w-full h-[140px] sm:h-[170px] md:h-[200px]"
+              preserveAspectRatio="xMidYMid meet"
               onMouseMove={handleMouseMove}
               onMouseLeave={() => setTooltip(null)}
             >

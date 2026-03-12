@@ -99,6 +99,9 @@
   * {
     @apply border-border;
   }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     @apply bg-background text-foreground;
   }
@@ -656,6 +659,15 @@ canvas, video, iframe, .no-theme-transition {
 /* Remove default focus outline (focus-visible handles keyboard) */
 *:focus:not(:focus-visible) {
   outline: none;
+}
+
+/* Ensure clickable elements show pointer cursor (#48) */
+[role="button"],
+[onclick],
+.cursor-pointer,
+summary,
+[tabindex]:not([tabindex="-1"]) {
+  cursor: pointer;
 }
 
 /* Respect OS-level reduced motion preference */

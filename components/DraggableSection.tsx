@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Eye, EyeOff, Minus, ChevronDown, HelpCircle } from 'lucide-react';
+import { haptic } from '@/lib/haptic';
 import type { ReactNode, MouseEvent } from 'react';
 import { AskPinPopover } from './AskPinPopover';
 
@@ -82,6 +83,7 @@ export function DraggableSection({
             {...listeners}
             className="cursor-grab active:cursor-grabbing p-1.5 rounded-lg bg-white shadow-md border border-slate-200 hover:border-blue-300 hover:shadow-lg transition-all dark:bg-[#0D1526] dark:border-[rgba(58,189,176,0.12)]"
             title={`Drag to reorder: ${label}`}
+            onPointerDown={() => haptic('light')}
           >
             <GripVertical className="h-4 w-4 text-slate-400" />
           </button>

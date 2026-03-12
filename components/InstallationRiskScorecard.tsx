@@ -102,10 +102,14 @@ export function InstallationRiskScorecard() {
       <th
         className={`px-2 py-1.5 font-medium cursor-pointer hover:bg-slate-100 select-none ${className || ''}`}
         onClick={() => handleSort(field)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort(field); } }}
+        tabIndex={0}
+        role="columnheader"
+        aria-sort={sortField === field ? (sortAsc ? 'ascending' : 'descending') : 'none'}
       >
         {label}
         {sortField === field && (
-          <span className="ml-1 text-2xs">{sortAsc ? '\u25B2' : '\u25BC'}</span>
+          <span className="ml-1 text-2xs" aria-hidden="true">{sortAsc ? '\u25B2' : '\u25BC'}</span>
         )}
       </th>
     );

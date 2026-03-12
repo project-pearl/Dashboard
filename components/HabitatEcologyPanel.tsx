@@ -424,7 +424,9 @@ export function HabitatEcologyPanel({
                 <tr className="text-left text-slate-500 border-b border-slate-200">
                   <th
                     className="pb-2 font-semibold cursor-pointer hover:text-slate-700 select-none"
+                    tabIndex={0}
                     onClick={() => handleSort('abbr')}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('abbr'); } }}
                   >
                     <span className="inline-flex items-center">
                       State <SortIcon field="abbr" />
@@ -432,7 +434,9 @@ export function HabitatEcologyPanel({
                   </th>
                   <th
                     className="pb-2 font-semibold text-right cursor-pointer hover:text-slate-700 select-none"
+                    tabIndex={0}
                     onClick={() => handleSort('assessed')}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('assessed'); } }}
                   >
                     <span className="inline-flex items-center justify-end">
                       Assessed <SortIcon field="assessed" />
@@ -440,7 +444,9 @@ export function HabitatEcologyPanel({
                   </th>
                   <th
                     className="pb-2 font-semibold text-right cursor-pointer hover:text-slate-700 select-none"
+                    tabIndex={0}
                     onClick={() => handleSort('impaired')}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('impaired'); } }}
                   >
                     <span className="inline-flex items-center justify-end">
                       Impaired <SortIcon field="impaired" />
@@ -448,7 +454,9 @@ export function HabitatEcologyPanel({
                   </th>
                   <th
                     className="pb-2 font-semibold text-right cursor-pointer hover:text-slate-700 select-none"
+                    tabIndex={0}
                     onClick={() => handleSort('rate')}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('rate'); } }}
                   >
                     <span className="inline-flex items-center justify-end">
                       Attainment Rate <SortIcon field="rate" />
@@ -456,7 +464,9 @@ export function HabitatEcologyPanel({
                   </th>
                   <th
                     className="pb-2 font-semibold text-right cursor-pointer hover:text-slate-700 select-none"
+                    tabIndex={0}
                     onClick={() => handleSort('ecoScore')}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('ecoScore'); } }}
                   >
                     <span className="inline-flex items-center justify-end">
                       Eco Score <SortIcon field="ecoScore" />
