@@ -997,6 +997,8 @@ export function FederalManagementCenter(props: Props) {
   }>>>({});
   const [attainsBulkLoading, setAttainsBulkLoading] = useState<Set<string>>(new Set());
   const [attainsBulkLoaded, setAttainsBulkLoaded] = useState<Set<string>>(new Set());
+  // Raw category counts from ATTAINS cache (before capping) — used for accurate scoring
+  const [attainsCounts, setAttainsCounts] = useState<Record<string, { high: number; medium: number; low: number; none: number; total: number }>>({});
 
   // Base region data from registry + legacy seeds (static)
   const baseRegionData = useMemo(() => generateRegionData(), []);
@@ -1247,6 +1249,7 @@ export function FederalManagementCenter(props: Props) {
         if (states && Object.keys(states).length > 0) {
           const bulk: Record<string, Array<{ name: string; category: string; alertLevel: AlertLevel; causes: string[]; cycle: string }>> = {};
           const loaded = new Set<string>();
+          const counts: Record<string, { high: number; medium: number; low: number; none: number; total: number }> = {};
 
           for (const [st, summary] of Object.entries(states) as [string, any][]) {
             const waterbodies = (summary.waterbodies || []).map((wb: any) => ({
@@ -1262,6 +1265,16 @@ export function FederalManagementCenter(props: Props) {
               bulk[st] = waterbodies;
               loaded.add(st);
             }
+            // Store raw counts from cache (computed before capping)
+            if (summary.high != null || summary.medium != null) {
+              counts[st] = {
+                high: summary.high || 0,
+                medium: summary.medium || 0,
+                low: summary.low || 0,
+                none: summary.none || 0,
+                total: summary.total || summary.fetched || 0,
+              };
+            }
           }
 
           const hydrated = await fillMissingAttainsStates(bulk, loaded);
@@ -1269,8 +1282,9 @@ export function FederalManagementCenter(props: Props) {
           if (!cancelled) {
             setAttainsBulk(hydrated.bulk);
             setAttainsBulkLoaded(hydrated.loaded);
+            setAttainsCounts(counts);
             setAttainsBulkLoading(new Set(allStates.filter(s => !hydrated.loaded.has(s))));
-            console.log(`[ATTAINS] Loaded ${hydrated.loaded.size} states into UI`);
+            console.log(`[ATTAINS] Loaded ${hydrated.loaded.size} states into UI (with raw counts for ${Object.keys(counts).length} states)`);
           }
         }
 
@@ -1944,15 +1958,24 @@ export function FederalManagementCenter(props: Props) {
         dataSource = 'per-waterbody';
       } else if (hasAttains) {
         // Tier 2: No per-waterbody matches, but ATTAINS bulk data exists
-        // Use EPA assessment category counts directly for state grading
-        high = attainsState.filter(a => a.alertLevel === 'high').length;
-        medium = attainsState.filter(a => a.alertLevel === 'medium').length;
-        low = attainsState.filter(a => a.alertLevel === 'low').length;
-        none = attainsState.filter(a => a.alertLevel === 'none').length;
+        // Use raw counts from cache (pre-capping) for accurate scoring
+        const rawCounts = attainsCounts[abbr];
+        if (rawCounts && (rawCounts.high + rawCounts.medium + rawCounts.low + rawCounts.none) > 0) {
+          high = rawCounts.high;
+          medium = rawCounts.medium;
+          low = rawCounts.low;
+          none = rawCounts.none;
+        } else {
+          // Fallback: count from waterbodies array (may be capped/biased)
+          high = attainsState.filter(a => a.alertLevel === 'high').length;
+          medium = attainsState.filter(a => a.alertLevel === 'medium').length;
+          low = attainsState.filter(a => a.alertLevel === 'low').length;
+          none = attainsState.filter(a => a.alertLevel === 'none').length;
+        }
         totalAlerts = high + medium; // Cat 5 + Cat 4 = impaired
-        assessedCount = attainsState.length;
+        assessedCount = rawCounts?.total || attainsState.length;
         canGradeState = true;
-        // Score from ATTAINS category distribution
+        // Score from ATTAINS category distribution (using full counts, not capped sample)
         const attainsTotal = high + medium + low + none;
         score = attainsTotal > 0
           ? Math.round((high * 40 + medium * 65 + low * 85 + none * 100) / attainsTotal)
@@ -2036,7 +2059,7 @@ export function FederalManagementCenter(props: Props) {
       if (a.canGradeState && b.canGradeState) return a.score - b.score;
       return a.name.localeCompare(b.name);
     });
-  }, [derived.regionsByState, attainsBulk, nationalSummary?.flowScores, stateCompositeScores]);
+  }, [derived.regionsByState, attainsBulk, attainsCounts, nationalSummary?.flowScores, stateCompositeScores]);
 
   const briefingLiveStats = useMemo(() => {
     const mdRow = stateRollup.find((r) => r.abbr === 'MD');
