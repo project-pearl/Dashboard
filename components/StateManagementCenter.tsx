@@ -480,6 +480,15 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
     return m;
   }, [attainsBulk]);
 
+  // Reverse lookup: region name → ATTAINS ID (for HUC-8 extraction on registry entries)
+  const attainsIdByName = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const a of attainsBulk) {
+      if (a.id && a.name) m.set(a.name.toLowerCase().trim(), a.id);
+    }
+    return m;
+  }, [attainsBulk]);
+
   const wbMarkers = useMemo(() => {
     const resolved: { id: string; name: string; lat: number; lon: number; alertLevel: AlertLevel; status: string; dataSourceCount: number }[] = [];
     for (const r of regionData) {
@@ -501,14 +510,16 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
           continue;
         }
       }
-      // Priority 3: name-based coordinate resolver (fallback)
-      const approx = resolveWaterbodyCoordinates(r.name, stateAbbr);
+      // Priority 3: name-based + HUC-8 coordinate resolver (fallback)
+      // Pass ATTAINS ID (from r.id or reverse name lookup) to enable HUC-8 centroid extraction
+      const aid = r.id.match(/\d{8}/) ? r.id : (attainsIdByName.get(r.name.toLowerCase().trim()) || undefined);
+      const approx = resolveWaterbodyCoordinates(r.name, stateAbbr, aid);
       if (approx) {
         resolved.push({ id: r.id, name: r.name, lat: approx.lat, lon: approx.lon, alertLevel: r.alertLevel, status: r.status, dataSourceCount: r.dataSourceCount });
       }
     }
     return resolved;
-  }, [regionData, stateAbbr, attainsCoordMap]);
+  }, [regionData, stateAbbr, attainsCoordMap, attainsIdByName]);
 
   // Mapbox marker data — transform wbMarkers for MapboxMarkers component
   const markerData = useMemo(() =>
