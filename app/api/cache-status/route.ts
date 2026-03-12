@@ -66,6 +66,9 @@ import { getHospitalCacheStatus, ensureWarmed as warmHospitals } from '@/lib/hos
 import { getWaterborneOutbreakCacheStatus, ensureWarmed as warmOutbreaks } from '@/lib/waterborneIllnessCache';
 import { getEnvironmentalHealthCacheStatus, ensureWarmed as warmEnvironmentalHealth } from '@/lib/environmentalHealthCache';
 import { getCDCWonderCacheStatus, ensureWarmed as warmCDCWonder } from '@/lib/cdcWonderCache';
+import { getEnvironmentalTrackingCacheStatus, ensureWarmed as warmEnvironmentalTracking } from '@/lib/environmentalTrackingCache';
+import { getHealthDataGovCacheStatus, ensureWarmed as warmHealthDataGov } from '@/lib/healthDataGovCache';
+import { getOpenFDACacheStatus, ensureWarmed as warmOpenFDA } from '@/lib/openFDACache';
 import { getHpsaCacheStatus, ensureWarmed as warmHrsaHpsa } from '@/lib/hrsaHpsaCache';
 import { getEJScreenCacheStatus, ensureWarmed as warmEJScreen } from '@/lib/ejscreenCache';
 import { getCampdCacheStatus, ensureWarmed as warmCampd } from '@/lib/campdCache';
@@ -97,7 +100,8 @@ export async function GET(request: NextRequest) {
     [warmFema, warmSuperfund, warmUsdm, warmUsgsDv, warmCoopsDerived, warmErddapSat],
     [warmNasaStream, warmNwm, warmIpac, warmNcei, warmHabsos, warmGlerl, warmHefs, warmBeacon, warmSsoCso, warmFirms, warmSeismic, warmDam, warmEmbassyAqi],
     [warmNfipClaims, warmHazMit, warmUsbr, warmEchoEffluent, warmRcra, warmSems, warmAdvocacy],
-    [warmHospitals, warmOutbreaks, warmEnvironmentalHealth, warmCDCWonder, warmHrsaHpsa],
+    [warmHospitals, warmOutbreaks, warmEnvironmentalHealth, warmCDCWonder, warmEnvironmentalTracking, warmHealthDataGov, warmOpenFDA],
+    [warmHrsaHpsa],
     [warmEJScreen, warmCampd, warmClimateNormals],
   ];
   for (const batch of warmBatches) {
@@ -163,6 +167,9 @@ export async function GET(request: NextRequest) {
   const outbreaks = getWaterborneOutbreakCacheStatus();
   const environmentalHealth = getEnvironmentalHealthCacheStatus();
   const cdcWonder = getCDCWonderCacheStatus();
+  const environmentalTracking = getEnvironmentalTrackingCacheStatus();
+  const healthDataGov = getHealthDataGovCacheStatus();
+  const openFDA = getOpenFDACacheStatus();
   const hrsaHpsa = getHpsaCacheStatus();
   const ejscreen = getEJScreenCacheStatus();
   const campd = getCampdCacheStatus();
@@ -409,6 +416,18 @@ export async function GET(request: NextRequest) {
     cdcWonder: {
       ...cdcWonder,
       ...staleness(cdcWonder.loaded ? (cdcWonder as any).built : null),
+    },
+    environmentalTracking: {
+      ...environmentalTracking,
+      ...staleness(environmentalTracking.loaded ? (environmentalTracking as any).built : null),
+    },
+    healthDataGov: {
+      ...healthDataGov,
+      ...staleness(healthDataGov.loaded ? (healthDataGov as any).built : null),
+    },
+    openFDA: {
+      ...openFDA,
+      ...staleness(openFDA.loaded ? (openFDA as any).built : null),
     },
     hrsaHpsa: {
       ...hrsaHpsa,

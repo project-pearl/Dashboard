@@ -132,7 +132,7 @@ export function DraggableSection({
       <div onClick={handleHeaderClick} className={canCollapse ? '[&_h3]:cursor-pointer' : ''}>
         <div
           aria-expanded={!collapsed}
-          className={collapsed && canCollapse ? 'max-h-14 overflow-hidden' : ''}
+          className={collapsed && canCollapse ? 'max-h-20 overflow-hidden' : ''}
         >
           {children}
         </div>

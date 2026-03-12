@@ -62,6 +62,7 @@ export const LENS_ICON_NAMES: Record<string, string> = {
   interagency: 'Network',
   funding: 'Banknote',
   full: 'LayoutDashboard',
+  'data-provenance': 'FileCheck',
   // ── State ──────────────────────────────────────────────────────────────────
   coverage: 'Activity',
   programs: 'Landmark',

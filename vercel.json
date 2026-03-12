@@ -61,6 +61,18 @@
       "schedule": "30 9 * * *"
     },
     {
+      "path": "/api/cron/rebuild-environmental-tracking",
+      "schedule": "45 9 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-healthdata-gov",
+      "schedule": "15 10 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-open-fda",
+      "schedule": "30 10 * * *"
+    },
+    {
       "path": "/api/cron/rebuild-cdc-wonder",
       "schedule": "45 3 * * *"
     },
@@ -291,6 +303,22 @@
     {
       "path": "/api/cron/rebuild-climate-normals",
       "schedule": "30 23 * * 0"
+    },
+    {
+      "path": "/api/cron/rebuild-myhealthfinder",
+      "schedule": "30 11 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-atsdr-toxicology",
+      "schedule": "45 11 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-usgs-wqp",
+      "schedule": "15 12 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-data-cdc-gov",
+      "schedule": "30 12 * * *"
     }
   ]
 }
