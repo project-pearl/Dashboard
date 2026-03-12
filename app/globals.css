@@ -681,6 +681,33 @@ summary,
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   PIN Print Stylesheet — Clean output for federal briefings & reports
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media print {
+  /* Hide navigation chrome */
+  nav, aside, .lg\:block, footer,
+  button[aria-label="Open navigation menu"],
+  button[aria-label="Close navigation menu"],
+  [class*="fixed bottom"],
+  [class*="z-50"] { display: none !important; }
+
+  /* Full-width content area */
+  main, [id="main-content"] { margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: 100% !important; }
+
+  /* Reduce visual noise */
+  * { box-shadow: none !important; }
+  .animate-pulse, .sentinel-pulse { animation: none !important; }
+
+  /* Ensure backgrounds print */
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  /* Page breaks */
+  .break-inside-avoid, .rounded-xl { break-inside: avoid; }
+  h2, h3 { break-after: avoid; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    PIN Sentinel — Alert Animations & Badges
    ═══════════════════════════════════════════════════════════════════════════ */
 

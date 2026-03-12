@@ -6135,7 +6135,6 @@ export function FederalManagementCenter(props: Props) {
                     {comingSoonId === k.id && (
                       <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                         <p className="text-xs text-slate-700">{k.detail}</p>
-                        <p className="text-2xs text-slate-400 mt-2 italic">Detail drill-down coming soon</p>
                       </div>
                     )}
                   </div>
@@ -6173,7 +6172,6 @@ export function FederalManagementCenter(props: Props) {
                     {comingSoonId === e.id && (
                       <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                         <p className="text-xs text-slate-700">{e.detail}</p>
-                        <p className="text-2xs text-slate-400 mt-2 italic">Incident detail view coming soon</p>
                       </div>
                     )}
                   </div>
@@ -6208,7 +6206,6 @@ export function FederalManagementCenter(props: Props) {
                     {comingSoonId === k.id && (
                       <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                         <p className="text-xs text-slate-700">{k.detail}</p>
-                        <p className="text-2xs text-slate-400 mt-2 italic">Spill detail panel coming soon</p>
                       </div>
                     )}
                   </div>
@@ -6492,12 +6489,12 @@ export function FederalManagementCenter(props: Props) {
             <div className="flex-1">
               <div className="text-sm font-semibold flex items-center gap-2 text-pin-text-primary">
                 Sentinel Alerts
-                <span className="text-2xs font-medium px-1.5 py-0.5 rounded-full" style={{ background: '#F9A82520', color: '#F9A825', border: '1px solid #F9A82540' }}>COMING SOON</span>
+                <span className="text-2xs font-medium px-1.5 py-0.5 rounded-full" style={{ background: '#F9A82520', color: '#F9A825', border: '1px solid #F9A82540' }}>BETA</span>
               </div>
               <p className="text-xs mt-0.5 text-pin-text-dim">
                 {viewLens === 'compliance'
-                  ? 'Live Sentinel integration in progress — SNC status changes, enforcement actions, DMR exceedances, and permit expiration warnings will appear here.'
-                  : 'Live Sentinel integration in progress — real-time monitoring for water quality events, threshold exceedances, and emerging issues will appear here.'}
+                  ? 'Sentinel monitors SNC status changes, enforcement actions, DMR exceedances, and permit expiration warnings.'
+                  : 'Sentinel provides real-time monitoring for water quality events, threshold exceedances, and emerging issues.'}
               </p>
             </div>
           </div>

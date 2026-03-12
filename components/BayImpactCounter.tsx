@@ -161,8 +161,13 @@ export function BayImpactCounter({ removalEfficiencies, regionId, userRole }: Ba
 
   const [liveTick, setLiveTick] = useState(0);
   useEffect(() => {
-    const interval = setInterval(() => setLiveTick(t => t + 1), 3000);
-    return () => clearInterval(interval);
+    let id: ReturnType<typeof setInterval> | null = null;
+    function start() { if (!id) id = setInterval(() => setLiveTick(t => t + 1), 3000); }
+    function stop() { if (id) { clearInterval(id); id = null; } }
+    const onVis = () => { document.hidden ? stop() : start(); };
+    document.addEventListener('visibilitychange', onVis);
+    start();
+    return () => { stop(); document.removeEventListener('visibilitychange', onVis); };
   }, []);
   const liveGallons = gallonsTreated + Math.floor(liveTick * (FLOW_RATE_GPD / (24 * 60 * 60 / 3)));
 
