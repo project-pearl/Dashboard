@@ -67,19 +67,23 @@ function makeHucAlert(
   rationale: string[],
   now: string,
   cbrnIndicators?: CbrnIndicator[],
+  classificationDowngradeReason?: string,
 ): AlertEvent {
+  const hasPatterns = huc.activePatterns.length > 0;
   return {
     id: crypto.randomUUID(),
     type: 'sentinel',
     severity,
     title: `HUC ${huc.huc8}: ${
-      huc.activePatterns.length > 0
+      hasPatterns
         ? PATTERN_LABELS[huc.activePatterns[0].patternId] || 'Anomaly Signal'
         : 'Persistent Anomaly Signal'
     }`,
     body: [
       `Watershed ${huc.huc8} (${huc.stateAbbr}) — ${huc.level} level, score ${huc.score}.`,
-      `Patterns: ${huc.activePatterns.map(p => PATTERN_LABELS[p.patternId] || p.patternId).join(', ') || 'None'}.`,
+      hasPatterns
+        ? `Patterns: ${huc.activePatterns.map(p => PATTERN_LABELS[p.patternId] || p.patternId).join(', ')}.`
+        : 'Score-only signal — monitoring for pattern emergence.',
       `${huc.events.length} correlated event${huc.events.length !== 1 ? 's' : ''} detected. Confidence: ${(confidence * 100).toFixed(0)}%.`,
     ].join(' '),
     entityId: huc.huc8,
@@ -101,6 +105,7 @@ function makeHucAlert(
       confidence,
       rationale,
       ...(cbrnIndicators && cbrnIndicators.length > 0 ? { cbrnIndicators } : {}),
+      ...(classificationDowngradeReason ? { classificationDowngradeReason } : {}),
     },
   };
 }
@@ -117,6 +122,14 @@ export async function evaluateSentinelAlerts(): Promise<AlertEvent[]> {
   const now = new Date().toISOString();
   const allEvents = getAllEvents();
   const newInvestigations: Record<string, InvestigationState> = {};
+
+  // Queue-age warmup: suppress external alerts if event queue < 24h old
+  const oldestEventTs = allEvents.reduce((oldest, e) => {
+    const ts = new Date(e.detectedAt).getTime();
+    return ts < oldest ? ts : oldest;
+  }, Date.now());
+  const queueAgeHours = (Date.now() - oldestEventTs) / (1000 * 60 * 60);
+  const systemWarming = allEvents.length === 0 || queueAgeHours < 24;
 
   for (const huc of scoredHucs) {
     if (huc.level !== 'WATCH' && huc.level !== 'CRITICAL') continue;
@@ -141,6 +154,7 @@ export async function evaluateSentinelAlerts(): Promise<AlertEvent[]> {
 
     let stage: SentinelStage = stageBase;
     let externalEligible = false;
+    let downgradeReason: string | undefined;
     if (hardCritical) {
       stage = 'external_alert';
       externalEligible = true;
@@ -154,6 +168,27 @@ export async function evaluateSentinelAlerts(): Promise<AlertEvent[]> {
       stage = 'external_alert';
       externalEligible = true;
       rationale.push('Persistence + corroboration gate satisfied.');
+    }
+
+    // Pattern gate: CRITICAL with no patterns → downgrade to warning
+    if (hardCritical && huc.activePatterns.length === 0) {
+      downgradeReason = 'CRITICAL score with no corroborating patterns — downgraded to warning.';
+      rationale.push(downgradeReason);
+    }
+
+    // Single-source gate: block external_alert if only one data source
+    if (externalEligible) {
+      const distinctSources = new Set(huc.events.map(e => e.source));
+      if (distinctSources.size <= 1) {
+        externalEligible = false;
+        rationale.push(`Single-source CRITICAL (${[...distinctSources][0] || 'unknown'}) — awaiting multi-source corroboration.`);
+      }
+    }
+
+    // Queue-age warmup: suppress external alerts while system is warming up
+    if (externalEligible && systemWarming) {
+      externalEligible = false;
+      rationale.push(`System warmup: event queue only ${queueAgeHours.toFixed(1)}h old — suppressing external alert.`);
     }
 
     // Weather-driven event suppression: if active NWS severe weather warning
@@ -188,8 +223,8 @@ export async function evaluateSentinelAlerts(): Promise<AlertEvent[]> {
 
     if (!externalEligible) continue;
 
-    const severity: AlertEvent['severity'] = hardCritical ? 'critical' : 'warning';
-    events.push(makeHucAlert(huc, severity, stage, confidence, rationale, now, classification.cbrnIndicators));
+    const severity: AlertEvent['severity'] = (hardCritical && huc.activePatterns.length > 0) ? 'critical' : 'warning';
+    events.push(makeHucAlert(huc, severity, stage, confidence, rationale, now, classification.cbrnIndicators, downgradeReason));
   }
 
   for (const source of sourceStates) {

@@ -14,6 +14,7 @@ import type {
 } from '@/lib/alerts/types';
 import { AlertDeepDive } from './AlertDeepDive';
 import type { DeepDiveAlert } from './AlertDeepDive';
+import { AlertDetailDrawer } from './AlertDetailDrawer';
 import { PATTERN_LABELS } from '@/lib/alerts/triggers/sentinelTrigger';
 import { csrfHeaders } from '@/lib/csrf';
 import { CappedList } from '@/components/CappedList';
@@ -79,6 +80,8 @@ export function AlertsManagementPanel() {
   const [parameterFilter, setParameterFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [selectedEvent, setSelectedEvent] = useState<AlertEvent | null>(null);
+  const [drawerAlert, setDrawerAlert] = useState<AlertEvent | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // ── Recipients state ──
   const [recipients, setRecipients] = useState<AlertRecipient[]>([]);
@@ -653,7 +656,14 @@ export function AlertsManagementPanel() {
                 return (
                   <button
                     key={evt.id}
-                    onClick={() => setSelectedEvent(isSelected ? null : evt)}
+                    onClick={() => {
+                      if (isDeployment) {
+                        setSelectedEvent(isSelected ? null : evt);
+                      } else {
+                        setDrawerAlert(evt);
+                        setDrawerOpen(true);
+                      }
+                    }}
                     className={`w-full text-left rounded-lg border p-3 transition-all ${sev.bg} ${sev.border} ${
                       isSelected ? 'ring-2 ring-slate-400 ring-offset-1' : 'hover:ring-1 hover:ring-slate-300'
                     }`}
@@ -683,7 +693,7 @@ export function AlertsManagementPanel() {
                             </span>
                           )}
                           {!isDeployment && (
-                            <ChevronRight className={`h-3 w-3 ml-auto transition-transform ${isSelected ? 'rotate-90' : ''}`} />
+                            <ChevronRight className="h-3 w-3 ml-auto" />
                           )}
                         </div>
                       </div>
@@ -703,87 +713,12 @@ export function AlertsManagementPanel() {
                 </div>
               )}
 
-              {/* ── Enriched detail panel (non-deployment alerts) ── */}
-              {selectedEvent && selectedEvent.type !== 'deployment' && (() => {
-                const meta = (selectedEvent.metadata || {}) as Record<string, unknown>;
-                const patterns = Array.isArray(meta.activePatterns) ? meta.activePatterns as string[] : [];
-                const rationale = Array.isArray(meta.rationale) ? meta.rationale as string[] : [];
-                return (
-                  <Card className="mt-3 border-2 border-slate-300">
-                    <CardContent className="p-4 space-y-3">
-                      {/* Header with title + badges */}
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-semibold text-slate-800">{selectedEvent.title}</span>
-                            <Badge variant="secondary" className="text-2xs">{selectedEvent.type}</Badge>
-                            <Badge className={`text-2xs ${SEVERITY_COLORS[selectedEvent.severity].bg} ${SEVERITY_COLORS[selectedEvent.severity].text}`}>
-                              {selectedEvent.severity}
-                            </Badge>
-                            {typeof meta.stage === 'string' && (
-                              <Badge variant="secondary" className="text-2xs bg-violet-100 text-violet-700">{meta.stage}</Badge>
-                            )}
-                          </div>
-                        </div>
-                        <button onClick={() => setSelectedEvent(null)} className="text-slate-400 hover:text-slate-600 p-1 flex-shrink-0">
-                          <XCircle className="h-4 w-4" />
-                        </button>
-                      </div>
-
-                      {/* Active patterns as tags */}
-                      {patterns.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {patterns.map(p => (
-                            <Badge key={p} variant="secondary" className="text-2xs bg-indigo-100 text-indigo-700">
-                              {PATTERN_LABELS[p] || p}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Score + Confidence + Event count row */}
-                      {(meta.score != null || meta.confidence != null) && (
-                        <div className="flex items-center gap-4 text-xs text-slate-700">
-                          {meta.score != null && (
-                            <span className="flex items-center gap-1.5">
-                              Score: <span className="font-semibold">{String(meta.score)}</span>
-                              {typeof meta.level === 'string' && (
-                                <Badge variant="secondary" className={`text-2xs ${
-                                  meta.level === 'CRITICAL' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
-                                }`}>{meta.level}</Badge>
-                              )}
-                            </span>
-                          )}
-                          {meta.confidence != null && (
-                            <span>Confidence: <span className="font-semibold">{(Number(meta.confidence) * 100).toFixed(0)}%</span></span>
-                          )}
-                          {meta.eventCount != null && (
-                            <span>{String(meta.eventCount)} event{Number(meta.eventCount) !== 1 ? 's' : ''}</span>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Rationale bullets */}
-                      {rationale.length > 0 && (
-                        <ul className="space-y-1 text-xs text-slate-600">
-                          {rationale.map((r, i) => <li key={i} className="flex gap-1.5"><span className="text-slate-400">-</span> {r}</li>)}
-                        </ul>
-                      )}
-
-                      {/* Original body as fallback context */}
-                      <p className="text-xs text-slate-500 mt-2 leading-relaxed">{selectedEvent.body}</p>
-
-                      {/* Entity + timestamp footer */}
-                      <div className="flex items-center gap-3 text-xs text-slate-500 pt-1 border-t border-slate-200">
-                        <span>{selectedEvent.entityLabel}</span>
-                        <span>{new Date(selectedEvent.createdAt).toLocaleString()}</span>
-                        {selectedEvent.recipientEmail && <span>{selectedEvent.recipientEmail}</span>}
-                        {selectedEvent.ruleId && <span>Rule: <span className="font-mono">{selectedEvent.ruleId}</span></span>}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })()}
+              {/* ── Alert detail drawer (non-deployment alerts) ── */}
+              <AlertDetailDrawer
+                alert={drawerAlert}
+                open={drawerOpen}
+                onClose={() => { setDrawerOpen(false); setDrawerAlert(null); }}
+              />
             </>
           )}
         </div>
