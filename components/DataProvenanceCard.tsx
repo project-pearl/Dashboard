@@ -94,15 +94,18 @@ export function DataProvenanceCard() {
           return (
             <div key={tier} className="border rounded-md overflow-hidden">
               {/* Tier header row */}
-              <button
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => toggleTier(tier)}
-                className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-slate-50 transition-colors"
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTier(tier); } }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-slate-50 transition-colors cursor-pointer"
               >
                 <TierBadge tier={tier} size="sm" />
                 <span className="text-sm font-medium text-slate-700 flex-1">{label}</span>
                 <span className="text-xs text-slate-400">{sources.length} source{sources.length !== 1 ? 's' : ''}</span>
                 <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-              </button>
+              </div>
 
               {/* Expanded source table */}
               {isOpen && (
