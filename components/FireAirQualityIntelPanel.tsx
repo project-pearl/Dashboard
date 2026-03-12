@@ -9,6 +9,7 @@ import { AirQualityMonitoringCard } from './AirQualityMonitoringCard';
 import { Sparkline } from './Sparkline';
 import { FireAqMap } from './FireAqMap';
 import BurnPitMonitoringCard from './BurnPitMonitoringCard';
+import InstallationThreatMonitoringCard from './InstallationThreatMonitoringCard';
 
 interface RegionSummary {
   region: string;
@@ -160,6 +161,9 @@ export function FireAirQualityIntelPanel({
 
       {/* ── Burn Pit Atmospheric Monitoring ── */}
       <BurnPitMonitoringCard />
+
+      {/* ── Installation Atmospheric Threat Monitoring ── */}
+      <InstallationThreatMonitoringCard />
 
       {/* ── Health Advisory ── */}
       <HealthAdvisoryCard threatLevel={threatLevel} totalFires={totalFires} maxFrp={maxFrp} />
