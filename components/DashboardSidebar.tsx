@@ -31,6 +31,10 @@ import {
   Leaf,
   Crown,
   FileCheck,
+  // Icons used directly in sidebar JSX
+  Home,
+  Zap,
+  Settings,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { LazyIcon, preloadIconBundle } from '@/lib/iconLoader';
