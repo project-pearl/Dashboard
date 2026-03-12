@@ -2338,12 +2338,29 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {[
-                      { category: 'Water Quality', grade: 'B', color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
-                      { category: 'Infrastructure', grade: 'C', color: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
-                      { category: 'Compliance', grade: 'B+', color: 'text-green-700 bg-green-50 border-green-200' },
-                      { category: 'Equity', grade: 'C+', color: 'text-teal-700 bg-teal-50 border-teal-200' },
-                    ].map(g => (
+                    {(() => {
+                      const cardColor = (g: { letter: string }) => {
+                        const l = g.letter.charAt(0);
+                        if (l === 'A') return 'text-green-700 bg-green-50 border-green-200';
+                        if (l === 'B') return 'text-emerald-700 bg-emerald-50 border-emerald-200';
+                        if (l === 'C') return 'text-yellow-700 bg-yellow-50 border-yellow-200';
+                        if (l === 'D') return 'text-orange-700 bg-orange-50 border-orange-200';
+                        return 'text-red-700 bg-red-50 border-red-200';
+                      };
+                      const wqScore = stateCompositeScore?.score ?? alertLevelAvgScore(regionData);
+                      const wqGrade = scoreToGrade(wqScore);
+                      const compGrade = jurisdictionScoreSummary.avgGrade;
+                      const ejScore = getEJScore(stateAbbr);
+                      const ejGrade = scoreToGrade(typeof ejScore === 'number' ? ejScore : 50);
+                      const infraScore = stateCompositeScore ? Math.round(stateCompositeScore.score * 0.9) : Math.round(wqScore * 0.85);
+                      const infraGrade = scoreToGrade(infraScore);
+                      return [
+                        { category: 'Water Quality', grade: wqGrade.letter, color: cardColor(wqGrade) },
+                        { category: 'Infrastructure', grade: infraGrade.letter, color: cardColor(infraGrade) },
+                        { category: 'Compliance', grade: compGrade.letter, color: cardColor(compGrade) },
+                        { category: 'Equity', grade: ejGrade.letter, color: cardColor(ejGrade) },
+                      ];
+                    })().map(g => (
                       <div key={g.category} className={`border rounded-xl p-4 text-center ${g.color}`}>
                         <p className="text-3xl font-bold">{g.grade}</p>
                         <p className="text-xs mt-1 font-medium">{g.category}</p>
@@ -2691,7 +2708,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             );
 
             // ── Resolution Planner ─────────────────────────────────────────
-            case 'resolution-planner': return DS(<ResolutionPlanner userRole="state" scopeContext={{ scope: 'state', data: { abbr: stateAbbr, name: STATE_NAMES[stateAbbr] || stateAbbr, epaRegion: getEpaRegionForState(stateAbbr) || 0, totalWaterbodies: regionData.length, assessed: regionData.length, impaired: regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length, score: alertLevelAvgScore(regionData), grade: 'B', cat5: 0, cat4a: 0, cat4b: 0, cat4c: 0, topCauses: [] } }} />);
+            case 'resolution-planner': return DS(<ResolutionPlanner userRole="state" scopeContext={{ scope: 'state', data: { abbr: stateAbbr, name: STATE_NAMES[stateAbbr] || stateAbbr, epaRegion: getEpaRegionForState(stateAbbr) || 0, totalWaterbodies: regionData.length, assessed: regionData.length, impaired: regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length, score: stateCompositeScore?.score ?? alertLevelAvgScore(regionData), grade: stateCompositeScore?.grade ?? scoreToGrade(alertLevelAvgScore(regionData)).letter, cat5: 0, cat4a: 0, cat4b: 0, cat4c: 0, topCauses: [] } }} />);
 
 
             // ── Policy Tracker sections ────────────────────────────────────

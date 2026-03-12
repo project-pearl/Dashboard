@@ -23,13 +23,13 @@ const coreIcons = {
 
 // Role-specific icon bundles
 const roleIconBundles = {
-  federal: lazy(() => import('./iconBundles/federalIcons').then(m => m.federalIcons)),
-  state: lazy(() => import('./iconBundles/stateIcons').then(m => m.stateIcons)),
-  local: lazy(() => import('./iconBundles/localIcons').then(m => m.localIcons)),
-  esg: lazy(() => import('./iconBundles/esgIcons').then(m => m.esgIcons)),
-  biotech: lazy(() => import('./iconBundles/biotechIcons').then(m => m.biotechIcons)),
-  university: lazy(() => import('./iconBundles/universityIcons').then(m => m.universityIcons)),
-  k12: lazy(() => import('./iconBundles/k12Icons').then(m => m.k12Icons)),
+  federal: lazy(() => import('./iconBundles/federalIcons').then(m => ({ default: m.federalIcons }))),
+  state: lazy(() => import('./iconBundles/stateIcons').then(m => ({ default: m.stateIcons }))),
+  local: lazy(() => import('./iconBundles/localIcons').then(m => ({ default: m.localIcons }))),
+  esg: lazy(() => import('./iconBundles/esgIcons').then(m => ({ default: m.esgIcons }))),
+  biotech: lazy(() => import('./iconBundles/biotechIcons').then(m => ({ default: m.biotechIcons }))),
+  university: lazy(() => import('./iconBundles/universityIcons').then(m => ({ default: m.universityIcons }))),
+  k12: lazy(() => import('./iconBundles/k12Icons').then(m => ({ default: m.k12Icons }))),
 };
 
 interface LazyIconProps {
@@ -74,15 +74,25 @@ export function LazyIcon({
 // Cache for loaded icon bundles
 const loadedBundles = new Map<string, any>();
 
-// Preload icons for a specific role
+// Preload icons for a specific role (triggers the lazy import so it's cached)
+const bundleImports: Record<string, () => Promise<any>> = {
+  federal: () => import('./iconBundles/federalIcons'),
+  state: () => import('./iconBundles/stateIcons'),
+  local: () => import('./iconBundles/localIcons'),
+  esg: () => import('./iconBundles/esgIcons'),
+  biotech: () => import('./iconBundles/biotechIcons'),
+  university: () => import('./iconBundles/universityIcons'),
+  k12: () => import('./iconBundles/k12Icons'),
+};
+
 export async function preloadIconBundle(role: keyof typeof roleIconBundles) {
   if (loadedBundles.has(role)) {
     return loadedBundles.get(role);
   }
 
   try {
-    const bundle = await roleIconBundles[role]();
-    loadedBundles.set(role, bundle);
+    const bundle = await bundleImports[role]?.();
+    if (bundle) loadedBundles.set(role, bundle);
     return bundle;
   } catch (error) {
     console.warn(`Failed to preload icon bundle for ${role}:`, error);
