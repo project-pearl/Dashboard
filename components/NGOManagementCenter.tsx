@@ -48,6 +48,7 @@ import { DraggableSection } from './DraggableSection';
 import dynamic from 'next/dynamic';
 import { useAdminState } from '@/lib/adminStateContext';
 import RoleTrainingGuide from '@/components/RoleTrainingGuide';
+import { DataProvenanceCard } from '@/components/DataProvenanceCard';
 
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
@@ -2675,6 +2676,10 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
             );
 
             case 'disclaimer': return null;
+
+            case 'data-provenance': return DS(
+              <DataProvenanceCard />
+            );
 
             case 'training': return DS(
               <RoleTrainingGuide rolePath="/dashboard/ngo" />

@@ -29,6 +29,7 @@ import { getStateMS4Jurisdictions, getMS4ComplianceSummary, STATE_AUTHORITIES } 
 import { useAuth } from '@/lib/authContext';
 import { getRegionMockData, calculateRemovalEfficiency, calculateOverallScore } from '@/lib/mockData';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
+import { DataProvenanceCard } from '@/components/DataProvenanceCard';
 import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
@@ -5865,6 +5866,9 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
 
             case 'disclaimer': return null;
 
+            case 'data-provenance': return DS(
+              <DataProvenanceCard />
+            );
             case 'training': return DS(
               <RoleTrainingGuide rolePath="/dashboard/ms4" />
             );

@@ -92,6 +92,7 @@ import ScorecardDashboard from '@/components/federal/ScorecardDashboard';
 import StateRollupTable from '@/components/federal/StateRollupTable';
 import NationalMapSection from '@/components/federal/NationalMapSection';
 import { SectionLoader, isSectionExtracted } from '@/components/federal/sections';
+import { DataProvenanceCard } from '@/components/DataProvenanceCard';
 
 import hucNamesData from '@/data/huc8-names.json';
 import centroidsData from '@/data/huc8-centroids.json';
@@ -5623,6 +5624,9 @@ export function FederalManagementCenter(props: Props) {
           </Card>
         );
 
+        case 'data-provenance': return DS(
+          <DataProvenanceCard />
+        );
         case 'training': return DS(
           <RoleTrainingGuide rolePath="/dashboard/federal" />
         );

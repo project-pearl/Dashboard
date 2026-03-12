@@ -58,6 +58,7 @@ import { StatusCard } from './StatusCard';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
+import { DataProvenanceCard } from '@/components/DataProvenanceCard';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
@@ -2314,6 +2315,9 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             );
           })());
 
+          case 'data-provenance': return DS(
+            <DataProvenanceCard />
+          );
           case 'training': return DS(
             <RoleTrainingGuide rolePath="/dashboard/local" />
           );

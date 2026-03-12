@@ -61,7 +61,7 @@ export const DEFAULT_SECTIONS = {
     // ── Always visible ──
     { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 24, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'users-panel', label: 'User Management',              order: 998, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'data-provenance', label: 'Data Provenance',          order: 998.5, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'data-provenance', label: 'Data Provenance',          order: 998.5, visible: true, defaultExpanded: false },
     { id: 'training',    label: 'Deployment Training',          order: 999, visible: true, defaultExpanded: true, lensControlled: true },
   ],
 
@@ -205,7 +205,7 @@ export const DEFAULT_SECTIONS = {
     // ── Always visible ──
     { id: 'disclaimer',          label: 'Platform Disclaimer',          order: 89, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'users-panel',         label: 'User Management',             order: 998, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'data-provenance',     label: 'Data Provenance',              order: 998.5, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'data-provenance',     label: 'Data Provenance',              order: 998.5, visible: true, defaultExpanded: false },
     { id: 'training',            label: 'Deployment Training',          order: 999, visible: true, defaultExpanded: true, lensControlled: true },
   ],
 
@@ -336,7 +336,7 @@ export const DEFAULT_SECTIONS = {
     // ── Always visible ──
     { id: 'disclaimer',          label: 'Platform Disclaimer',              order: 87, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'users-panel',         label: 'User Management',                 order: 998, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'data-provenance',     label: 'Data Provenance',                  order: 998.5, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'data-provenance',     label: 'Data Provenance',                  order: 998.5, visible: true, defaultExpanded: false },
     { id: 'training',            label: 'Deployment Training',              order: 999, visible: true, defaultExpanded: true, lensControlled: true },
   ],
 
@@ -391,7 +391,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'fund-analytics', label: 'Funding Analytics',             order: 30.3, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 31, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'data-provenance', label: 'Data Provenance',             order: 998.5, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'data-provenance', label: 'Data Provenance',             order: 998.5, visible: true, defaultExpanded: false },
     { id: 'training',       label: 'Deployment Training',           order: 999, visible: true, defaultExpanded: true, lensControlled: true },
   ],
 
@@ -451,7 +451,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'fund-analytics',      label: 'Financial Analytics',              order: 36,  visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',           label: 'Platform Disclaimer',             order: 37,  visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'data-provenance',      label: 'Data Provenance',                  order: 998.5, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'data-provenance',      label: 'Data Provenance',                  order: 998.5, visible: true, defaultExpanded: false },
     { id: 'training',             label: 'Deployment Training',             order: 999, visible: true, defaultExpanded: true, lensControlled: true },
   ],
 
@@ -511,7 +511,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'fund-analytics',          label: 'Financial Analytics',             order: 35.3, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',              label: 'Platform Disclaimer',             order: 36,  visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'data-provenance',         label: 'Data Provenance',                  order: 998.5, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'data-provenance',         label: 'Data Provenance',                  order: 998.5, visible: true, defaultExpanded: false },
     { id: 'training',                label: 'Deployment Training',             order: 999, visible: true, defaultExpanded: true, lensControlled: true },
   ],
 
@@ -567,7 +567,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'fund-pipeline',              label: 'Opportunity Pipeline',         order: 27.7, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 28, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'data-provenance', label: 'Data Provenance',          order: 998.5, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'data-provenance', label: 'Data Provenance',          order: 998.5, visible: true, defaultExpanded: false },
     { id: 'training',    label: 'Deployment Training',          order: 999, visible: true, defaultExpanded: true, lensControlled: true },
   ],
 
@@ -612,7 +612,7 @@ export const DEFAULT_SECTIONS = {
     // ── Always visible ──
     { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 27, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'users-panel', label: 'User Management',              order: 998, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'data-provenance', label: 'Data Provenance',          order: 998.5, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'data-provenance', label: 'Data Provenance',          order: 998.5, visible: true, defaultExpanded: false },
     { id: 'training',    label: 'Deployment Training',          order: 999, visible: true, defaultExpanded: true, lensControlled: true },
   ],
 
@@ -692,7 +692,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'location-report',    label: 'Location Water Quality Report', order: 40, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'disclaimer',         label: 'Platform Disclaimer',         order: 41, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'users-panel',        label: 'User Management',             order: 998, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'data-provenance',    label: 'Data Provenance',              order: 998.5, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'data-provenance',    label: 'Data Provenance',              order: 998.5, visible: true, defaultExpanded: false },
     { id: 'training',           label: 'Deployment Training',         order: 999, visible: true, defaultExpanded: true, lensControlled: true },
   ],
 
@@ -833,7 +833,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'location-report',       label: 'Location Water Quality Report',  order: 96, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'disclaimer',            label: 'Platform Disclaimer',            order: 97, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'users-panel',           label: 'User Management',               order: 998, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'data-provenance',       label: 'Data Provenance',                order: 998.5, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'data-provenance',       label: 'Data Provenance',                order: 998.5, visible: true, defaultExpanded: false },
     { id: 'training',              label: 'Deployment Training',            order: 999, visible: true, defaultExpanded: true, lensControlled: true },
   ],
 
@@ -845,7 +845,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'spi-permits',      label: 'Permit Constraint Snapshot',    order: 4,  visible: true, defaultExpanded: true },
     { id: 'location-report',  label: 'Location Water Quality Report', order: 5,  visible: true, defaultExpanded: false },
     { id: 'disclaimer',       label: 'Platform Disclaimer',           order: 6,  visible: true, defaultExpanded: true },
-    { id: 'data-provenance',  label: 'Data Provenance',               order: 998.5, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'data-provenance',  label: 'Data Provenance',               order: 998.5, visible: true, defaultExpanded: false },
     { id: 'training',         label: 'Deployment Training',           order: 999, visible: true, defaultExpanded: true, lensControlled: true },
   ],
 
@@ -869,7 +869,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'water-score',        label: 'PIN Water Score',             order: 5,   visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'risk-forecast',      label: 'Risk Forecast',               order: 5.5, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'disclaimer',         label: 'Disclaimer',                  order: 6,   visible: true, defaultExpanded: true },
-    { id: 'data-provenance',    label: 'Data Provenance',              order: 998.5, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'data-provenance',    label: 'Data Provenance',              order: 998.5, visible: true, defaultExpanded: false },
     { id: 'training',           label: 'Deployment Training',         order: 999, visible: true, defaultExpanded: true, lensControlled: true },
   ],
   Local: [
@@ -973,7 +973,7 @@ export const DEFAULT_SECTIONS = {
     // ── Always visible ──
     { id: 'disclaimer',  label: 'Platform Disclaimer',  order: 80,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'users-panel', label: 'User Management',      order: 998, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'data-provenance', label: 'Data Provenance',  order: 998.5, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'data-provenance', label: 'Data Provenance',  order: 998.5, visible: true, defaultExpanded: false },
     { id: 'training',    label: 'Deployment Training',  order: 999, visible: true, defaultExpanded: true, lensControlled: true },
   ],
 

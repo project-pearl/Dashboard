@@ -30,6 +30,7 @@ import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { EmergingContaminantsTracker } from '@/components/EmergingContaminantsTracker';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
+import { DataProvenanceCard } from '@/components/DataProvenanceCard';
 import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 import { UserManagementPanel } from './UserManagementPanel';
 import { getInvitableRoles } from '@/lib/adminHierarchy';
@@ -2085,6 +2086,10 @@ export default function UtilityManagementCenter({ systemId }: Props) {
             );
 
             case 'disclaimer': return null;
+
+            case 'data-provenance': return DS(
+              <DataProvenanceCard />
+            );
 
             case 'training': return DS(
               <RoleTrainingGuide rolePath="/dashboard/utility" />
