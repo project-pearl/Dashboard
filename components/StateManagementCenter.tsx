@@ -176,19 +176,19 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Compliance',
     description: 'Impairment severity, permits, enforcement, and drinking water',
     defaultOverlay: 'risk',
-    sections: new Set(['icis', 'sdwis', 'ms4jurisdictions', 'compliance-assessment', 'compliance-analytics', 'disclaimer']),
+    sections: new Set(['icis', 'sdwis', 'ms4jurisdictions', 'compliance-assessment', 'compliance-analytics', 'cyber-risk-panel', 'disclaimer']),
   },
   'water-quality': {
     label: 'Water Quality',
     description: 'Standards, assessment, station data, and field integration',
     defaultOverlay: 'risk',
-    sections: new Set(['regprofile', 'local-panel', 'groundwater', 'wq-standards', 'wq-assessment', 'wq-stations', 'disclaimer']),
+    sections: new Set(['regprofile', 'local-panel', 'groundwater', 'wq-standards', 'wq-assessment', 'wq-stations', 'usgs-ogc-stations', 'ngwmn-groundwater', 'water-availability', 'disclaimer']),
   },
   'public-health': {
     label: 'Public Health & Contaminants',
     description: 'Contaminant tracking, health coordination, and lab capacity',
     defaultOverlay: 'risk',
-    sections: new Set(['sdwis', 'ph-contaminants', 'ph-health-coord', 'ph-lab-capacity', 'ph-mortality-context', 'ph-healthcare-access', 'ph-outbreak-tracker', 'ph-env-health-corr', 'disclaimer']),
+    sections: new Set(['sdwis', 'ph-contaminants', 'ph-health-coord', 'ph-lab-capacity', 'ph-mortality-context', 'ph-healthcare-access', 'ph-outbreak-tracker', 'ph-env-health-corr', 'pfas-analytics-panel', 'disclaimer']),
   },
   habitat: {
     label: 'Habitat & Ecology',
@@ -206,19 +206,19 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Infrastructure',
     description: 'SRF administration, capital planning, and green infrastructure',
     defaultOverlay: 'risk',
-    sections: new Set(['infra-srf', 'infra-capital', 'infra-construction', 'infra-green', 'ag-bmp-effectiveness', 'ag-nutrient', 'ag-wbp', 'disclaimer']),
+    sections: new Set(['infra-srf', 'infra-capital', 'infra-construction', 'infra-green', 'ag-bmp-effectiveness', 'ag-nutrient', 'ag-wbp', 'flood-impact-analysis', 'cyber-risk-panel', 'disclaimer']),
   },
   monitoring: {
     label: 'Monitoring',
     description: 'State monitoring network, data management, and optimization',
     defaultOverlay: 'coverage',
-    sections: new Set(['groundwater', 'mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'mon-air-quality', 'mon-latency', 'mon-report-card', 'mon-source-health', 'flood-status', 'flood-risk-summary', 'weather-alerts', 'disclaimer']),
+    sections: new Set(['groundwater', 'mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'mon-air-quality', 'mon-latency', 'mon-report-card', 'mon-source-health', 'flood-status', 'flood-risk-summary', 'weather-alerts', 'usgs-ogc-stations', 'ngwmn-groundwater', 'nws-forecast-panel', 'water-availability', 'disclaimer']),
   },
   disaster: {
     label: 'Disaster & Emergency Response',
     description: 'Active incidents, spill reporting, and preparedness — redirects to merged planner view',
     defaultOverlay: 'risk',
-    sections: new Set(['alertfeed', 'disaster-active', 'disaster-response', 'disaster-spill', 'disaster-prep', 'disaster-cascade', 'flood-forecast', 'flood-risk-overview', 'resolution-planner', 'disclaimer']),
+    sections: new Set(['alertfeed', 'disaster-active', 'disaster-response', 'disaster-spill', 'disaster-prep', 'disaster-cascade', 'flood-forecast', 'flood-risk-overview', 'resolution-planner', 'flood-impact-analysis', 'nws-forecast-panel', 'disclaimer']),
   },
   tmdl: {
     label: 'TMDL & Restoration',
@@ -236,7 +236,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Reports',
     description: 'Integrated reports, regulatory filings, and data export',
     defaultOverlay: 'risk',
-    sections: new Set(['exporthub', 'rpt-ir-workspace', 'rpt-regulatory', 'rpt-adhoc', 'disclaimer']),
+    sections: new Set(['exporthub', 'rpt-ir-workspace', 'rpt-regulatory', 'rpt-adhoc', 'global-water-quality', 'disclaimer']),
   },
   permits: {
     label: 'Permits & Enforcement',
@@ -6397,6 +6397,214 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             }} />
           );
         }
+
+            case 'usgs-ogc-stations': {
+              return (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-blue-600">—</div>
+                      <div className="text-xs text-gray-500">Total Stations</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-green-600">—</div>
+                      <div className="text-xs text-gray-500">Site Types</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-purple-600">—</div>
+                      <div className="text-xs text-gray-500">Agencies</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-orange-600">—</div>
+                      <div className="text-xs text-gray-500">States Covered</div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-500 italic">USGS OGC monitoring stations for {stateAbbr} — run rebuild-usgs-ogc cron to populate.</p>
+                </div>
+              );
+            }
+
+            case 'ngwmn-groundwater': {
+              return (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-blue-600">—</div>
+                      <div className="text-xs text-gray-500">Total Sites</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-green-600">—</div>
+                      <div className="text-xs text-gray-500">Agencies</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-yellow-600">—</div>
+                      <div className="text-xs text-gray-500">Quality Results</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-purple-600">—</div>
+                      <div className="text-xs text-gray-500">States</div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-500 italic">NGWMN groundwater monitoring for {stateAbbr} — run rebuild-ngwmn cron to populate.</p>
+                </div>
+              );
+            }
+
+            case 'flood-impact-analysis': {
+              return (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-red-600">—</div>
+                      <div className="text-xs text-gray-500">Zones Analyzed</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-orange-600">—</div>
+                      <div className="text-xs text-gray-500">High Risk</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-yellow-600">—</div>
+                      <div className="text-xs text-gray-500">Infra at Risk</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-blue-600">—</div>
+                      <div className="text-xs text-gray-500">States</div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-500 italic">Flood impact analysis for {stateAbbr} — run rebuild-flood-impact cron to populate.</p>
+                </div>
+              );
+            }
+
+            case 'pfas-analytics-panel': {
+              return (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-red-600">—</div>
+                      <div className="text-xs text-gray-500">PFAS Facilities</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-orange-600">—</div>
+                      <div className="text-xs text-gray-500">Exceedances</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-purple-600">—</div>
+                      <div className="text-xs text-gray-500">Near Military</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-blue-600">—</div>
+                      <div className="text-xs text-gray-500">States</div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-500 italic">PFAS analytics for {stateAbbr} — run rebuild-dod-pfas cron to populate.</p>
+                </div>
+              );
+            }
+
+            case 'nws-forecast-panel': {
+              return (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-blue-600">—</div>
+                      <div className="text-xs text-gray-500">Locations</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-red-600">—</div>
+                      <div className="text-xs text-gray-500">High Risk</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-green-600">—</div>
+                      <div className="text-xs text-gray-500">States</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-gray-600">—</div>
+                      <div className="text-xs text-gray-500">Refresh Rate</div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-500 italic">NWS forecast data for {stateAbbr} — run rebuild-nws-forecast cron to populate.</p>
+                </div>
+              );
+            }
+
+            case 'water-availability': {
+              return (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-blue-600">—</div>
+                      <div className="text-xs text-gray-500">HUC-8 Indicators</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-red-600">—</div>
+                      <div className="text-xs text-gray-500">Drought HUCs</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-orange-600">—</div>
+                      <div className="text-xs text-gray-500">Declining</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-green-600">—</div>
+                      <div className="text-xs text-gray-500">States</div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-500 italic">Water availability indicators for {stateAbbr} — run rebuild-water-availability cron to populate.</p>
+                </div>
+              );
+            }
+
+            case 'cyber-risk-panel': {
+              return (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-blue-600">—</div>
+                      <div className="text-xs text-gray-500">Systems Assessed</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-red-600">—</div>
+                      <div className="text-xs text-gray-500">High/Critical</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-purple-600">—</div>
+                      <div className="text-xs text-gray-500">Near Military</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-green-600">—</div>
+                      <div className="text-xs text-gray-500">States</div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-500 italic">Cyber risk assessment for {stateAbbr} water systems — run rebuild-cyber-risk cron to populate.</p>
+                </div>
+              );
+            }
+
+            case 'global-water-quality': {
+              return (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-blue-600">—</div>
+                      <div className="text-xs text-gray-500">Countries</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-green-600">—</div>
+                      <div className="text-xs text-gray-500">Stations</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-purple-600">—</div>
+                      <div className="text-xs text-gray-500">Latest Year</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-gray-600">—</div>
+                      <div className="text-xs text-gray-500">Source</div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-500 italic">Global water quality benchmarks for {stateAbbr} comparison — run rebuild-global-wq cron to populate.</p>
+                </div>
+              );
+            }
 
             default: return null;
           }

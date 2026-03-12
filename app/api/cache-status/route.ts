@@ -78,6 +78,16 @@ import { getATSDRToxicologyCacheStatus, ensureWarmed as warmATSDRToxicology } fr
 import { getUSGSWQPCacheStatus, ensureWarmed as warmUSGSWQP } from '@/lib/usgsWqpCache';
 import { getDataCDCGovCacheStatus, ensureWarmed as warmDataCDCGov } from '@/lib/dataCdcGovCache';
 import { getDoDPFASCacheStatus, ensureWarmed as warmDoDPFAS } from '@/lib/dodPfasCache';
+import { getUsgsOgcCacheStatus, ensureWarmed as warmUsgsOgc } from '@/lib/usgsOgcCache';
+import { getNgwmnCacheStatus, ensureWarmed as warmNgwmn } from '@/lib/ngwmnCache';
+import { getFloodImpactCacheStatus, ensureWarmed as warmFloodImpact } from '@/lib/floodImpactCache';
+import { getEpaPfasCacheStatus, ensureWarmed as warmEpaPfas } from '@/lib/epaPfasAnalyticsCache';
+import { getDodPfasSitesCacheStatus, ensureWarmed as warmDodPfasSites } from '@/lib/dodPfasSitesCache';
+import { getNwsForecastCacheStatus, ensureWarmed as warmNwsForecast } from '@/lib/nwsForecastCache';
+import { getWaterAvailCacheStatus, ensureWarmed as warmWaterAvail } from '@/lib/usgsWaterAvailCache';
+import { getCyberRiskCacheStatus, ensureWarmed as warmCyberRisk } from '@/lib/cyberRiskCache';
+import { getGemsStatCacheStatus, ensureWarmed as warmGemStat } from '@/lib/gemstatCache';
+import { getCopernicusCdsCacheStatus, ensureWarmed as warmCopernicusCds } from '@/lib/copernicusCdsCache';
 import { getHealthSummary, ensureWarmed as warmSentinelHealth } from '@/lib/sentinel/sentinelHealth';
 import { getQueueStats, ensureWarmed as warmSentinelQueue } from '@/lib/sentinel/eventQueue';
 import { getScoredHucsSummary, ensureWarmed as warmSentinelScores } from '@/lib/sentinel/scoringEngine';
@@ -109,6 +119,8 @@ export async function GET(request: NextRequest) {
     [warmHrsaHpsa],
     [warmEJScreen, warmCampd, warmClimateNormals],
     [warmMyHealthfinder, warmATSDRToxicology, warmUSGSWQP, warmDataCDCGov, warmDoDPFAS],
+    [warmUsgsOgc, warmNgwmn, warmFloodImpact, warmEpaPfas, warmDodPfasSites],
+    [warmNwsForecast, warmWaterAvail, warmCyberRisk, warmGemStat, warmCopernicusCds],
   ];
   for (const batch of warmBatches) {
     await Promise.allSettled(batch.map(fn => fn()));
@@ -185,6 +197,16 @@ export async function GET(request: NextRequest) {
   const usgsWqp = getUSGSWQPCacheStatus();
   const dataCdcGov = getDataCDCGovCacheStatus();
   const dodPfas = getDoDPFASCacheStatus();
+  const usgsOgc = getUsgsOgcCacheStatus();
+  const ngwmn = getNgwmnCacheStatus();
+  const floodImpact = getFloodImpactCacheStatus();
+  const epaPfas = getEpaPfasCacheStatus();
+  const dodPfasSites = getDodPfasSitesCacheStatus();
+  const nwsForecast = getNwsForecastCacheStatus();
+  const waterAvail = getWaterAvailCacheStatus();
+  const cyberRisk = getCyberRiskCacheStatus();
+  const gemstat = getGemsStatCacheStatus();
+  const copernicusCds = getCopernicusCdsCacheStatus();
 
   const caches = {
     wqp: {
@@ -475,6 +497,46 @@ export async function GET(request: NextRequest) {
     dodPfas: {
       ...dodPfas,
       ...staleness(dodPfas.loaded ? (dodPfas as any).built : null),
+    },
+    usgsOgc: {
+      ...usgsOgc,
+      ...staleness(usgsOgc.loaded ? (usgsOgc as any).built : null),
+    },
+    ngwmn: {
+      ...ngwmn,
+      ...staleness(ngwmn.loaded ? (ngwmn as any).built : null),
+    },
+    floodImpact: {
+      ...floodImpact,
+      ...staleness(floodImpact.loaded ? (floodImpact as any).built : null),
+    },
+    epaPfas: {
+      ...epaPfas,
+      ...staleness(epaPfas.loaded ? (epaPfas as any).built : null),
+    },
+    dodPfasSites: {
+      ...dodPfasSites,
+      ...staleness(dodPfasSites.loaded ? (dodPfasSites as any).built : null),
+    },
+    nwsForecast: {
+      ...nwsForecast,
+      ...staleness(nwsForecast.loaded ? (nwsForecast as any).built : null),
+    },
+    waterAvail: {
+      ...waterAvail,
+      ...staleness(waterAvail.loaded ? (waterAvail as any).built : null),
+    },
+    cyberRisk: {
+      ...cyberRisk,
+      ...staleness(cyberRisk.loaded ? (cyberRisk as any).built : null),
+    },
+    gemstat: {
+      ...gemstat,
+      ...staleness(gemstat.loaded ? (gemstat as any).built : null),
+    },
+    copernicusCds: {
+      ...copernicusCds,
+      ...staleness(copernicusCds.loaded ? (copernicusCds as any).built : null),
     },
   };
 

@@ -19,6 +19,9 @@ import { evaluateFusionAlerts } from '@/lib/alerts/triggers/fusionTrigger';
 import { evaluateFirmsAlerts } from '@/lib/alerts/triggers/firmsTrigger';
 import { evaluateAttainsAlerts } from '@/lib/alerts/triggers/attainsTrigger';
 import { evaluateNwsWeatherAlerts } from '@/lib/alerts/triggers/nwsWeatherTrigger';
+import { evaluatePfasProximity } from '@/lib/alerts/triggers/pfasProximityTrigger';
+import { evaluateGroundwaterAnomalies } from '@/lib/alerts/triggers/groundwaterAnomalyTrigger';
+import { evaluateMultiHazards } from '@/lib/alerts/triggers/multiHazardTrigger';
 import { loadRules, evaluateRules } from '@/lib/alerts/rules';
 import type { AlertEvent } from '@/lib/alerts/types';
 import { isCronAuthorized } from '@/lib/apiAuth';
@@ -187,7 +190,34 @@ export async function GET(request: NextRequest) {
       console.warn(`[dispatch-alerts] NWS Weather trigger error: ${err.message}`);
     }
 
-    // 13. Custom rules
+    // 13. PFAS proximity trigger
+    try {
+      const pfasEvents = await evaluatePfasProximity();
+      candidates.push(...pfasEvents);
+      console.warn(`[dispatch-alerts] PFAS proximity: ${pfasEvents.length} candidates`);
+    } catch (err: any) {
+      console.warn(`[dispatch-alerts] PFAS proximity trigger error: ${err.message}`);
+    }
+
+    // 14. Groundwater anomaly trigger
+    try {
+      const gwEvents = await evaluateGroundwaterAnomalies();
+      candidates.push(...gwEvents);
+      console.warn(`[dispatch-alerts] Groundwater anomaly: ${gwEvents.length} candidates`);
+    } catch (err: any) {
+      console.warn(`[dispatch-alerts] Groundwater anomaly trigger error: ${err.message}`);
+    }
+
+    // 15. Multi-hazard trigger
+    try {
+      const multiEvents = await evaluateMultiHazards();
+      candidates.push(...multiEvents);
+      console.warn(`[dispatch-alerts] Multi-hazard: ${multiEvents.length} candidates`);
+    } catch (err: any) {
+      console.warn(`[dispatch-alerts] Multi-hazard trigger error: ${err.message}`);
+    }
+
+    // 16. Custom rules
     try {
       const rules = await loadRules();
       if (rules.length > 0) {

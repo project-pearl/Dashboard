@@ -75,6 +75,9 @@ export const BLOB_PATHS = {
   fusionSnapshot:        'alerts/fusion-snapshot.json',
   firmsSnapshot:         'alerts/firms-snapshot.json',
   nwsWeatherSnapshot:    'alerts/nws-weather-snapshot.json',
+  pfasProximitySnapshot: 'alerts/pfas-proximity-snapshot.json',
+  groundwaterAnomalySnapshot: 'alerts/groundwater-anomaly-snapshot.json',
+  multiHazardSnapshot:   'alerts/multi-hazard-snapshot.json',
   siteThrottle:          'alerts/site-throttle.json',
 };
 

@@ -12,7 +12,7 @@ export type AlertSeverity = 'anomaly' | 'critical' | 'warning' | 'info';
 export type AlertChannel = 'email';
 
 /** All supported alert trigger sources across Sentinel, USGS, ATTAINS, etc. */
-export type AlertTriggerType = 'sentinel' | 'usgs' | 'delta' | 'attains' | 'nwss' | 'custom' | 'fusion' | 'coordination' | 'flood_forecast' | 'deployment' | 'hab' | 'beacon' | 'firms' | 'nws_weather';
+export type AlertTriggerType = 'sentinel' | 'usgs' | 'delta' | 'attains' | 'nwss' | 'custom' | 'fusion' | 'coordination' | 'flood_forecast' | 'deployment' | 'hab' | 'beacon' | 'firms' | 'nws_weather' | 'pfas_proximity' | 'groundwater_anomaly' | 'multi_hazard';
 
 /** A single alert event to be dispatched (or already dispatched) to a recipient. */
 export interface AlertEvent {
