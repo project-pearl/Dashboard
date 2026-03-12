@@ -209,12 +209,11 @@ export default function NationalMapSection(props: NationalMapSectionProps) {
                       key={o.id}
                       onClick={() => setOverlay(o.id)}
                       title={o.description}
-                      className="inline-flex items-center rounded-full px-3.5 py-1.5 text-xs font-medium transition-all"
-                      style={{
-                        background: isActive ? 'var(--pill-bg-active)' : 'var(--pill-bg)',
-                        color: isActive ? 'var(--pill-text-active)' : 'var(--pill-text)',
-                        border: `1px solid ${isActive ? 'var(--pill-border-active)' : 'var(--pill-border)'}`,
-                      }}
+                      className={`inline-flex items-center rounded-full px-3.5 py-1.5 text-xs font-medium transition-all border ${
+                        isActive
+                          ? 'bg-pin-pill-bg-active text-pin-pill-text-active border-pin-pill-border-active'
+                          : 'bg-pin-pill-bg text-pin-pill-text border-pin-pill-border'
+                      }`}
                     >
                       <Icon className="h-3.5 w-3.5 mr-1.5" />
                       {o.label}
@@ -228,8 +227,8 @@ export default function NationalMapSection(props: NationalMapSectionProps) {
                   Map data unavailable. Ensure us-atlas and topojson-client are installed.
                 </div>
               ) : (
-                <div className="w-full overflow-hidden rounded-lg" style={{ border: '1px solid var(--border-subtle)' }}>
-                  <div className="px-3 py-2 text-2xs flex items-center justify-between" style={{ color: 'var(--text-dim)', borderBottom: '1px solid var(--border-subtle)' }}>
+                <div className="w-full overflow-hidden rounded-lg border border-pin-border-subtle">
+                  <div className="px-3 py-2 text-2xs flex items-center justify-between text-pin-text-dim border-b border-pin-border-subtle">
                     <div className="flex items-center gap-2">
                       <span>Click a state to select</span>
                       <SentinelStatusBadge
@@ -311,14 +310,14 @@ export default function NationalMapSection(props: NationalMapSectionProps) {
                   </div>
 
                   {/* Legend */}
-                  <div className="flex flex-wrap items-center gap-3 px-3 py-2.5" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                  <div className="flex flex-wrap items-center gap-3 px-3 py-2.5 border-t border-pin-border-subtle">
                     {overlay === 'hotspots' && (
                       <>
                         <span className="pin-label mr-1">Risk:</span>
-                        <span className="inline-flex items-center gap-1 text-2xs text-pin-text-dim"><span className="w-2 h-2 rounded-sm" style={{ background: 'var(--status-healthy)' }} /> Healthy</span>
-                        <span className="inline-flex items-center gap-1 text-2xs text-pin-text-dim"><span className="w-2 h-2 rounded-sm" style={{ background: 'var(--status-warning)' }} /> Watch</span>
-                        <span className="inline-flex items-center gap-1 text-2xs text-pin-text-dim"><span className="w-2 h-2 rounded-sm" style={{ background: 'var(--status-warning)' }} /> Impaired</span>
-                        <span className="inline-flex items-center gap-1 text-2xs text-pin-text-dim"><span className="w-2 h-2 rounded-sm" style={{ background: 'var(--status-severe)' }} /> Severe</span>
+                        <span className="inline-flex items-center gap-1 text-2xs text-pin-text-dim"><span className="w-2 h-2 rounded-sm bg-pin-status-healthy" /> Healthy</span>
+                        <span className="inline-flex items-center gap-1 text-2xs text-pin-text-dim"><span className="w-2 h-2 rounded-sm bg-pin-status-warning" /> Watch</span>
+                        <span className="inline-flex items-center gap-1 text-2xs text-pin-text-dim"><span className="w-2 h-2 rounded-sm bg-pin-status-warning" /> Impaired</span>
+                        <span className="inline-flex items-center gap-1 text-2xs text-pin-text-dim"><span className="w-2 h-2 rounded-sm bg-pin-status-severe" /> Severe</span>
                       </>
                     )}
                     {overlay === 'ms4' && (
@@ -507,7 +506,7 @@ export default function NationalMapSection(props: NationalMapSectionProps) {
                       <ChevronLeft size={14} />
                       {alertDetailReturnRef.current === 'state' ? `Back to ${STATE_ABBR_TO_NAME[selectedState] ?? selectedState}` : 'Back to Alerts'}
                     </button>
-                    <span className="mx-1" style={{ color: 'var(--border-default)' }}>|</span>
+                    <span className="mx-1 text-pin-border-default">|</span>
                     <MapPin size={15} className="flex-shrink-0 text-pin-teal" />
                     <span className="font-semibold text-pin-text-primary">
                       {selectedHistoryAlert?.entityLabel
@@ -577,7 +576,7 @@ export default function NationalMapSection(props: NationalMapSectionProps) {
                   {selectedHucIndices ? (
                     <div className="space-y-4">
                       {/* Composite score gauge */}
-                      <div className="flex items-center gap-4 py-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <div className="flex items-center gap-4 py-2 border-b border-pin-border-subtle">
                         <div className="relative w-20 h-20 flex-shrink-0">
                           <svg viewBox="0 0 36 36" className="w-20 h-20 -rotate-90">
                             <circle cx="18" cy="18" r="15.9" fill="none" strokeWidth="2.5" stroke="var(--border-subtle)" />
@@ -620,7 +619,7 @@ export default function NationalMapSection(props: NationalMapSectionProps) {
                           return (
                             <div key={idx.key} className="flex items-center gap-2">
                               <div className="text-2xs w-28 text-right truncate text-pin-text-dim">{idx.label}</div>
-                              <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
+                              <div className="flex-1 h-2 rounded-full overflow-hidden bg-pin-border-subtle">
                                 <div className="h-full rounded-full transition-all" style={{ width: score != null ? `${score}%` : '0%', background: idx.color }} />
                               </div>
                               <div className="text-2xs w-6 font-semibold text-right text-pin-text-primary">{score ?? '\u2014'}</div>
@@ -631,12 +630,13 @@ export default function NationalMapSection(props: NationalMapSectionProps) {
 
                       {/* Alert level badge */}
                       {selectedAlertLevel && (
-                        <div className="flex items-center gap-2 pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                        <div className="flex items-center gap-2 pt-2 border-t border-pin-border-subtle">
                           <span className="text-2xs font-bold uppercase tracking-wider text-pin-text-dim">Alert Level:</span>
-                          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-semibold" style={{
-                            background: selectedAlertLevel === 'CRITICAL' ? 'var(--status-severe-bg)' : selectedAlertLevel === 'WATCH' ? 'var(--status-watch-bg)' : 'var(--status-impaired-bg)',
-                            color: selectedAlertLevel === 'CRITICAL' ? 'var(--status-severe)' : selectedAlertLevel === 'WATCH' ? 'var(--status-watch)' : 'var(--status-impaired)',
-                          }}>
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-semibold ${
+                            selectedAlertLevel === 'CRITICAL' ? 'bg-pin-status-severe-bg text-pin-status-severe'
+                            : selectedAlertLevel === 'WATCH' ? 'bg-pin-status-watch-bg text-pin-status-watch'
+                            : 'bg-pin-status-impaired-bg text-pin-status-impaired'
+                          }`}>
                             {selectedAlertLevel}
                           </span>
                         </div>
@@ -661,7 +661,7 @@ export default function NationalMapSection(props: NationalMapSectionProps) {
                       <ChevronLeft size={14} />
                       Back to Alerts
                     </button>
-                    <span className="mx-1" style={{ color: 'var(--border-default)' }}>|</span>
+                    <span className="mx-1 text-pin-border-default">|</span>
                     <MapPin size={15} className="flex-shrink-0 text-pin-text-dim" />
                     <span className="font-semibold text-pin-text-primary">
                       {STATE_ABBR_TO_NAME[selectedState] ?? selectedState} ({selectedState})
@@ -692,10 +692,7 @@ export default function NationalMapSection(props: NationalMapSectionProps) {
                             return (
                               <div
                                 key={h.huc8}
-                                className="flex items-center gap-2 p-1.5 rounded-md cursor-pointer transition-colors"
-                                style={{ border: '1px solid var(--border-subtle)' }}
-                                onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                                className="flex items-center gap-2 p-1.5 rounded-md cursor-pointer transition-colors border border-pin-border-subtle hover:bg-pin-bg-hover"
                                 onClick={() => {
                                   setSelectedAlertHuc(h.huc8);
                                   const matched = liveAlertFeed.find((e) => e.entityId === h.huc8);
@@ -772,7 +769,7 @@ export default function NationalMapSection(props: NationalMapSectionProps) {
               <CardContent className="py-3 px-4">
                 <div className="flex items-center gap-1.5 mb-2">
                   <Building2 size={13} className="text-pin-text-dim" />
-                  <span className="pin-section-label" style={{ fontSize: '10px' }}>MS4 & Regulatory</span>
+                  <span className="pin-section-label text-[10px]">MS4 & Regulatory</span>
                 </div>
                 <div className="space-y-1.5">
                   {ms4 && (
@@ -799,7 +796,7 @@ export default function NationalMapSection(props: NationalMapSectionProps) {
                       </div>
                       <div className="flex items-baseline justify-between">
                         <span className="pin-label">WQ Trend</span>
-                        <span className="text-xs font-semibold" style={{ color: trendIsWorsening ? 'var(--status-severe)' : 'var(--text-dim)' }}>{trendLabel}</span>
+                        <span className={`text-xs font-semibold ${trendIsWorsening ? 'text-pin-status-severe' : 'text-pin-text-dim'}`}>{trendLabel}</span>
                       </div>
                     </>
                   )}

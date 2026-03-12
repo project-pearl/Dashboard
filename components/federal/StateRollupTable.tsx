@@ -216,13 +216,13 @@ export default function StateRollupTable({
                           {row.dataSource === 'attains' && <span className="text-2xs text-blue-500 ml-0.5">EPA</span>}
                         </td>
                         <td className="py-2 px-3 text-center">
-                          {row.cat5 > 0 && <span className="pin-label inline-flex items-center rounded-full px-2 py-0.5" style={{ background: 'var(--status-severe-bg)', color: 'var(--status-severe)' }}>{row.cat5}</span>}
+                          {row.cat5 > 0 && <span className="pin-label inline-flex items-center rounded-full px-2 py-0.5 bg-pin-status-severe-bg text-pin-status-severe">{row.cat5}</span>}
                         </td>
                         <td className="py-2 px-3 text-center">
-                          {row.cat4a > 0 && <span className="pin-label inline-flex items-center rounded-full px-2 py-0.5" style={{ background: 'var(--status-watch-bg)', color: 'var(--status-watch)' }}>{row.cat4a}</span>}
+                          {row.cat4a > 0 && <span className="pin-label inline-flex items-center rounded-full px-2 py-0.5 bg-pin-status-watch-bg text-pin-status-watch">{row.cat4a}</span>}
                         </td>
                         <td className="py-2 px-3 text-center">
-                          {row.totalImpaired > 0 && <span className="pin-label inline-flex items-center rounded-full px-2 py-0.5" style={{ background: 'var(--status-impaired-bg)', color: 'var(--status-impaired)' }}>{row.totalImpaired}</span>}
+                          {row.totalImpaired > 0 && <span className="pin-label inline-flex items-center rounded-full px-2 py-0.5 bg-pin-status-impaired-bg text-pin-status-impaired">{row.totalImpaired}</span>}
                         </td>
                         <td className="py-2 px-3 text-center text-slate-600">{row.waterbodies}</td>
                       </tr>

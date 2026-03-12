@@ -52,12 +52,12 @@ export default function WaterbodyRestorationCard({
                 <div className="flex items-center gap-4">
                   <div className="flex-1">
                     <div className="flex items-baseline gap-2 mb-1">
-                      <span className="pin-stat-hero text-2xl" style={attainsAggregation.tmdlGapPct > 50 ? { color: 'var(--status-severe)' } : undefined}>
+                      <span className={`pin-stat-hero text-2xl ${attainsAggregation.tmdlGapPct > 50 ? 'text-pin-status-severe' : ''}`}>
                         {attainsAggregation.tmdlGapPct}%
                       </span>
                       <span className="text-xs text-pin-text-secondary">of impaired lack approved TMDL</span>
                     </div>
-                    <div className="h-2.5 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
+                    <div className="h-2.5 rounded-full overflow-hidden bg-pin-border-subtle">
                       <div className="h-full rounded-full" style={{
                         width: `${attainsAggregation.tmdlGapPct}%`,
                         background: attainsAggregation.tmdlGapPct > 50 ? 'var(--status-severe)' : 'var(--status-warning)',
@@ -89,7 +89,7 @@ export default function WaterbodyRestorationCard({
                     return (
                       <div key={r.cat} className="flex items-center gap-2">
                         <div className="w-[110px] text-2xs truncate text-pin-text-dim">{r.label}</div>
-                        <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
+                        <div className="flex-1 h-2 rounded-full overflow-hidden bg-pin-border-subtle">
                           <div className="h-full rounded-full" style={{ width: `${Math.max(pct, 1)}%`, background: r.color, opacity: r.opacity }} />
                         </div>
                         <div className="text-2xs w-[48px] text-right pin-stat-secondary">{r.count.toLocaleString()}</div>
@@ -109,7 +109,7 @@ export default function WaterbodyRestorationCard({
                     return (
                       <div key={i} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => console.log('Filter by cause:', c.cause)}>
                         <div className="w-[110px] text-2xs truncate text-pin-text-dim" title={c.cause}>{c.cause}</div>
-                        <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
+                        <div className="flex-1 h-2 rounded-full overflow-hidden bg-pin-border-subtle">
                           <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'var(--text-dim)', opacity: 0.35 }} />
                         </div>
                         <div className="text-2xs w-[48px] text-right pin-stat-secondary">{c.count.toLocaleString()}</div>
@@ -120,7 +120,7 @@ export default function WaterbodyRestorationCard({
               </div>
 
               {/* Methodology + Export */}
-              <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+              <div className="flex items-center justify-between pt-2 border-t border-pin-border-subtle">
                 <a
                   href="https://www.epa.gov/waterdata/attains"
                   target="_blank"
@@ -139,8 +139,7 @@ export default function WaterbodyRestorationCard({
                     a.href = url; a.download = 'national-impairment-summary.txt'; a.click();
                     URL.revokeObjectURL(url);
                   }}
-                  className="text-2xs flex items-center gap-1 px-2 py-1 rounded transition-colors"
-                  style={{ color: 'var(--text-dim)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
+                  className="text-2xs flex items-center gap-1 px-2 py-1 rounded transition-colors text-pin-text-dim bg-pin-bg-card border border-pin-border-subtle"
                 >
                   <ArrowRight className="w-3 h-3" />
                   Download Summary

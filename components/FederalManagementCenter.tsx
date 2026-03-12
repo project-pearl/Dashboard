@@ -2881,7 +2881,7 @@ export function FederalManagementCenter(props: Props) {
         {/* Toast notification */}
         {toastMsg && (
           <div className="fixed top-4 right-4 z-50 max-w-sm animate-in fade-in slide-in-from-top-2">
-            <div className="rounded-xl shadow-lg p-4 flex items-start gap-3" style={{ background: 'var(--bg-card)', border: '2px solid var(--accent-teal)', color: 'var(--text-primary)' }}>
+            <div className="rounded-xl shadow-lg p-4 flex items-start gap-3 bg-pin-bg-card border-2 border-pin-teal text-pin-text-primary">
               <div className="mt-0.5 text-pin-teal">ℹ️</div>
               <div className="flex-1">
                 <div className="text-sm text-pin-text-primary">{toastMsg}</div>
@@ -3055,7 +3055,7 @@ export function FederalManagementCenter(props: Props) {
                                    insight.type === 'success' ? 'var(--status-healthy)' :
                                    'var(--text-dim)';
                   return (
-                    <div key={idx} className="py-2.5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                    <div key={idx} className="py-2.5 border-b border-pin-border-subtle">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: sevColor }} />
                         <span className="text-xs font-semibold text-pin-text-bright">{insight.title}</span>
@@ -3105,7 +3105,7 @@ export function FederalManagementCenter(props: Props) {
                 {domain.keyMetrics && (
                   <div className="flex flex-wrap gap-2">
                     {domain.keyMetrics.map(m => (
-                      <span key={m} className="px-2 py-0.5 rounded text-2xs font-medium" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-dim)' }}>
+                      <span key={m} className="px-2 py-0.5 rounded text-2xs font-medium bg-pin-bg-card border border-pin-border-subtle text-pin-text-dim">
                         {m}
                       </span>
                     ))}
@@ -3606,7 +3606,7 @@ export function FederalManagementCenter(props: Props) {
         case 'top10': return DS(<>
         {/* Feature 3: Hotspots Rankings — driven by live Sentinel alerts */}
         {lens.showHotspots && (
-        <div id="section-top10" className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border-default)', background: 'var(--bg-card)' }}>
+        <div id="section-top10" className="rounded-xl overflow-hidden border border-pin-border-default bg-pin-bg-card">
           <button onClick={() => setShowHotspotsSection(prev => !prev)} className="w-full flex items-center justify-between px-4 py-3 transition-colors hover:bg-slate-50 text-pin-text-primary">
             <span className="text-sm font-semibold flex items-center gap-2 text-pin-text-primary">🔥 Top 10 Worsening / Improving Watersheds</span>
             <div className="flex items-center gap-1.5">
@@ -3647,14 +3647,11 @@ export function FederalManagementCenter(props: Props) {
                           mapRef.current.flyTo({ center: [c.lng, c.lat], zoom: 8, duration: 800 });
                         }
                       }}
-                      className="cursor-pointer transition-colors"
-                      style={{ borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)' }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-card)'; }}
+                      className="cursor-pointer transition-colors rounded-[10px] border border-pin-border-subtle bg-pin-bg-card hover:bg-pin-bg-hover"
                     >
                       <div className="flex items-center justify-between p-2.5">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <div className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: 'var(--status-severe-bg)', color: 'var(--status-severe)' }}>
+                          <div className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-pin-status-severe-bg text-pin-status-severe">
                             {idx + 1}
                           </div>
                           <div className="min-w-0 flex-1">
@@ -3666,10 +3663,12 @@ export function FederalManagementCenter(props: Props) {
                             </div>
                           </div>
                         </div>
-                        <span className="pin-label inline-flex items-center rounded-full px-2 py-0.5" style={{
-                          background: region.alertLevel === 'high' ? 'var(--status-severe-bg)' : region.alertLevel === 'medium' ? 'var(--status-impaired-bg)' : region.alertLevel === 'low' ? 'var(--status-watch-bg)' : 'var(--status-healthy-bg)',
-                          color: region.alertLevel === 'high' ? 'var(--status-severe)' : region.alertLevel === 'medium' ? 'var(--status-impaired)' : region.alertLevel === 'low' ? 'var(--status-watch)' : 'var(--status-healthy)',
-                        }}>
+                        <span className={`pin-label inline-flex items-center rounded-full px-2 py-0.5 ${
+                          region.alertLevel === 'high' ? 'bg-pin-status-severe-bg text-pin-status-severe'
+                          : region.alertLevel === 'medium' ? 'bg-pin-status-impaired-bg text-pin-status-impaired'
+                          : region.alertLevel === 'low' ? 'bg-pin-status-watch-bg text-pin-status-watch'
+                          : 'bg-pin-status-healthy-bg text-pin-status-healthy'
+                        }`}>
                           {region.alertLevel === 'high' ? 'Critical' : region.alertLevel === 'medium' ? 'Watch' : 'Advisory'}
                         </span>
                       </div>
@@ -3708,13 +3707,10 @@ export function FederalManagementCenter(props: Props) {
                         mapRef.current.flyTo({ center: [c.lng, c.lat], zoom: 8, duration: 800 });
                       }
                     }}
-                    className="flex items-center justify-between p-2 cursor-pointer transition-colors"
-                    style={{ borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-card)'; }}
+                    className="flex items-center justify-between p-2 cursor-pointer transition-colors rounded-[10px] border border-pin-border-subtle bg-pin-bg-card hover:bg-pin-bg-hover"
                   >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <div className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: 'var(--status-healthy-bg)', color: 'var(--status-healthy)' }}>
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-pin-status-healthy-bg text-pin-status-healthy">
                         {idx + 1}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -3726,10 +3722,7 @@ export function FederalManagementCenter(props: Props) {
                         </div>
                       </div>
                     </div>
-                    <span className="pin-label inline-flex items-center rounded-full px-2 py-0.5" style={{
-                      background: 'var(--status-healthy-bg)',
-                      color: 'var(--status-healthy)',
-                    }}>
+                    <span className="pin-label inline-flex items-center rounded-full px-2 py-0.5 bg-pin-status-healthy-bg text-pin-status-healthy">
                       Resolved
                     </span>
                   </div>
@@ -5100,15 +5093,15 @@ export function FederalManagementCenter(props: Props) {
         case 'location-report': return DS(<LocationReportCard />);
 
         case 'sentinel-alerts-placeholder': return DS(
-        <div className="rounded-lg p-4" style={{ background: 'var(--bg-card)', border: '1px solid #F9A82540', borderLeft: '3px solid #F9A825' }}>
+        <div className="rounded-lg p-4 bg-pin-bg-card border border-pin-beta-border border-l-[3px] border-l-pin-beta">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: '#F9A82520' }}>
-              <Shield className="w-5 h-5" style={{ color: '#F9A825' }} />
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-pin-beta-bg">
+              <Shield className="w-5 h-5 text-pin-beta" />
             </div>
             <div className="flex-1">
               <div className="text-sm font-semibold flex items-center gap-2 text-pin-text-primary">
                 Sentinel Alerts
-                <span className="text-2xs font-medium px-1.5 py-0.5 rounded-full" style={{ background: '#F9A82520', color: '#F9A825', border: '1px solid #F9A82540' }}>BETA</span>
+                <span className="text-2xs font-medium px-1.5 py-0.5 rounded-full bg-pin-beta-bg text-pin-beta border border-pin-beta-border">BETA</span>
               </div>
               <p className="text-xs mt-0.5 text-pin-text-dim">
                 {viewLens === 'compliance'
