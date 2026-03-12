@@ -179,6 +179,10 @@ export async function GET(request: NextRequest) {
   const ejscreen = getEJScreenCacheStatus();
   const campd = getCampdCacheStatus();
   const climateNormals = getClimateNormalsCacheStatus();
+  const myHealthfinder = getMyHealthfinderCacheStatus();
+  const atsdrToxicology = getATSDRToxicologyCacheStatus();
+  const usgsWqp = getUSGSWQPCacheStatus();
+  const dataCdcGov = getDataCDCGovCacheStatus();
 
   const caches = {
     wqp: {
@@ -449,6 +453,22 @@ export async function GET(request: NextRequest) {
     climateNormals: {
       ...climateNormals,
       ...staleness(climateNormals.loaded ? (climateNormals as any).built : null),
+    },
+    myHealthfinder: {
+      ...myHealthfinder,
+      ...staleness(myHealthfinder.loaded ? (myHealthfinder as any).built : null),
+    },
+    atsdrToxicology: {
+      ...atsdrToxicology,
+      ...staleness(atsdrToxicology.loaded ? (atsdrToxicology as any).built : null),
+    },
+    usgsWqp: {
+      ...usgsWqp,
+      ...staleness(usgsWqp.loaded ? (usgsWqp as any).built : null),
+    },
+    dataCdcGov: {
+      ...dataCdcGov,
+      ...staleness(dataCdcGov.loaded ? (dataCdcGov as any).built : null),
     },
   };
 
