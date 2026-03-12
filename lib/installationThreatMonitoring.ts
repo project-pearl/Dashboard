@@ -10,7 +10,7 @@
 import { estimatePlumeArrival, findTargetsAtRisk, Wind } from './plumeProjection';
 import { haversineKm } from './geoUtils';
 import { getNdbcCache } from './ndbcCache';
-import installationsJson from '@/data/military-installations.json';
+import installationsJson from '@/data/military-installations-fixed.json';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

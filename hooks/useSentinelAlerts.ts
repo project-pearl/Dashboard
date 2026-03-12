@@ -19,6 +19,7 @@ const POLL_INTERVAL = 60_000; // 60 seconds
 export type SystemStatus = 'active' | 'degraded' | 'offline';
 
 export interface SentinelAlertsResult {
+  anomalyHucs: ScoredHucClient[];
   criticalHucs: ScoredHucClient[];
   watchHucs: ScoredHucClient[];
   advisoryHucs: ScoredHucClient[];
@@ -55,6 +56,7 @@ function deriveSystemStatus(
 }
 
 export function useSentinelAlerts(): SentinelAlertsResult {
+  const [anomalyHucs, setAnomalyHucs] = useState<ScoredHucClient[]>([]);
   const [criticalHucs, setCriticalHucs] = useState<ScoredHucClient[]>([]);
   const [watchHucs, setWatchHucs] = useState<ScoredHucClient[]>([]);
   const [advisoryHucs, setAdvisoryHucs] = useState<ScoredHucClient[]>([]);
@@ -83,10 +85,12 @@ export function useSentinelAlerts(): SentinelAlertsResult {
       }
 
       const active: ScoredHuc[] = data.activeHucs ?? [];
+      const anomaly = active.filter(h => h.level === 'ANOMALY').map(toClient);
       const critical = active.filter(h => h.level === 'CRITICAL').map(toClient);
       const watch = active.filter(h => h.level === 'WATCH').map(toClient);
       const advisory = active.filter(h => h.level === 'ADVISORY').map(toClient);
 
+      setAnomalyHucs(anomaly);
       setCriticalHucs(critical);
       setWatchHucs(watch);
       setAdvisoryHucs(advisory);
@@ -131,6 +135,7 @@ export function useSentinelAlerts(): SentinelAlertsResult {
 
   return useMemo(
     () => ({
+      anomalyHucs,
       criticalHucs,
       watchHucs,
       advisoryHucs,
@@ -144,6 +149,7 @@ export function useSentinelAlerts(): SentinelAlertsResult {
       refetch: fetchStatus,
     }),
     [
+      anomalyHucs,
       criticalHucs,
       watchHucs,
       advisoryHucs,

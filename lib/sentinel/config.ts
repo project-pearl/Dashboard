@@ -37,6 +37,7 @@ export const BASE_SCORES: Record<ChangeSource, Record<SeverityHint, number>> = {
 
 /** Ordered thresholds mapping cumulative scores to Sentinel levels (CRITICAL→NOMINAL). */
 export const SCORE_THRESHOLDS: { min: number; level: ScoreLevel }[] = [
+  { min: 300, level: 'ANOMALY' },
   { min: 150, level: 'CRITICAL' },
   { min:  75, level: 'WATCH' },
   { min:  30, level: 'ADVISORY' },

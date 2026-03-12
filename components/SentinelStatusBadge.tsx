@@ -12,6 +12,7 @@ interface SentinelStatusBadgeProps {
   systemStatus: SystemStatus;
   lastFetched: string | null;
   sources: SentinelSourceState[];
+  anomalyCount?: number;
   criticalCount: number;
   watchCount: number;
 }
@@ -35,6 +36,7 @@ export function SentinelStatusBadge({
   systemStatus,
   lastFetched,
   sources,
+  anomalyCount = 0,
   criticalCount,
   watchCount,
 }: SentinelStatusBadgeProps) {
@@ -66,6 +68,11 @@ export function SentinelStatusBadge({
         <span className="font-medium">{STATUS_LABELS[systemStatus]}</span>
         <span className="hidden sm:inline">— {subtextParts[0]}</span>
 
+        {anomalyCount > 0 && (
+          <span className="ml-1 px-1.5 py-0.5 text-2xs font-bold rounded bg-purple-700 text-white animate-pulse">
+            {anomalyCount} ANOMALY
+          </span>
+        )}
         {criticalCount > 0 && (
           <span className="ml-1 px-1.5 py-0.5 text-2xs font-bold rounded bg-red-600 text-white">
             {criticalCount} CRITICAL

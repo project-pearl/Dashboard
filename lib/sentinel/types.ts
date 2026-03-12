@@ -27,7 +27,7 @@ export type ChangeType =
 
 export type SeverityHint = 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL';
 export type SourceStatus = 'HEALTHY' | 'DEGRADED' | 'OFFLINE';
-export type ScoreLevel = 'NOMINAL' | 'ADVISORY' | 'WATCH' | 'CRITICAL';
+export type ScoreLevel = 'NOMINAL' | 'ADVISORY' | 'WATCH' | 'CRITICAL' | 'ANOMALY';
 
 export interface BedSiteState {
   streak: number;

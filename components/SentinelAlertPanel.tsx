@@ -17,12 +17,14 @@ interface SentinelAlertPanelProps {
 }
 
 const LEVEL_COLORS: Record<string, string> = {
+  ANOMALY: '#7B1FA2',
   CRITICAL: '#D32F2F',
   WATCH: '#F9A825',
   ADVISORY: '#FDD835',
 };
 
 const LEVEL_ICONS: Record<string, React.ReactNode> = {
+  ANOMALY: <AlertTriangle className="w-5 h-5 text-purple-600" />,
   CRITICAL: <AlertTriangle className="w-5 h-5 text-red-500" />,
   WATCH: <Eye className="w-5 h-5 text-amber-500" />,
   ADVISORY: <Info className="w-5 h-5 text-yellow-500" />,
