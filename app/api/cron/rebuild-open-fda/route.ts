@@ -16,7 +16,7 @@ import {
   fetchOpenFDAData,
   OPEN_FDA_ENDPOINTS,
 } from '@/lib/openFDACache';
-import { getSDWISCache } from '@/lib/sdwisCache';
+import { getSdwisAllData } from '@/lib/sdwisCache';
 
 export async function GET(request: NextRequest) {
   if (!isCronAuthorized(request)) {
@@ -53,17 +53,16 @@ export async function GET(request: NextRequest) {
 
     // Get water violations for correlation analysis
     console.log('Loading water violation data for correlation...');
-    const sdwisCache = getSDWISCache();
-    const waterViolations = Object.values(sdwisCache)
-      .flatMap(stateData => stateData.violations || [])
+    const sdwisData = getSdwisAllData();
+    const waterViolations = sdwisData.violations
       .filter(violation => violation.lat && violation.lng)
       .map(violation => ({
-        id: violation.violationId || violation.id,
+        id: violation.pwsid,
         lat: violation.lat,
         lng: violation.lng,
-        violationDate: violation.compliancePeriodBeginDate || violation.violationBeginDate,
-        systemId: violation.pwsId || violation.systemId,
-        violationType: violation.violationType,
+        violationDate: violation.compliancePeriod,
+        systemId: violation.pwsid,
+        violationType: violation.rule,
       }));
 
     console.log(`Loaded ${waterViolations.length} water violations for correlation analysis`);
@@ -318,11 +317,11 @@ function calculateMilitaryImpact(record: any): number {
   let impact = 0;
 
   // Supply chain risk contribution
-  const riskScores = { critical: 40, high: 30, medium: 20, low: 10 };
+  const riskScores: Record<string, number> = { critical: 40, high: 30, medium: 20, low: 10 };
   impact += riskScores[record.fdaSpecific.supplyChainRisk] || 0;
 
   // Classification contribution
-  const classificationScores = { 'Class I': 30, 'Class II': 20, 'Class III': 10 };
+  const classificationScores: Record<string, number> = { 'Class I': 30, 'Class II': 20, 'Class III': 10 };
   impact += classificationScores[record.fdaSpecific.recallClassification] || 0;
 
   // Water-related bonus

@@ -10,13 +10,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   setCyberRiskCache, getCyberRiskCacheStatus,
   isCyberRiskBuildInProgress, setCyberRiskBuildInProgress,
-  type CyberRiskAssessment, type SystemSize, type CyberRiskLevel,
+  type CyberRiskAssessment,
 } from '@/lib/cyberRiskCache';
 import { isCronAuthorized } from '@/lib/apiAuth';
 import * as Sentry from '@sentry/nextjs';
 import { notifySlackCronFailure } from '@/lib/slackNotify';
 import { recordCronRun } from '@/lib/cronHealth';
 import { ALL_STATES } from '@/lib/constants';
+
+// Local type aliases derived from CyberRiskAssessment
+type SystemSize = CyberRiskAssessment['systemSize'];
+type CyberRiskLevel = CyberRiskAssessment['riskLevel'];
 
 // ── Deterministic PRNG (xorshift32) ────────────────────────────────────────
 
@@ -299,12 +303,10 @@ export async function GET(request: NextRequest) {
       _meta: {
         built: new Date().toISOString(),
         assessmentCount: totalAssessments,
-        stateCount: Object.keys(stateMap).length,
-        highRiskCount,
+        statesCovered: Object.keys(stateMap).length,
         criticalCount,
-        nearMilitaryCount,
       },
-      states: stateMap,
+      byState: stateMap,
     });
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);

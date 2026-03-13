@@ -359,6 +359,18 @@
     {
       "path": "/api/cron/rebuild-data-cdc-gov",
       "schedule": "30 12 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-census-acs",
+      "schedule": "30 20 * * 0"
+    },
+    {
+      "path": "/api/cron/rebuild-cdc-svi",
+      "schedule": "30 21 * * 0"
+    },
+    {
+      "path": "/api/cron/rebuild-cdc-eji",
+      "schedule": "0 22 * * 0"
     }
   ]
 }

@@ -81,7 +81,7 @@ import { getDoDPFASCacheStatus, ensureWarmed as warmDoDPFAS } from '@/lib/dodPfa
 import { getUsgsOgcCacheStatus, ensureWarmed as warmUsgsOgc } from '@/lib/usgsOgcCache';
 import { getNgwmnCacheStatus, ensureWarmed as warmNgwmn } from '@/lib/ngwmnCache';
 import { getFloodImpactCacheStatus, ensureWarmed as warmFloodImpact } from '@/lib/floodImpactCache';
-import { getEpaPfasCacheStatus, ensureWarmed as warmEpaPfas } from '@/lib/epaPfasAnalyticsCache';
+import { getEpaPfasAnalyticsCacheStatus, ensureWarmed as warmEpaPfas } from '@/lib/epaPfasAnalyticsCache';
 import { getDodPfasSitesCacheStatus, ensureWarmed as warmDodPfasSites } from '@/lib/dodPfasSitesCache';
 import { getNwsForecastCacheStatus, ensureWarmed as warmNwsForecast } from '@/lib/nwsForecastCache';
 import { getWaterAvailCacheStatus, ensureWarmed as warmWaterAvail } from '@/lib/usgsWaterAvailCache';
@@ -200,7 +200,7 @@ export async function GET(request: NextRequest) {
   const usgsOgc = getUsgsOgcCacheStatus();
   const ngwmn = getNgwmnCacheStatus();
   const floodImpact = getFloodImpactCacheStatus();
-  const epaPfas = getEpaPfasCacheStatus();
+  const epaPfas = getEpaPfasAnalyticsCacheStatus();
   const dodPfasSites = getDodPfasSitesCacheStatus();
   const nwsForecast = getNwsForecastCacheStatus();
   const waterAvail = getWaterAvailCacheStatus();

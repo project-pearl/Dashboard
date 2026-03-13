@@ -343,7 +343,7 @@ async function fetchSingleStateEnvironmentalData(stateCode: string): Promise<any
         'User-Agent': 'Water-Quality-Dashboard/1.0',
         'Accept': 'application/json',
       },
-      timeout: 10000, // 10 second timeout per state
+      signal: AbortSignal.timeout(10000), // 10 second timeout per state
     });
 
     if (response.ok) {

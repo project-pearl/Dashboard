@@ -1,23 +1,16 @@
 /**
- * Flood Impact Cache — Derived cache for flood infrastructure vulnerability.
+ * Flood Infrastructure Vulnerability Cache — Server-side spatial cache for
+ * flood impact zones combining NWS flood gauges, NWM streamflow forecasts,
+ * and nearby infrastructure risk assessments.
  *
- * Populated by /api/cron/rebuild-flood-impact (daily cron).
- * Reads from existing NWPS, NWM, HEFS, FRS, and military-installations caches.
- * No external API calls — purely derived/composite.
- * Grid-indexed (0.1°) for spatial lookups.
+ * Data source: NWS AHPS flood gauges, NWM streamflow, infrastructure databases.
+ * Grid resolution: 0.1° (~11km). Lookup checks target cell + 8 neighbors.
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
-import { computeCacheDelta, gridKey, neighborKeys, type CacheDelta } from './cacheUtils';
+import { gridKey, neighborKeys, computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
-
-export interface NearbyInfrastructure {
-  type: string;
-  name: string;
-  distanceMi: number;
-  riskLevel: 'low' | 'medium' | 'high' | 'critical';
-}
 
 export interface FloodImpactZone {
   gridKey: string;
@@ -25,37 +18,48 @@ export interface FloodImpactZone {
   lng: number;
   state: string;
   floodStatus: 'none' | 'minor' | 'moderate' | 'major';
-  gaugesAtRisk: string[];
-  nwmStreamflow: number[];
-  nearbyInfrastructure: NearbyInfrastructure[];
+  gaugesAtRisk: {
+    lid: string;
+    name: string;
+    status: string;
+    stage: number;
+  }[];
+  nwmStreamflow: {
+    reachId: string;
+    flow: number;
+    floodThreshold: number;
+  }[];
+  nearbyInfrastructure: {
+    type: string;
+    name: string;
+    distanceMi: number;
+    riskLevel: string;
+  }[];
   compositeRisk: number;
   populationExposed: number;
 }
 
-export interface FloodImpactCacheMeta {
+interface GridCell {
+  zone: FloodImpactZone;
+}
+
+interface FloodImpactCacheMeta {
   built: string;
   zoneCount: number;
-  stateCount: number;
   highRiskCount: number;
-  infrastructureAtRisk: number;
+  gridCells: number;
 }
 
 interface FloodImpactCacheData {
   _meta: FloodImpactCacheMeta;
-  grid: Record<string, FloodImpactZone>;
-  byState: Record<string, FloodImpactZone[]>;
-}
-
-export interface FloodImpactLookupResult {
-  zones: FloodImpactZone[];
-  cacheBuilt: string;
-  fromCache: true;
+  grid: Record<string, GridCell>;
+  stateIndex: Record<string, FloodImpactZone[]>;
 }
 
 // ── Cache Singleton ──────────────────────────────────────────────────────────
 
 let _memCache: FloodImpactCacheData | null = null;
-let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _cacheSource: string | null = null;
 let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
@@ -70,11 +74,13 @@ function loadFromDisk(): boolean {
     const raw = fs.readFileSync(file, 'utf-8');
     const data = JSON.parse(raw);
     if (!data?.meta || !data?.grid) return false;
-    _memCache = { _meta: data.meta, grid: data.grid, byState: data.byState || {} };
+    _memCache = { _meta: data.meta, grid: data.grid, stateIndex: data.stateIndex || {} };
     _cacheSource = 'disk';
-    console.log(`[Flood Impact Cache] Loaded from disk (${_memCache._meta.zoneCount} zones)`);
+    console.log(`[Flood Impact Cache] Loaded from disk (${data.meta.zoneCount} zones, built ${data.meta.built})`);
     return true;
-  } catch { return false; }
+  } catch {
+    return false;
+  }
 }
 
 function saveToDisk(): void {
@@ -83,15 +89,27 @@ function saveToDisk(): void {
     const fs = require('fs');
     const path = require('path');
     const dir = path.join(process.cwd(), '.cache');
+    const file = path.join(dir, 'flood-impact.json');
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    const payload = JSON.stringify({ meta: _memCache._meta, grid: _memCache.grid, byState: _memCache.byState });
-    fs.writeFileSync(path.join(dir, 'flood-impact.json'), payload, 'utf-8');
-    console.log(`[Flood Impact Cache] Saved to disk (${(Buffer.byteLength(payload) / 1024 / 1024).toFixed(1)}MB)`);
-  } catch { /* optional */ }
+    const payload = JSON.stringify({
+      meta: _memCache._meta,
+      grid: _memCache.grid,
+      stateIndex: _memCache.stateIndex,
+    });
+    fs.writeFileSync(file, payload, 'utf-8');
+    console.log(`[Flood Impact Cache] Saved to disk (${(Buffer.byteLength(payload) / 1024).toFixed(1)} KB)`);
+  } catch {
+    // fail silently
+  }
 }
 
 let _diskLoaded = false;
-function ensureDiskLoaded() { if (!_diskLoaded) { _diskLoaded = true; loadFromDisk(); } }
+function ensureDiskLoaded() {
+  if (!_diskLoaded) {
+    _diskLoaded = true;
+    loadFromDisk();
+  }
+}
 
 let _blobChecked = false;
 export async function ensureWarmed(): Promise<void> {
@@ -99,49 +117,66 @@ export async function ensureWarmed(): Promise<void> {
   if (_memCache !== null) return;
   if (_blobChecked) return;
   _blobChecked = true;
-  const data = await loadCacheFromBlob<{ meta: any; grid: any; byState: any }>('cache/flood-impact.json');
+  const data = await loadCacheFromBlob<{ meta: any; grid: any; stateIndex: any }>('cache/flood-impact.json');
   if (data?.meta && data?.grid) {
-    _memCache = { _meta: data.meta, grid: data.grid, byState: data.byState || {} };
-    _cacheSource = 'disk';
+    _memCache = { _meta: data.meta, grid: data.grid, stateIndex: data.stateIndex || {} };
+    _cacheSource = 'blob';
     console.warn(`[Flood Impact Cache] Loaded from blob (${data.meta.zoneCount} zones)`);
   }
 }
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
-export function getFloodImpactCache(lat: number, lng: number): FloodImpactLookupResult | null {
+export function getFloodImpactCache(lat: number, lng: number): FloodImpactZone[] | null {
   ensureDiskLoaded();
   if (!_memCache) return null;
-  const keys = neighborKeys(lat, lng);
   const zones: FloodImpactZone[] = [];
-  for (const k of keys) {
-    const z = _memCache.grid[k];
-    if (z) zones.push(z);
+  for (const key of neighborKeys(lat, lng)) {
+    const cell = _memCache.grid[key];
+    if (cell) zones.push(cell.zone);
   }
-  if (zones.length === 0) return null;
-  return { zones, cacheBuilt: _memCache._meta.built, fromCache: true };
+  return zones.length > 0 ? zones : null;
 }
 
-export function getFloodImpactByState(state: string): FloodImpactZone[] | null {
+export function getFloodImpactByState(state: string): FloodImpactZone[] {
   ensureDiskLoaded();
-  return _memCache?.byState[state.toUpperCase()] ?? null;
+  if (!_memCache) return [];
+  const upper = state.toUpperCase();
+  return _memCache.stateIndex[upper] || [];
 }
 
-export function getHighRiskZones(): FloodImpactZone[] | null {
+export function getHighRiskZones(): FloodImpactZone[] {
   ensureDiskLoaded();
-  if (!_memCache) return null;
-  return Object.values(_memCache.grid).filter(z => z.compositeRisk >= 60);
+  if (!_memCache) return [];
+  const highRisk: FloodImpactZone[] = [];
+  for (const cell of Object.values(_memCache.grid)) {
+    if (cell.zone.floodStatus === 'major' || cell.zone.compositeRisk >= 0.7) {
+      highRisk.push(cell.zone);
+    }
+  }
+  return highRisk;
 }
+
+// ── Setter ───────────────────────────────────────────────────────────────────
 
 export async function setFloodImpactCache(data: FloodImpactCacheData): Promise<void> {
-  const prev = _memCache ? { zoneCount: _memCache._meta.zoneCount, stateCount: _memCache._meta.stateCount, highRiskCount: _memCache._meta.highRiskCount } : null;
-  const next = { zoneCount: data._meta.zoneCount, stateCount: data._meta.stateCount, highRiskCount: data._meta.highRiskCount };
-  _lastDelta = computeCacheDelta(prev, next, _memCache?._meta.built ?? null);
+  const prevCounts = _memCache
+    ? { zoneCount: _memCache._meta.zoneCount, highRiskCount: _memCache._meta.highRiskCount }
+    : null;
+  const newCounts = { zoneCount: data._meta.zoneCount, highRiskCount: data._meta.highRiskCount };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null);
   _memCache = data;
   _cacheSource = 'memory (cron)';
-  console.log(`[Flood Impact Cache] Updated: ${data._meta.zoneCount} zones, ${data._meta.highRiskCount} high-risk`);
+  console.log(
+    `[Flood Impact Cache] Updated: ${data._meta.zoneCount} zones, ` +
+    `${data._meta.highRiskCount} high-risk, ${data._meta.gridCells} cells`,
+  );
   saveToDisk();
-  await saveCacheToBlob('cache/flood-impact.json', { meta: data._meta, grid: data.grid, byState: data.byState });
+  await saveCacheToBlob('cache/flood-impact.json', {
+    meta: data._meta,
+    grid: data.grid,
+    stateIndex: data.stateIndex,
+  });
 }
 
 // ── Build Lock ───────────────────────────────────────────────────────────────
@@ -152,14 +187,16 @@ const BUILD_LOCK_TIMEOUT_MS = 12 * 60 * 1000;
 
 export function isFloodImpactBuildInProgress(): boolean {
   if (_buildInProgress && _buildStartedAt > 0 && Date.now() - _buildStartedAt > BUILD_LOCK_TIMEOUT_MS) {
-    console.warn('[Flood Impact Cache] Auto-clearing stale build lock');
-    _buildInProgress = false; _buildStartedAt = 0;
+    console.warn('[Flood Impact Cache] Auto-clearing stale build lock (>12 min)');
+    _buildInProgress = false;
+    _buildStartedAt = 0;
   }
   return _buildInProgress;
 }
 
 export function setFloodImpactBuildInProgress(v: boolean): void {
-  _buildInProgress = v; _buildStartedAt = v ? Date.now() : 0;
+  _buildInProgress = v;
+  _buildStartedAt = v ? Date.now() : 0;
 }
 
 // ── Status ───────────────────────────────────────────────────────────────────
@@ -168,9 +205,14 @@ export function getFloodImpactCacheStatus() {
   ensureDiskLoaded();
   if (!_memCache) return { loaded: false, source: null as string | null };
   return {
-    loaded: true, source: _cacheSource || 'memory (cron)',
-    built: _memCache._meta.built, zoneCount: _memCache._meta.zoneCount,
-    stateCount: _memCache._meta.stateCount, highRiskCount: _memCache._meta.highRiskCount,
-    infrastructureAtRisk: _memCache._meta.infrastructureAtRisk, lastDelta: _lastDelta,
+    loaded: true,
+    source: _cacheSource || 'memory (cron)',
+    built: _memCache._meta.built,
+    zoneCount: _memCache._meta.zoneCount,
+    highRiskCount: _memCache._meta.highRiskCount,
+    gridCells: _memCache._meta.gridCells,
+    lastDelta: _lastDelta,
   };
 }
+
+export { gridKey };

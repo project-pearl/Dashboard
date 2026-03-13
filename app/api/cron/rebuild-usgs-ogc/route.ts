@@ -136,8 +136,8 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    const grid: Record<string, UsgsOgcStation[]> = {};
-    const byState: Record<string, UsgsOgcStation[]> = {};
+    const grid: Record<string, { stations: UsgsOgcStation[] }> = {};
+    const stateIndex: Record<string, UsgsOgcStation[]> = {};
     let totalStations = 0;
     const allSiteTypes = new Set<string>();
     const allAgencies = new Set<string>();
@@ -161,12 +161,12 @@ export async function GET(request: NextRequest) {
         if (result.status === 'fulfilled') {
           const { state, stations } = result.value;
           if (stations.length > 0) {
-            byState[state] = stations;
+            stateIndex[state] = stations;
 
             for (const s of stations) {
               const key = gridKey(s.lat, s.lng);
-              if (!grid[key]) grid[key] = [];
-              grid[key].push(s);
+              if (!grid[key]) grid[key] = { stations: [] };
+              grid[key].stations.push(s);
 
               if (s.siteType) allSiteTypes.add(s.siteType);
               if (s.agencyCode) allAgencies.add(s.agencyCode);
@@ -204,12 +204,12 @@ export async function GET(request: NextRequest) {
         try {
           const stations = await fetchStateStations(state, fips);
           if (stations.length > 0) {
-            byState[state] = stations;
+            stateIndex[state] = stations;
 
             for (const s of stations) {
               const key = gridKey(s.lat, s.lng);
-              if (!grid[key]) grid[key] = [];
-              grid[key].push(s);
+              if (!grid[key]) grid[key] = { stations: [] };
+              grid[key].stations.push(s);
 
               if (s.siteType) allSiteTypes.add(s.siteType);
               if (s.agencyCode) allAgencies.add(s.agencyCode);
@@ -241,18 +241,17 @@ export async function GET(request: NextRequest) {
       _meta: {
         built: new Date().toISOString(),
         stationCount: totalStations,
-        stateCount: Object.keys(byState).length,
-        siteTypes: allSiteTypes.size,
-        agencies: allAgencies.size,
+        statesCovered: Object.keys(stateIndex).length,
+        gridCells: Object.keys(grid).length,
       },
       grid,
-      byState,
+      stateIndex,
     });
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(
       `[USGS OGC Cron] Build complete in ${elapsed}s — ` +
-      `${totalStations} stations, ${Object.keys(byState).length} states, ` +
+      `${totalStations} stations, ${Object.keys(stateIndex).length} states, ` +
       `${Object.keys(grid).length} cells`,
     );
 
@@ -262,10 +261,8 @@ export async function GET(request: NextRequest) {
       status: 'complete',
       duration: `${elapsed}s`,
       stationCount: totalStations,
-      stateCount: Object.keys(byState).length,
+      statesCovered: Object.keys(stateIndex).length,
       gridCells: Object.keys(grid).length,
-      siteTypes: allSiteTypes.size,
-      agencies: allAgencies.size,
       stateBreakdown: stateResults,
       cache: getUsgsOgcCacheStatus(),
     });

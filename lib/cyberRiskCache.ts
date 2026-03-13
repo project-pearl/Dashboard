@@ -1,30 +1,19 @@
 /**
- * Cyber Risk Cache — Water sector cybersecurity risk assessments.
+ * Cyber Risk Cache — Server-side state-keyed cache for water system
+ * cybersecurity risk assessments derived from EPA ECHO compliance gaps,
+ * SCADA indicators, and proximity to military installations.
  *
- * Populated by /api/cron/rebuild-cyber-risk (weekly cron).
- * Derived cache — reads existing ECHO, SDWIS, FRS caches. No external API.
- * State-keyed for state-level lookups.
+ * Populated by /api/cron/rebuild-cyber-risk (daily at 11 PM UTC).
+ * State-keyed: Record<string, CyberRiskAssessment[]>
+ *
+ * Links to water quality via SDWIS/ECHO compliance gaps and digital
+ * exposure scoring for supervisory control systems.
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
 import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
-
-export type SystemSize = 'very_small' | 'small' | 'medium' | 'large' | 'very_large';
-export type CyberRiskLevel = 'low' | 'medium' | 'high' | 'critical';
-
-export interface ComplianceGaps {
-  recentViolations: number;
-  sncStatus: boolean;
-  dmrMissing: boolean;
-  inspectionOverdue: boolean;
-}
-
-export interface DigitalExposure {
-  hasScadaIndicators: boolean;
-  systemComplexity: number;
-}
 
 export interface CyberRiskAssessment {
   registryId: string;
@@ -33,40 +22,40 @@ export interface CyberRiskAssessment {
   city: string;
   lat: number;
   lng: number;
-  systemSize: SystemSize;
+  systemSize: 'very_small' | 'small' | 'medium' | 'large' | 'very_large';
   populationServed: number;
-  complianceGaps: ComplianceGaps;
-  digitalExposure: DigitalExposure;
+  complianceGaps: {
+    recentViolations: number;
+    sncStatus: boolean;
+    dmrMissing: boolean;
+    inspectionOverdue: boolean;
+  };
+  digitalExposure: {
+    hasScadaIndicators: boolean;
+    systemComplexity: number;
+  };
   cyberRiskScore: number;
-  riskLevel: CyberRiskLevel;
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
   nearMilitary: boolean;
   militaryDistanceMi: number | null;
 }
 
-export interface CyberRiskCacheMeta {
+interface CyberRiskCacheMeta {
   built: string;
   assessmentCount: number;
-  stateCount: number;
-  highRiskCount: number;
+  statesCovered: number;
   criticalCount: number;
-  nearMilitaryCount: number;
 }
 
 interface CyberRiskCacheData {
   _meta: CyberRiskCacheMeta;
-  states: Record<string, CyberRiskAssessment[]>;
-}
-
-export interface CyberRiskLookupResult {
-  assessments: CyberRiskAssessment[];
-  cacheBuilt: string;
-  fromCache: true;
+  byState: Record<string, CyberRiskAssessment[]>;
 }
 
 // ── Cache Singleton ──────────────────────────────────────────────────────────
 
 let _memCache: CyberRiskCacheData | null = null;
-let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _cacheSource: string | null = null;
 let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
@@ -80,12 +69,14 @@ function loadFromDisk(): boolean {
     if (!fs.existsSync(file)) return false;
     const raw = fs.readFileSync(file, 'utf-8');
     const data = JSON.parse(raw);
-    if (!data?.meta || !data?.states) return false;
-    _memCache = { _meta: data.meta, states: data.states };
+    if (!data?.meta || !data?.byState) return false;
+    _memCache = { _meta: data.meta, byState: data.byState };
     _cacheSource = 'disk';
-    console.log(`[Cyber Risk Cache] Loaded from disk (${_memCache._meta.assessmentCount} assessments)`);
+    console.log(`[Cyber Risk Cache] Loaded from disk (${data.meta.assessmentCount} assessments, built ${data.meta.built})`);
     return true;
-  } catch { return false; }
+  } catch {
+    return false;
+  }
 }
 
 function saveToDisk(): void {
@@ -94,15 +85,23 @@ function saveToDisk(): void {
     const fs = require('fs');
     const path = require('path');
     const dir = path.join(process.cwd(), '.cache');
+    const file = path.join(dir, 'cyber-risk.json');
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    const payload = JSON.stringify({ meta: _memCache._meta, states: _memCache.states });
-    fs.writeFileSync(path.join(dir, 'cyber-risk.json'), payload, 'utf-8');
-    console.log(`[Cyber Risk Cache] Saved to disk (${(Buffer.byteLength(payload) / 1024 / 1024).toFixed(1)}MB)`);
-  } catch { /* optional */ }
+    const payload = JSON.stringify({ meta: _memCache._meta, byState: _memCache.byState });
+    fs.writeFileSync(file, payload, 'utf-8');
+    console.log(`[Cyber Risk Cache] Saved to disk`);
+  } catch {
+    // fail silently
+  }
 }
 
 let _diskLoaded = false;
-function ensureDiskLoaded() { if (!_diskLoaded) { _diskLoaded = true; loadFromDisk(); } }
+function ensureDiskLoaded() {
+  if (!_diskLoaded) {
+    _diskLoaded = true;
+    loadFromDisk();
+  }
+}
 
 let _blobChecked = false;
 export async function ensureWarmed(): Promise<void> {
@@ -110,62 +109,70 @@ export async function ensureWarmed(): Promise<void> {
   if (_memCache !== null) return;
   if (_blobChecked) return;
   _blobChecked = true;
-  const data = await loadCacheFromBlob<{ meta: any; states: any }>('cache/cyber-risk.json');
-  if (data?.meta && data?.states) {
-    _memCache = { _meta: data.meta, states: data.states };
-    _cacheSource = 'disk';
+  const data = await loadCacheFromBlob<{ meta: any; byState: any }>('cache/cyber-risk.json');
+  if (data?.meta && data?.byState) {
+    _memCache = { _meta: data.meta, byState: data.byState };
+    _cacheSource = 'blob';
     console.warn(`[Cyber Risk Cache] Loaded from blob (${data.meta.assessmentCount} assessments)`);
   }
 }
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
-export function getCyberRisk(state: string): CyberRiskLookupResult | null {
+export function getCyberRisk(state: string): CyberRiskAssessment[] {
   ensureDiskLoaded();
-  if (!_memCache) return null;
-  const assessments = _memCache.states[state.toUpperCase()];
-  if (!assessments || assessments.length === 0) return null;
-  return { assessments, cacheBuilt: _memCache._meta.built, fromCache: true };
+  if (!_memCache) return [];
+  return _memCache.byState[state.toUpperCase()] || [];
 }
 
-export function getCyberRiskAll(): Record<string, CyberRiskAssessment[]> | null {
+export function getCyberRiskAll(): Record<string, CyberRiskAssessment[]> {
   ensureDiskLoaded();
-  return _memCache?.states ?? null;
+  if (!_memCache) return {};
+  return _memCache.byState;
 }
 
-export function getHighRiskSystems(): CyberRiskAssessment[] | null {
+export function getHighRiskSystems(): CyberRiskAssessment[] {
   ensureDiskLoaded();
-  if (!_memCache) return null;
-  const result: CyberRiskAssessment[] = [];
-  for (const assessments of Object.values(_memCache.states)) {
+  if (!_memCache) return [];
+  const results: CyberRiskAssessment[] = [];
+  for (const assessments of Object.values(_memCache.byState)) {
     for (const a of assessments) {
-      if (a.riskLevel === 'high' || a.riskLevel === 'critical') result.push(a);
+      if (a.riskLevel === 'high' || a.riskLevel === 'critical') {
+        results.push(a);
+      }
     }
   }
-  return result;
+  return results;
 }
 
-export function getCriticalNearMilitary(): CyberRiskAssessment[] | null {
+export function getCriticalNearMilitary(): CyberRiskAssessment[] {
   ensureDiskLoaded();
-  if (!_memCache) return null;
-  const result: CyberRiskAssessment[] = [];
-  for (const assessments of Object.values(_memCache.states)) {
+  if (!_memCache) return [];
+  const results: CyberRiskAssessment[] = [];
+  for (const assessments of Object.values(_memCache.byState)) {
     for (const a of assessments) {
-      if (a.riskLevel === 'critical' && a.nearMilitary) result.push(a);
+      if (a.riskLevel === 'critical' && a.nearMilitary) {
+        results.push(a);
+      }
     }
   }
-  return result;
+  return results;
 }
 
 export async function setCyberRiskCache(data: CyberRiskCacheData): Promise<void> {
-  const prev = _memCache ? { assessmentCount: _memCache._meta.assessmentCount, stateCount: _memCache._meta.stateCount, highRiskCount: _memCache._meta.highRiskCount, criticalCount: _memCache._meta.criticalCount } : null;
-  const next = { assessmentCount: data._meta.assessmentCount, stateCount: data._meta.stateCount, highRiskCount: data._meta.highRiskCount, criticalCount: data._meta.criticalCount };
-  _lastDelta = computeCacheDelta(prev, next, _memCache?._meta.built ?? null);
+  const prevCounts = _memCache
+    ? { assessmentCount: _memCache._meta.assessmentCount, statesCovered: _memCache._meta.statesCovered, criticalCount: _memCache._meta.criticalCount }
+    : null;
+  const newCounts = { assessmentCount: data._meta.assessmentCount, statesCovered: data._meta.statesCovered, criticalCount: data._meta.criticalCount };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null);
   _memCache = data;
   _cacheSource = 'memory (cron)';
-  console.log(`[Cyber Risk Cache] Updated: ${data._meta.assessmentCount} assessments, ${data._meta.criticalCount} critical`);
+  console.log(
+    `[Cyber Risk Cache] Updated: ${data._meta.assessmentCount} assessments, ` +
+    `${data._meta.statesCovered} states, ${data._meta.criticalCount} critical`,
+  );
   saveToDisk();
-  await saveCacheToBlob('cache/cyber-risk.json', { meta: data._meta, states: data.states });
+  await saveCacheToBlob('cache/cyber-risk.json', { meta: data._meta, byState: data.byState });
 }
 
 // ── Build Lock ───────────────────────────────────────────────────────────────
@@ -176,14 +183,16 @@ const BUILD_LOCK_TIMEOUT_MS = 12 * 60 * 1000;
 
 export function isCyberRiskBuildInProgress(): boolean {
   if (_buildInProgress && _buildStartedAt > 0 && Date.now() - _buildStartedAt > BUILD_LOCK_TIMEOUT_MS) {
-    console.warn('[Cyber Risk Cache] Auto-clearing stale build lock');
-    _buildInProgress = false; _buildStartedAt = 0;
+    console.warn('[Cyber Risk Cache] Auto-clearing stale build lock (>12 min)');
+    _buildInProgress = false;
+    _buildStartedAt = 0;
   }
   return _buildInProgress;
 }
 
 export function setCyberRiskBuildInProgress(v: boolean): void {
-  _buildInProgress = v; _buildStartedAt = v ? Date.now() : 0;
+  _buildInProgress = v;
+  _buildStartedAt = v ? Date.now() : 0;
 }
 
 // ── Status ───────────────────────────────────────────────────────────────────
@@ -192,10 +201,12 @@ export function getCyberRiskCacheStatus() {
   ensureDiskLoaded();
   if (!_memCache) return { loaded: false, source: null as string | null };
   return {
-    loaded: true, source: _cacheSource || 'memory (cron)',
-    built: _memCache._meta.built, assessmentCount: _memCache._meta.assessmentCount,
-    stateCount: _memCache._meta.stateCount, highRiskCount: _memCache._meta.highRiskCount,
-    criticalCount: _memCache._meta.criticalCount, nearMilitaryCount: _memCache._meta.nearMilitaryCount,
+    loaded: true,
+    source: _cacheSource || 'memory (cron)',
+    built: _memCache._meta.built,
+    assessmentCount: _memCache._meta.assessmentCount,
+    statesCovered: _memCache._meta.statesCovered,
+    criticalCount: _memCache._meta.criticalCount,
     lastDelta: _lastDelta,
   };
 }

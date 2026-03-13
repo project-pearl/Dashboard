@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   setFloodImpactCache, getFloodImpactCacheStatus,
   isFloodImpactBuildInProgress, setFloodImpactBuildInProgress,
-  type FloodImpactZone, type NearbyInfrastructure,
+  type FloodImpactZone,
 } from '@/lib/floodImpactCache';
 import { ensureWarmed as ensureNwpsWarmed } from '@/lib/nwpsCache';
 import { getNwpsAllGauges, type NwpsGauge } from '@/lib/nwpsCache';
@@ -24,6 +24,9 @@ import { isCronAuthorized } from '@/lib/apiAuth';
 import * as Sentry from '@sentry/nextjs';
 import { notifySlackCronFailure } from '@/lib/slackNotify';
 import { recordCronRun } from '@/lib/cronHealth';
+
+// Inline type matching FloodImpactZone['nearbyInfrastructure'][number]
+type NearbyInfrastructure = FloodImpactZone['nearbyInfrastructure'][number];
 
 // -- Helpers ------------------------------------------------------------------
 
@@ -74,7 +77,7 @@ function computeInfraRiskLevel(
  */
 function computeCompositeRisk(
   floodStatus: FloodImpactZone['floodStatus'],
-  nwmStreamflows: number[],
+  nwmStreamflows: FloodImpactZone['nwmStreamflow'],
   nearbyInfra: NearbyInfrastructure[],
 ): number {
   // Flood status component (0-40)
@@ -84,7 +87,7 @@ function computeCompositeRisk(
     : 0;
 
   // Streamflow component (0-30): based on max streamflow relative to high threshold
-  const maxFlow = nwmStreamflows.length > 0 ? Math.max(...nwmStreamflows) : 0;
+  const maxFlow = nwmStreamflows.length > 0 ? Math.max(...nwmStreamflows.map(s => s.flow)) : 0;
   const flowScore = Math.min(30, Math.round((maxFlow / 500) * 30));
 
   // Infrastructure exposure component (0-30): based on count and risk levels
@@ -118,16 +121,17 @@ function generateSampleZones(): FloodImpactZone[] {
   const sampleData: Array<{
     lat: number; lng: number; state: string;
     floodStatus: FloodImpactZone['floodStatus'];
-    gauges: string[]; flows: number[];
+    gauges: { lid: string; name: string; status: string; stage: number }[];
+    flows: { reachId: string; flow: number; floodThreshold: number }[];
   }> = [
-    { lat: 38.9, lng: -77.0, state: 'DC', floodStatus: 'minor', gauges: ['DCGN01'], flows: [120, 85] },
-    { lat: 29.7, lng: -95.4, state: 'TX', floodStatus: 'moderate', gauges: ['TXHS01', 'TXHS02'], flows: [340, 280, 190] },
-    { lat: 39.3, lng: -76.6, state: 'MD', floodStatus: 'minor', gauges: ['MDBH01'], flows: [95] },
-    { lat: 37.5, lng: -122.2, state: 'CA', floodStatus: 'none', gauges: [], flows: [45] },
-    { lat: 40.7, lng: -74.0, state: 'NY', floodStatus: 'major', gauges: ['NYHB01', 'NYHB02', 'NYHB03'], flows: [580, 420, 310] },
-    { lat: 25.8, lng: -80.2, state: 'FL', floodStatus: 'moderate', gauges: ['FLMI01'], flows: [260, 210] },
-    { lat: 47.6, lng: -122.3, state: 'WA', floodStatus: 'none', gauges: [], flows: [30] },
-    { lat: 33.4, lng: -112.0, state: 'AZ', floodStatus: 'minor', gauges: ['AZPH01'], flows: [150] },
+    { lat: 38.9, lng: -77.0, state: 'DC', floodStatus: 'minor', gauges: [{ lid: 'DCGN01', name: 'DC Gauge 1', status: 'minor', stage: 8.2 }], flows: [{ reachId: 'R001', flow: 120, floodThreshold: 200 }, { reachId: 'R002', flow: 85, floodThreshold: 150 }] },
+    { lat: 29.7, lng: -95.4, state: 'TX', floodStatus: 'moderate', gauges: [{ lid: 'TXHS01', name: 'TX Houston 1', status: 'moderate', stage: 12.5 }, { lid: 'TXHS02', name: 'TX Houston 2', status: 'minor', stage: 9.1 }], flows: [{ reachId: 'R003', flow: 340, floodThreshold: 400 }, { reachId: 'R004', flow: 280, floodThreshold: 350 }, { reachId: 'R005', flow: 190, floodThreshold: 300 }] },
+    { lat: 39.3, lng: -76.6, state: 'MD', floodStatus: 'minor', gauges: [{ lid: 'MDBH01', name: 'MD Baltimore 1', status: 'minor', stage: 7.4 }], flows: [{ reachId: 'R006', flow: 95, floodThreshold: 180 }] },
+    { lat: 37.5, lng: -122.2, state: 'CA', floodStatus: 'none', gauges: [], flows: [{ reachId: 'R007', flow: 45, floodThreshold: 200 }] },
+    { lat: 40.7, lng: -74.0, state: 'NY', floodStatus: 'major', gauges: [{ lid: 'NYHB01', name: 'NY Hudson 1', status: 'major', stage: 18.3 }, { lid: 'NYHB02', name: 'NY Hudson 2', status: 'moderate', stage: 14.0 }, { lid: 'NYHB03', name: 'NY Hudson 3', status: 'minor', stage: 10.2 }], flows: [{ reachId: 'R008', flow: 580, floodThreshold: 450 }, { reachId: 'R009', flow: 420, floodThreshold: 400 }, { reachId: 'R010', flow: 310, floodThreshold: 350 }] },
+    { lat: 25.8, lng: -80.2, state: 'FL', floodStatus: 'moderate', gauges: [{ lid: 'FLMI01', name: 'FL Miami 1', status: 'moderate', stage: 11.8 }], flows: [{ reachId: 'R011', flow: 260, floodThreshold: 300 }, { reachId: 'R012', flow: 210, floodThreshold: 280 }] },
+    { lat: 47.6, lng: -122.3, state: 'WA', floodStatus: 'none', gauges: [], flows: [{ reachId: 'R013', flow: 30, floodThreshold: 200 }] },
+    { lat: 33.4, lng: -112.0, state: 'AZ', floodStatus: 'minor', gauges: [{ lid: 'AZPH01', name: 'AZ Phoenix 1', status: 'minor', stage: 6.9 }], flows: [{ reachId: 'R014', flow: 150, floodThreshold: 250 }] },
   ];
 
   return sampleData.map(d => {
@@ -197,8 +201,8 @@ export async function GET(request: NextRequest) {
     console.log(`[Flood Impact Cron] NWPS gauges available: ${allGauges.length}`);
 
     // Step 3: Build flood impact zones
-    const grid: Record<string, FloodImpactZone> = {};
-    const byState: Record<string, FloodImpactZone[]> = {};
+    const grid: Record<string, { zone: FloodImpactZone }> = {};
+    const stateIndex: Record<string, FloodImpactZone[]> = {};
     let usedSampleData = false;
 
     if (allGauges.length > 0) {
@@ -222,10 +226,15 @@ export async function GET(request: NextRequest) {
 
         // Determine worst flood status among gauges in this cell
         let worstStatus: FloodImpactZone['floodStatus'] = 'none';
-        const gaugeIds: string[] = [];
+        const gaugesAtRisk: FloodImpactZone['gaugesAtRisk'] = [];
         for (const g of cellGauges) {
           const status = normalizeFloodStatus(g.status);
-          gaugeIds.push(g.lid);
+          gaugesAtRisk.push({
+            lid: g.lid,
+            name: g.name || g.lid,
+            status: g.status || 'not_defined',
+            stage: g.observed?.primary ?? 0,
+          });
           if (status === 'major') worstStatus = 'major';
           else if (status === 'moderate' && worstStatus !== 'major') worstStatus = 'moderate';
           else if (status === 'minor' && worstStatus === 'none') worstStatus = 'minor';
@@ -233,11 +242,15 @@ export async function GET(request: NextRequest) {
 
         // Get NWM streamflow data for this location
         const nwmReaches = getNwmCache(lat, lng);
-        const streamflows: number[] = [];
+        const streamflows: FloodImpactZone['nwmStreamflow'] = [];
         if (nwmReaches) {
           for (const reach of nwmReaches) {
             if (reach.streamflow !== null && reach.streamflow > 0) {
-              streamflows.push(reach.streamflow);
+              streamflows.push({
+                reachId: reach.featureId || `reach-${streamflows.length}`,
+                flow: reach.streamflow,
+                floodThreshold: reach.streamflow * 1.5,
+              });
             }
           }
         }
@@ -271,19 +284,19 @@ export async function GET(request: NextRequest) {
           lng,
           state,
           floodStatus: worstStatus,
-          gaugesAtRisk: gaugeIds,
+          gaugesAtRisk,
           nwmStreamflow: streamflows.slice(0, 10), // Cap at 10 values
           nearbyInfrastructure: nearbyInfra,
           compositeRisk,
           populationExposed,
         };
 
-        grid[cellKey] = zone;
+        grid[cellKey] = { zone };
 
         if (state) {
           const stUpper = state.toUpperCase();
-          if (!byState[stUpper]) byState[stUpper] = [];
-          byState[stUpper].push(zone);
+          if (!stateIndex[stUpper]) stateIndex[stUpper] = [];
+          stateIndex[stUpper].push(zone);
         }
       }
 
@@ -295,10 +308,10 @@ export async function GET(request: NextRequest) {
 
       const sampleZones = generateSampleZones();
       for (const zone of sampleZones) {
-        grid[zone.gridKey] = zone;
+        grid[zone.gridKey] = { zone };
         const st = zone.state.toUpperCase();
-        if (!byState[st]) byState[st] = [];
-        byState[st].push(zone);
+        if (!stateIndex[st]) stateIndex[st] = [];
+        stateIndex[st].push(zone);
       }
 
       console.log(`[Flood Impact Cron] Generated ${sampleZones.length} sample zones`);
@@ -306,12 +319,8 @@ export async function GET(request: NextRequest) {
 
     // Compute meta
     const zoneCount = Object.keys(grid).length;
-    const stateCount = Object.keys(byState).length;
-    const highRiskCount = Object.values(grid).filter(z => z.compositeRisk >= 60).length;
-    const infrastructureAtRisk = Object.values(grid).reduce(
-      (sum, z) => sum + z.nearbyInfrastructure.length,
-      0,
-    );
+    const gridCells = Object.keys(grid).length;
+    const highRiskCount = Object.values(grid).filter(c => c.zone.compositeRisk >= 60).length;
 
     // Empty-data guard
     if (zoneCount === 0) {
@@ -329,19 +338,19 @@ export async function GET(request: NextRequest) {
       _meta: {
         built: new Date().toISOString(),
         zoneCount,
-        stateCount,
         highRiskCount,
-        infrastructureAtRisk,
+        gridCells,
       },
       grid,
-      byState,
+      stateIndex,
     });
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    const stateCount = Object.keys(stateIndex).length;
     console.log(
       `[Flood Impact Cron] Build complete in ${elapsed}s — ` +
       `${zoneCount} zones, ${stateCount} states, ${highRiskCount} high-risk, ` +
-      `${infrastructureAtRisk} infrastructure at risk`,
+      `${gridCells} grid cells`,
     );
 
     recordCronRun('rebuild-flood-impact', 'success', Date.now() - startTime);
@@ -352,7 +361,7 @@ export async function GET(request: NextRequest) {
       zoneCount,
       stateCount,
       highRiskCount,
-      infrastructureAtRisk,
+      gridCells,
       usedSampleData,
       cache: getFloodImpactCacheStatus(),
     });

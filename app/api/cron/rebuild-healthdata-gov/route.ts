@@ -16,7 +16,7 @@ import {
   fetchHealthDataGovData,
   HEALTHDATA_GOV_DATASETS,
 } from '@/lib/healthDataGovCache';
-import { getSDWISCache } from '@/lib/sdwisCache';
+import { getSdwisAllData } from '@/lib/sdwisCache';
 
 export async function GET(request: NextRequest) {
   if (!isCronAuthorized(request)) {
@@ -53,17 +53,16 @@ export async function GET(request: NextRequest) {
 
     // Get water violations for correlation analysis
     console.log('Loading water violation data for correlation...');
-    const sdwisCache = getSDWISCache();
-    const waterViolations = Object.values(sdwisCache)
-      .flatMap(stateData => stateData.violations || [])
+    const sdwisData = getSdwisAllData();
+    const waterViolations = sdwisData.violations
       .filter(violation => violation.lat && violation.lng)
       .map(violation => ({
-        id: violation.violationId || violation.id,
+        id: violation.pwsid,
         lat: violation.lat,
         lng: violation.lng,
-        violationDate: violation.compliancePeriodBeginDate || violation.violationBeginDate,
-        systemId: violation.pwsId || violation.systemId,
-        violationType: violation.violationType,
+        violationDate: violation.compliancePeriod,
+        systemId: violation.pwsid,
+        violationType: violation.rule,
       }));
 
     console.log(`Loaded ${waterViolations.length} water violations for correlation analysis`);
@@ -97,7 +96,7 @@ export async function GET(request: NextRequest) {
           emergency_preparedness: healthDataCacheData.correlations.emergencyPreparednessRecords,
           near_military: healthDataCacheData.correlations.nearMilitaryFacilities,
           with_water_violations: healthDataCacheData.correlations.correlatedWithViolations,
-          high_risk_alerts: healthDataCacheData.correlations.highRiskAreas.length,
+          high_risk_alerts: healthDataCacheData.correlations.highRiskAlerts.length,
         },
         violations_checked: waterViolations.length,
         date_range: healthDataCacheData.summary.dateRange,
@@ -168,12 +167,12 @@ function calculateCapacityTrends(records: any[]): any[] {
 
     // Analyze bed utilization trends
     const bedUtilizationTrend = analyzeTrend(
-      sortedRecords.map(r => r.healthMetrics.find(m => m.measure === 'inpatient_bed_count')?.value || 0)
+      sortedRecords.map(r => r.healthMetrics.find((m: any) => m.measure === 'inpatient_bed_count')?.value || 0)
     );
 
     // Analyze ICU capacity trends
     const icuTrend = analyzeTrend(
-      sortedRecords.map(r => r.healthMetrics.find(m => m.measure === 'icu_bed_utilization')?.value || 0)
+      sortedRecords.map(r => r.healthMetrics.find((m: any) => m.measure === 'icu_bed_utilization')?.value || 0)
     );
 
     if (Math.abs(bedUtilizationTrend) > 5 || Math.abs(icuTrend) > 5) {
@@ -211,15 +210,15 @@ function assessEmergencyReadiness(records: any[]): any[] {
   locationData.forEach((locationRecords, location) => {
     // Calculate aggregate metrics
     const totalBeds = locationRecords.reduce((sum, r) =>
-      sum + (r.healthMetrics.find(m => m.measure === 'inpatient_bed_count')?.value || 0), 0
+      sum + (r.healthMetrics.find((m: any) => m.measure === 'inpatient_bed_count')?.value || 0), 0
     );
 
     const totalICUBeds = locationRecords.reduce((sum, r) =>
-      sum + (r.healthMetrics.find(m => m.measure === 'total_icu_beds')?.value || 0), 0
+      sum + (r.healthMetrics.find((m: any) => m.measure === 'total_icu_beds')?.value || 0), 0
     );
 
     const currentUtilization = locationRecords.reduce((sum, r) =>
-      sum + (r.healthMetrics.find(m => m.measure === 'icu_bed_utilization')?.value || 0), 0
+      sum + (r.healthMetrics.find((m: any) => m.measure === 'icu_bed_utilization')?.value || 0), 0
     );
 
     if (totalBeds > 0) {
@@ -289,11 +288,11 @@ function analyzeRegionalPatterns(records: any[]): any[] {
     // Aggregate metrics by category
     if (record.socrataSpecific.category === 'hospital_capacity') {
       data.hospitalCount++;
-      data.totalCapacity += record.healthMetrics.find(m => m.measure === 'inpatient_bed_count')?.value || 0;
+      data.totalCapacity += record.healthMetrics.find((m: any) => m.measure === 'inpatient_bed_count')?.value || 0;
     }
 
     if (record.socrataSpecific.category === 'emergency_preparedness') {
-      data.emergencyVisits += record.healthMetrics.find(m => m.measure === 'ed_visits')?.value || 0;
+      data.emergencyVisits += record.healthMetrics.find((m: any) => m.measure === 'ed_visits')?.value || 0;
     }
 
     if (record.socrataSpecific.category === 'outbreak_surveillance') {

@@ -1,9 +1,12 @@
 /**
- * DoD PFAS Sites Cache — DoD PFAS investigation sites.
+ * DoD PFAS Investigation Sites Cache — Server-side state-keyed cache for
+ * Department of Defense PFAS contamination investigation sites including
+ * installation-level investigation status, contaminant types, and affected media.
  *
- * Populated by /api/cron/rebuild-dod-pfas (daily cron).
- * Uses curated dataset with sample data fallback.
- * State-keyed for state-level lookups.
+ * Data source: DoD PFAS Task Force progress reports and installation
+ * assessment data cross-referenced with EPA regional records.
+ *
+ * Populated by /api/cron/rebuild-dod-pfas-sites.
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
@@ -11,66 +14,61 @@ import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-export type DodBranch = 'Army' | 'Navy' | 'Air Force' | 'Marine Corps' | 'Other';
-export type InvestigationStatus = 'assessed' | 'under_investigation' | 'remediation' | 'complete';
-
 export interface DodPfasSite {
   installationName: string;
-  branch: DodBranch;
+  branch: string;
   state: string;
   city: string;
   lat: number;
   lng: number;
-  investigationStatus: InvestigationStatus;
+  investigationStatus: 'assessed' | 'under_investigation' | 'remediation' | 'complete';
   pfasDetected: boolean;
-  maxConcentrationPpt: number;
+  maxConcentrationPpt: number | null;
   contaminantTypes: string[];
   affectedMedia: string[];
   lastUpdated: string;
 }
 
-export interface DodPfasCacheMeta {
+interface DodPfasSitesMeta {
   built: string;
   siteCount: number;
-  stateCount: number;
-  activeSites: number;
-  detectionCount: number;
+  statesCovered: number;
+  activeInvestigations: number;
 }
 
-interface DodPfasCacheData {
-  _meta: DodPfasCacheMeta;
+interface DodPfasSitesCacheData {
+  _meta: DodPfasSitesMeta;
   states: Record<string, DodPfasSite[]>;
-}
-
-export interface DodPfasLookupResult {
-  sites: DodPfasSite[];
-  cacheBuilt: string;
-  fromCache: true;
 }
 
 // ── Cache Singleton ──────────────────────────────────────────────────────────
 
-let _memCache: DodPfasCacheData | null = null;
-let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _memCache: DodPfasSitesCacheData | null = null;
+let _cacheSource: string | null = null;
 let _lastDelta: CacheDelta | null = null;
 
-// ── Disk Persistence ────────────────────────────────────────────────────────
+// ── Disk Persistence ─────────────────────────────────────────────────────────
+
+const DISK_FILE = 'dod-pfas-sites.json';
+const BLOB_KEY = 'cache/dod-pfas-sites.json';
 
 function loadFromDisk(): boolean {
   try {
     if (typeof process === 'undefined') return false;
     const fs = require('fs');
     const path = require('path');
-    const file = path.join(process.cwd(), '.cache', 'dod-pfas-sites.json');
+    const file = path.join(process.cwd(), '.cache', DISK_FILE);
     if (!fs.existsSync(file)) return false;
     const raw = fs.readFileSync(file, 'utf-8');
     const data = JSON.parse(raw);
     if (!data?.meta || !data?.states) return false;
     _memCache = { _meta: data.meta, states: data.states };
     _cacheSource = 'disk';
-    console.log(`[DoD PFAS Sites] Loaded from disk (${_memCache._meta.siteCount} sites)`);
+    console.log(`[DoD PFAS Sites Cache] Loaded from disk (${data.meta.siteCount} sites, built ${data.meta.built})`);
     return true;
-  } catch { return false; }
+  } catch {
+    return false;
+  }
 }
 
 function saveToDisk(): void {
@@ -79,15 +77,23 @@ function saveToDisk(): void {
     const fs = require('fs');
     const path = require('path');
     const dir = path.join(process.cwd(), '.cache');
+    const file = path.join(dir, DISK_FILE);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     const payload = JSON.stringify({ meta: _memCache._meta, states: _memCache.states });
-    fs.writeFileSync(path.join(dir, 'dod-pfas-sites.json'), payload, 'utf-8');
-    console.log(`[DoD PFAS Sites] Saved to disk (${(Buffer.byteLength(payload) / 1024 / 1024).toFixed(1)}MB)`);
-  } catch { /* optional */ }
+    fs.writeFileSync(file, payload, 'utf-8');
+    console.log(`[DoD PFAS Sites Cache] Saved to disk`);
+  } catch {
+    // fail silently
+  }
 }
 
 let _diskLoaded = false;
-function ensureDiskLoaded() { if (!_diskLoaded) { _diskLoaded = true; loadFromDisk(); } }
+function ensureDiskLoaded() {
+  if (!_diskLoaded) {
+    _diskLoaded = true;
+    loadFromDisk();
+  }
+}
 
 let _blobChecked = false;
 export async function ensureWarmed(): Promise<void> {
@@ -95,52 +101,58 @@ export async function ensureWarmed(): Promise<void> {
   if (_memCache !== null) return;
   if (_blobChecked) return;
   _blobChecked = true;
-  const data = await loadCacheFromBlob<{ meta: any; states: any }>('cache/dod-pfas-sites.json');
+  const data = await loadCacheFromBlob<{ meta: DodPfasSitesMeta; states: Record<string, DodPfasSite[]> }>(BLOB_KEY);
   if (data?.meta && data?.states) {
     _memCache = { _meta: data.meta, states: data.states };
-    _cacheSource = 'disk';
-    console.warn(`[DoD PFAS Sites] Loaded from blob (${data.meta.siteCount} sites)`);
+    _cacheSource = 'blob';
+    console.warn(`[DoD PFAS Sites Cache] Loaded from blob (${data.meta.siteCount} sites)`);
   }
 }
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
-export function getDodPfasSites(state: string): DodPfasLookupResult | null {
+export function getDodPfasSites(state: string): DodPfasSite[] {
   ensureDiskLoaded();
-  if (!_memCache) return null;
-  const sites = _memCache.states[state.toUpperCase()];
-  if (!sites || sites.length === 0) return null;
-  return { sites, cacheBuilt: _memCache._meta.built, fromCache: true };
+  if (!_memCache) return [];
+  return _memCache.states[state.toUpperCase()] || [];
 }
 
-export function getDodPfasAllSites(): Record<string, DodPfasSite[]> | null {
+export function getDodPfasAllSites(): Record<string, DodPfasSite[]> {
   ensureDiskLoaded();
-  return _memCache?.states ?? null;
+  if (!_memCache) return {};
+  return _memCache.states;
 }
 
-export function getActivePfasInvestigations(): DodPfasSite[] | null {
+export function getActivePfasInvestigations(): DodPfasSite[] {
   ensureDiskLoaded();
-  if (!_memCache) return null;
+  if (!_memCache) return [];
   const result: DodPfasSite[] = [];
   for (const sites of Object.values(_memCache.states)) {
-    for (const s of sites) {
-      if (s.investigationStatus === 'under_investigation' || s.investigationStatus === 'remediation') {
-        result.push(s);
+    for (const site of sites) {
+      if (site.investigationStatus === 'under_investigation' || site.investigationStatus === 'remediation') {
+        result.push(site);
       }
     }
   }
   return result;
 }
 
-export async function setDodPfasSitesCache(data: DodPfasCacheData): Promise<void> {
-  const prev = _memCache ? { siteCount: _memCache._meta.siteCount, stateCount: _memCache._meta.stateCount, activeSites: _memCache._meta.activeSites } : null;
-  const next = { siteCount: data._meta.siteCount, stateCount: data._meta.stateCount, activeSites: data._meta.activeSites };
-  _lastDelta = computeCacheDelta(prev, next, _memCache?._meta.built ?? null);
+// ── Setter ───────────────────────────────────────────────────────────────────
+
+export async function setDodPfasSitesCache(data: DodPfasSitesCacheData): Promise<void> {
+  const prevCounts = _memCache
+    ? { siteCount: _memCache._meta.siteCount, statesCovered: _memCache._meta.statesCovered }
+    : null;
+  const newCounts = { siteCount: data._meta.siteCount, statesCovered: data._meta.statesCovered };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null);
   _memCache = data;
   _cacheSource = 'memory (cron)';
-  console.log(`[DoD PFAS Sites] Updated: ${data._meta.siteCount} sites, ${data._meta.activeSites} active`);
+  console.log(
+    `[DoD PFAS Sites Cache] Updated: ${data._meta.siteCount} sites, ` +
+    `${data._meta.statesCovered} states, ${data._meta.activeInvestigations} active investigations`,
+  );
   saveToDisk();
-  await saveCacheToBlob('cache/dod-pfas-sites.json', { meta: data._meta, states: data.states });
+  await saveCacheToBlob(BLOB_KEY, { meta: data._meta, states: data.states });
 }
 
 // ── Build Lock ───────────────────────────────────────────────────────────────
@@ -151,14 +163,16 @@ const BUILD_LOCK_TIMEOUT_MS = 12 * 60 * 1000;
 
 export function isDodPfasSitesBuildInProgress(): boolean {
   if (_buildInProgress && _buildStartedAt > 0 && Date.now() - _buildStartedAt > BUILD_LOCK_TIMEOUT_MS) {
-    console.warn('[DoD PFAS Sites] Auto-clearing stale build lock');
-    _buildInProgress = false; _buildStartedAt = 0;
+    console.warn('[DoD PFAS Sites Cache] Auto-clearing stale build lock (>12 min)');
+    _buildInProgress = false;
+    _buildStartedAt = 0;
   }
   return _buildInProgress;
 }
 
 export function setDodPfasSitesBuildInProgress(v: boolean): void {
-  _buildInProgress = v; _buildStartedAt = v ? Date.now() : 0;
+  _buildInProgress = v;
+  _buildStartedAt = v ? Date.now() : 0;
 }
 
 // ── Status ───────────────────────────────────────────────────────────────────
@@ -167,9 +181,12 @@ export function getDodPfasSitesCacheStatus() {
   ensureDiskLoaded();
   if (!_memCache) return { loaded: false, source: null as string | null };
   return {
-    loaded: true, source: _cacheSource || 'memory (cron)',
-    built: _memCache._meta.built, siteCount: _memCache._meta.siteCount,
-    stateCount: _memCache._meta.stateCount, activeSites: _memCache._meta.activeSites,
-    detectionCount: _memCache._meta.detectionCount, lastDelta: _lastDelta,
+    loaded: true,
+    source: _cacheSource || 'memory (cron)',
+    built: _memCache._meta.built,
+    siteCount: _memCache._meta.siteCount,
+    statesCovered: _memCache._meta.statesCovered,
+    activeInvestigations: _memCache._meta.activeInvestigations,
+    lastDelta: _lastDelta,
   };
 }

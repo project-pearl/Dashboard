@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const validAssessments = allAssessments.filter(Boolean);
+    const validAssessments = allAssessments.filter((a): a is NonNullable<typeof a> => Boolean(a));
 
     // Generate alerts
     const alerts = await generateInstallationThreatAlerts();

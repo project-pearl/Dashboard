@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { loadRules, saveRules } from '@/lib/alerts/rules';
-import type { AlertRule } from '@/lib/alerts/types';
+import type { AlertRule, AlertTriggerType, AlertSeverity, RuleCondition } from '@/lib/alerts/types';
 import { alertRuleCreateSchema, alertRuleDeleteSchema } from '@/lib/schemas';
 import { parseBody } from '@/lib/validateRequest';
 
@@ -42,9 +42,9 @@ export async function POST(request: NextRequest) {
   const newRule: AlertRule = {
     id: crypto.randomUUID(),
     name: body.name,
-    triggerType: body.triggerType || 'custom',
-    condition: body.condition,
-    severity: body.severity || 'warning',
+    triggerType: (body.triggerType || 'custom') as AlertTriggerType,
+    condition: body.condition as RuleCondition,
+    severity: (body.severity || 'warning') as AlertSeverity,
     enabled: body.enabled !== false,
     createdBy: body.createdBy || 'admin',
     createdAt: new Date().toISOString(),

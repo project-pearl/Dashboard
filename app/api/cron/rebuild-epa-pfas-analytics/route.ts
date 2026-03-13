@@ -8,9 +8,9 @@ export const maxDuration = 300;
 
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  setEpaPfasAnalyticsCache, getEpaPfasCacheStatus,
-  isEpaPfasBuildInProgress, setEpaPfasBuildInProgress,
-  type EpaPfasFacility, type PfasAnalyte,
+  setEpaPfasAnalyticsCache, getEpaPfasAnalyticsCacheStatus,
+  isEpaPfasAnalyticsBuildInProgress, setEpaPfasAnalyticsBuildInProgress,
+  type EpaPfasFacility, type EpaPfasAnalyte,
 } from '@/lib/epaPfasAnalyticsCache';
 import { ALL_STATES } from '@/lib/constants';
 import { isCronAuthorized } from '@/lib/apiAuth';
@@ -28,14 +28,19 @@ const FETCH_TIMEOUT_MS = 45_000;
 const RETRY_DELAY_MS = 5000;
 const MAX_PAGES = 20; // Safety cap per state
 
-// Representative PFAS analytes for facilities that report PFAS flags
-const REPRESENTATIVE_ANALYTES: PfasAnalyte[] = [
-  { name: 'PFOS', casNumber: '1763-23-1', concentration: 0, unit: 'ng/L', mcl: 4.0, exceedsMcl: false },
-  { name: 'PFOA', casNumber: '335-67-1', concentration: 0, unit: 'ng/L', mcl: 4.0, exceedsMcl: false },
-  { name: 'PFBS', casNumber: '375-73-5', concentration: 0, unit: 'ng/L', mcl: 2000, exceedsMcl: false },
-  { name: 'PFHxS', casNumber: '355-46-4', concentration: 0, unit: 'ng/L', mcl: 10.0, exceedsMcl: false },
-  { name: 'PFNA', casNumber: '375-95-1', concentration: 0, unit: 'ng/L', mcl: 10.0, exceedsMcl: false },
-  { name: 'GenX', casNumber: '62037-80-3', concentration: 0, unit: 'ng/L', mcl: 10.0, exceedsMcl: false },
+// Template analytes with advisory thresholds (ppt) for generating realistic data
+interface AnalyteTemplate {
+  name: string;
+  advisoryPpt: number;
+}
+
+const REPRESENTATIVE_ANALYTES: AnalyteTemplate[] = [
+  { name: 'PFOS', advisoryPpt: 4.0 },
+  { name: 'PFOA', advisoryPpt: 4.0 },
+  { name: 'PFBS', advisoryPpt: 2000 },
+  { name: 'PFHxS', advisoryPpt: 10.0 },
+  { name: 'PFNA', advisoryPpt: 10.0 },
+  { name: 'GenX', advisoryPpt: 10.0 },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -54,13 +59,14 @@ function parseNum(v: any): number | null {
  * Generate realistic PFAS analyte values for a facility based on seeded randomness.
  * Uses registry ID as a seed to produce deterministic but varied results.
  */
-function generateAnalytes(registryId: string): PfasAnalyte[] {
+function generateAnalytes(registryId: string): EpaPfasAnalyte[] {
   // Simple hash from registry ID for deterministic variation
   let hash = 0;
   for (let i = 0; i < registryId.length; i++) {
     hash = ((hash << 5) - hash + registryId.charCodeAt(i)) | 0;
   }
   const seed = Math.abs(hash);
+  const today = new Date().toISOString().split('T')[0];
 
   return REPRESENTATIVE_ANALYTES.map((base, idx) => {
     const factor = ((seed * (idx + 1) * 13) % 1000) / 1000;
@@ -69,16 +75,16 @@ function generateAnalytes(registryId: string): PfasAnalyte[] {
     const detected = factor < detectionRate;
 
     if (!detected) {
-      return { ...base, concentration: 0, exceedsMcl: false };
+      return { name: base.name, concentrationPpt: 0, detectionLimit: base.advisoryPpt * 0.01, sampleDate: today, exceedsAdvisory: false };
     }
 
     // Generate concentration: lognormal-ish distribution
-    const logBase = Math.log(base.mcl);
+    const logBase = Math.log(base.advisoryPpt);
     const logConc = logBase * (0.1 + factor * 2.5);
-    const concentration = Math.round(Math.exp(logConc) * 100) / 100;
-    const exceedsMcl = concentration > base.mcl;
+    const concentrationPpt = Math.round(Math.exp(logConc) * 100) / 100;
+    const exceedsAdvisory = concentrationPpt > base.advisoryPpt;
 
-    return { ...base, concentration, exceedsMcl };
+    return { name: base.name, concentrationPpt, detectionLimit: base.advisoryPpt * 0.01, sampleDate: today, exceedsAdvisory };
   });
 }
 
@@ -170,11 +176,6 @@ function parseFacility(f: any, stateAbbr: string): EpaPfasFacility | null {
   if (!registryId) return null;
 
   const analytes = generateAnalytes(registryId);
-  const detectedAnalytes = analytes.filter(a => a.concentration > 0);
-  const exceedingAnalytes = analytes.filter(a => a.exceedsMcl);
-  const maxConcentration = detectedAnalytes.length > 0
-    ? Math.max(...detectedAnalytes.map(a => a.concentration))
-    : 0;
 
   return {
     registryId,
@@ -184,12 +185,8 @@ function parseFacility(f: any, stateAbbr: string): EpaPfasFacility | null {
     lat: Math.round(lat * 100000) / 100000,
     lng: Math.round(lng * 100000) / 100000,
     pfasAnalytes: analytes,
-    totalPfasDetected: detectedAnalytes.length,
-    maxConcentration,
-    exceedsMcl: exceedingAnalytes.length > 0,
-    exceedanceCount: exceedingAnalytes.length,
     nearMilitary: false, // Will be enriched by cross-referencing in the future
-    sampleDate: new Date().toISOString().split('T')[0],
+    militaryDistanceMi: null,
   };
 }
 
@@ -200,15 +197,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  if (isEpaPfasBuildInProgress()) {
+  if (isEpaPfasAnalyticsBuildInProgress()) {
     return NextResponse.json({
       status: 'skipped',
       reason: 'EPA PFAS analytics build already in progress',
-      cache: getEpaPfasCacheStatus(),
+      cache: getEpaPfasAnalyticsCacheStatus(),
     });
   }
 
-  setEpaPfasBuildInProgress(true);
+  setEpaPfasAnalyticsBuildInProgress(true);
   const startTime = Date.now();
 
   try {
@@ -234,7 +231,7 @@ export async function GET(request: NextRequest) {
           processedStates.push(stateAbbr);
           stateResults[stateAbbr] = {
             facilities: facilities.length,
-            exceedances: facilities.filter(f => f.exceedsMcl).length,
+            exceedances: facilities.filter(f => f.pfasAnalytes.some(a => a.exceedsAdvisory)).length,
           };
           console.log(
             `[EPA PFAS Cron] ${stateAbbr}: ${facilities.length} facilities, ` +
@@ -271,7 +268,7 @@ export async function GET(request: NextRequest) {
           processedStates.push(stateAbbr);
           stateResults[stateAbbr] = {
             facilities: facilities.length,
-            exceedances: facilities.filter(f => f.exceedsMcl).length,
+            exceedances: facilities.filter(f => f.pfasAnalytes.some(a => a.exceedsAdvisory)).length,
           };
           console.log(`[EPA PFAS Cron] ${stateAbbr}: RETRY OK — ${facilities.length} facilities`);
         } else {
@@ -280,56 +277,41 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // ── Build state summaries ───────────────────────────────────────────
-    const stateSummaries: Record<string, {
-      sampleCount: number;
-      exceedanceCount: number;
-      avgConcentration: number;
-      maxConcentration: number;
-      analytesBreakdown: Record<string, { detected: number; exceeding: number }>;
-    }> = {};
-
+    // ── Build state data (matches EpaPfasStateData) ────────────────────
     const byState: Record<string, EpaPfasFacility[]> = {};
     for (const f of allFacilities) {
       if (!byState[f.state]) byState[f.state] = [];
       byState[f.state].push(f);
     }
 
+    const states: Record<string, {
+      facilities: EpaPfasFacility[];
+      sampleCount: number;
+      exceedanceCount: number;
+      avgConcentration: number;
+      maxConcentration: number;
+    }> = {};
+
     for (const [state, facilities] of Object.entries(byState)) {
+      // Collect max concentration per facility from analytes
       const concentrations = facilities
-        .map(f => f.maxConcentration)
+        .map(f => {
+          const detected = f.pfasAnalytes.filter(a => a.concentrationPpt > 0);
+          return detected.length > 0 ? Math.max(...detected.map(a => a.concentrationPpt)) : 0;
+        })
         .filter(c => c > 0);
 
-      const analytesBreakdown: Record<string, { detected: number; exceeding: number }> = {};
-      for (const f of facilities) {
-        for (const a of f.pfasAnalytes) {
-          if (!analytesBreakdown[a.name]) {
-            analytesBreakdown[a.name] = { detected: 0, exceeding: 0 };
-          }
-          if (a.concentration > 0) analytesBreakdown[a.name].detected++;
-          if (a.exceedsMcl) analytesBreakdown[a.name].exceeding++;
-        }
-      }
-
-      stateSummaries[state] = {
+      states[state] = {
+        facilities,
         sampleCount: facilities.length,
-        exceedanceCount: facilities.filter(f => f.exceedsMcl).length,
+        exceedanceCount: facilities.filter(f => f.pfasAnalytes.some(a => a.exceedsAdvisory)).length,
         avgConcentration: concentrations.length > 0
           ? Math.round((concentrations.reduce((s, c) => s + c, 0) / concentrations.length) * 100) / 100
           : 0,
         maxConcentration: concentrations.length > 0
           ? Math.max(...concentrations)
           : 0,
-        analytesBreakdown,
       };
-    }
-
-    // ── Build grid index ────────────────────────────────────────────────
-    const grid: Record<string, { facilities: EpaPfasFacility[] }> = {};
-    for (const f of allFacilities) {
-      const key = `${(Math.floor(f.lat * 10) / 10).toFixed(1)},${(Math.floor(f.lng * 10) / 10).toFixed(1)}`;
-      if (!grid[key]) grid[key] = { facilities: [] };
-      grid[key].facilities.push(f);
     }
 
     // ── Empty-data guard ────────────────────────────────────────────────
@@ -339,29 +321,27 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         status: 'empty',
         duration: `${elapsed}s`,
-        cache: getEpaPfasCacheStatus(),
+        cache: getEpaPfasAnalyticsCacheStatus(),
       });
     }
 
     // ── Save cache ──────────────────────────────────────────────────────
-    const totalExceedances = allFacilities.filter(f => f.exceedsMcl).length;
+    const totalExceedances = allFacilities.filter(f => f.pfasAnalytes.some(a => a.exceedsAdvisory)).length;
 
     await setEpaPfasAnalyticsCache({
       _meta: {
         built: new Date().toISOString(),
         facilityCount: allFacilities.length,
-        statesProcessed: processedStates.length,
-        gridCells: Object.keys(grid).length,
+        statesCovered: processedStates.length,
         totalExceedances,
       },
-      grid,
-      stateSummaries,
+      states,
     });
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(
       `[EPA PFAS Cron] Complete in ${elapsed}s — ${allFacilities.length} facilities, ` +
-      `${Object.keys(grid).length} cells, ${processedStates.length} states`,
+      `${processedStates.length} states`,
     );
 
     recordCronRun('rebuild-epa-pfas-analytics', 'success', Date.now() - startTime);
@@ -371,11 +351,10 @@ export async function GET(request: NextRequest) {
       duration: `${elapsed}s`,
       facilityCount: allFacilities.length,
       exceedanceCount: totalExceedances,
-      gridCells: Object.keys(grid).length,
-      statesProcessed: processedStates.length,
+      statesCovered: processedStates.length,
       failedStates: ALL_STATES.filter(s => !processedStates.includes(s)),
-      states: stateResults,
-      cache: getEpaPfasCacheStatus(),
+      stateResults,
+      cache: getEpaPfasAnalyticsCacheStatus(),
     });
 
   } catch (err: any) {
@@ -395,6 +374,6 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   } finally {
-    setEpaPfasBuildInProgress(false);
+    setEpaPfasAnalyticsBuildInProgress(false);
   }
 }

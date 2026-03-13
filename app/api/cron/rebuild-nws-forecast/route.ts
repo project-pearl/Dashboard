@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   setNwsForecastCache, getNwsForecastCacheStatus,
   isNwsForecastBuildInProgress, setNwsForecastBuildInProgress,
-  type NwsForecast, type ForecastPeriod,
+  type NwsForecast, type NwsForecastPeriod,
 } from '@/lib/nwsForecastCache';
 import { isCronAuthorized } from '@/lib/apiAuth';
 import * as Sentry from '@sentry/nextjs';
@@ -220,19 +220,15 @@ async function fetchLocationForecast(
   }
 
   // Parse forecast periods (NWS returns ~14 periods = 7 days)
-  const periods: ForecastPeriod[] = rawPeriods.map((p: any) => ({
+  const periods: NwsForecastPeriod[] = rawPeriods.map((p: any) => ({
+    number: p.number ?? 0,
     name: p.name || '',
-    startTime: p.startTime || '',
-    endTime: p.endTime || '',
-    isDaytime: p.isDaytime ?? true,
     temperature: p.temperature ?? 0,
-    temperatureUnit: p.temperatureUnit || 'F',
     windSpeed: p.windSpeed || '',
-    windDirection: p.windDirection || '',
     shortForecast: p.shortForecast || '',
     detailedForecast: p.detailedForecast || '',
-    precipProbability: p.probabilityOfPrecipitation?.value ?? 0,
-    precipEstimateInches: extractPrecipInches(p),
+    precipProbability: p.probabilityOfPrecipitation?.value ?? null,
+    precipAmount: extractPrecipInches(p) || null,
   }));
 
   // Compute 7-day aggregates
@@ -240,21 +236,20 @@ async function fetchLocationForecast(
   const maxTemp7d = Math.max(...temps);
   const minTemp7d = Math.min(...temps);
   const precipTotal7d = Math.round(
-    periods.reduce((sum, p) => sum + p.precipEstimateInches, 0) * 100,
+    periods.reduce((sum, p) => sum + (p.precipAmount ?? 0), 0) * 100,
   ) / 100;
 
   const violationRiskScore = computeViolationRiskScore(precipTotal7d, maxTemp7d, minTemp7d);
 
   return {
+    locationId: `${loc.state}-${loc.name.replace(/[^a-zA-Z0-9]/g, '-')}`,
     locationName: loc.name,
-    state: loc.state,
     lat: loc.lat,
     lng: loc.lng,
-    locationType: loc.type,
-    office,
+    state: loc.state,
+    gridId: office,
     gridX: gridX ?? 0,
     gridY: gridY ?? 0,
-    fetchedAt: new Date().toISOString(),
     periods,
     precipTotal7d,
     maxTemp7d,
@@ -412,14 +407,11 @@ export async function GET(request: NextRequest) {
     await setNwsForecastCache({
       _meta: {
         built: new Date().toISOString(),
-        forecastCount: allForecasts.length,
-        statesWithData: Object.keys(stateSummaries).length,
-        gridCells: Object.keys(grid).length,
+        locationCount: allForecasts.length,
+        statesCovered: Object.keys(byState).length,
         highRiskCount,
-        avgRiskScore,
       },
-      grid,
-      stateSummaries,
+      states: byState,
     });
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);

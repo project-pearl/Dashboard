@@ -24,6 +24,33 @@ export function haversineMi(
 }
 
 /**
+ * Haversine distance between two points, returned in kilometers.
+ * Accepts either 4 numbers or two {lat, lng} objects.
+ */
+export function haversineDistance(
+  a: { lat: number; lng: number } | number,
+  b: { lat: number; lng: number } | number,
+  lat2?: number,
+  lng2?: number,
+): number {
+  let la1: number, lo1: number, la2: number, lo2: number;
+  if (typeof a === 'object' && typeof b === 'object') {
+    la1 = a.lat; lo1 = a.lng; la2 = b.lat; lo2 = b.lng;
+  } else {
+    la1 = a as number; lo1 = b as number; la2 = lat2!; lo2 = lng2!;
+  }
+  const R = 6371; // Earth radius in km
+  const dLat = ((la2 - la1) * Math.PI) / 180;
+  const dLng = ((lo2 - lo1) * Math.PI) / 180;
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((la1 * Math.PI) / 180) *
+      Math.cos((la2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
+}
+
+/**
  * Compute centroid of a GeoJSON polygon's outer ring.
  */
 export function polygonCentroid(

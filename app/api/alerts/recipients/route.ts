@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { loadRecipients, saveRecipients } from '@/lib/alerts/recipients';
-import type { AlertRecipient } from '@/lib/alerts/types';
+import type { AlertRecipient, AlertTriggerType, AlertSeverity } from '@/lib/alerts/types';
 import { alertRecipientCreateSchema, alertRecipientUpdateSchema, alertRecipientDeleteSchema } from '@/lib/schemas';
 import { parseBody } from '@/lib/validateRequest';
 
@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
     name: body.name,
     role: body.role || 'admin',
     state: body.state || null,
-    triggers: body.triggers || ['sentinel', 'delta', 'attains'],
-    severities: body.severities || ['critical', 'warning'],
+    triggers: (body.triggers || ['sentinel', 'delta', 'attains']) as AlertTriggerType[],
+    severities: (body.severities || ['critical', 'warning']) as AlertSeverity[],
     active: body.active !== false,
   };
 
@@ -77,7 +77,12 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: 'Recipient not found' }, { status: 404 });
   }
 
-  const updated = { ...recipients[idx], ...body };
+  const updated: AlertRecipient = {
+    ...recipients[idx],
+    ...body,
+    triggers: (body.triggers ?? recipients[idx].triggers) as AlertTriggerType[],
+    severities: (body.severities ?? recipients[idx].severities) as AlertSeverity[],
+  };
   recipients[idx] = updated;
   await saveRecipients(recipients);
 

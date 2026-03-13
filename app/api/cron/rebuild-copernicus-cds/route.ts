@@ -301,12 +301,11 @@ export async function GET(request: NextRequest) {
     await setCopernicusCdsCache({
       _meta: {
         built: new Date().toISOString(),
-        indicatorCount,
-        stateCount,
+        recordCount: indicatorCount,
+        statesCovered: stateCount,
         latestMonth: latestMonthStr,
-        apiSource,
       },
-      states: stateMap,
+      byState: stateMap,
     });
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);

@@ -541,7 +541,7 @@ interface EnvironmentalJusticeAssessment {
 
   // Cumulative Environmental burden
   cumulativeBurden: {
-    ej ScreenPercentile: number;
+    ejScreenPercentile: number;
     pollutionBurdenScore: number;
     vulnerabilityScore: number;
     cumulativeImpactScore: number;
@@ -597,7 +597,7 @@ interface EnvironmentalJusticeAssessment {
   mitigationOpportunities: {
     pollutionReduction: string[];
     healthcareAccess: string[];
-    communityprograms: string[];
+    communityPrograms: string[];
     policyInterventions: string[];
     environmentalRemediation: string[];
   };
@@ -764,7 +764,7 @@ export async function getMilitaryEnvironmentalJusticeAssessment(): Promise<{
         assessments.push(assessment);
         totalMilitaryPopulationAtRisk += militaryPop;
 
-        if (assessment.cumulativeBurden.ej ScreenPercentile >= 80) {
+        if (assessment.cumulativeBurden.ejScreenPercentile >= 80) {
           highBurdenCommunities++;
         }
 
@@ -777,7 +777,7 @@ export async function getMilitaryEnvironmentalJusticeAssessment(): Promise<{
   }
 
   return {
-    assessments: assessments.sort((a, b) => b.cumulativeBurden.ej ScreenPercentile - a.cumulativeBurden.ej ScreenPercentile),
+    assessments: assessments.sort((a, b) => b.cumulativeBurden.ejScreenPercentile - a.cumulativeBurden.ejScreenPercentile),
     totalMilitaryPopulationAtRisk,
     averageVeteranHealthDisparities: {
       ptsdRate: assessmentCount > 0 ? totalPtsdRate / assessmentCount : 0,
@@ -866,7 +866,7 @@ export async function calculateEnvironmentalHealthMetrics(): Promise<{
   // Environmental justice
   for (const [grid, assessments] of epaHealthCache.environmentalJusticeAssessments) {
     for (const assessment of assessments) {
-      if (assessment.cumulativeBurden.ej ScreenPercentile >= 80) {
+      if (assessment.cumulativeBurden.ejScreenPercentile >= 80) {
         highBurdenCommunities++;
       }
 

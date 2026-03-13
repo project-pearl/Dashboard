@@ -506,7 +506,7 @@ interface SubstanceAbuseTreatment {
     facilityEnvironment: string;
     accessibilityFeatures: boolean;
     safetyMeasures: string[];
-    infection kontroll: boolean;
+    infectionControl: boolean;
   };
 
   // Funding and Financial
@@ -560,7 +560,7 @@ interface DrugControlBudget {
     opioidCrisis: number;
     prescriptionDrugAbuse: number;
     fentanylResponse: number;
-    youth Prevention: number;
+    youthPrevention: number;
     ruralCommunities: number;
     veteranSupport: number;
   };

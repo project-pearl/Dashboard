@@ -27,7 +27,7 @@ const CDC_OUTBREAK_ENDPOINTS = {
 } as const;
 
 // SDWIS violation data for correlation
-import { getSDWISCache } from '@/lib/sdwisCache';
+import { getSdwisAllData } from '@/lib/sdwisCache';
 
 interface OutbreakAPIResponse {
   success: boolean;
@@ -106,16 +106,15 @@ export async function GET(request: NextRequest) {
 
     // Get SDWIS violations for correlation
     console.log('Loading water violation data for correlation...');
-    const sdwisCache = getSDWISCache();
-    const waterViolations = Object.values(sdwisCache)
-      .flatMap(stateData => stateData.violations || [])
+    const sdwisData = getSdwisAllData();
+    const waterViolations = sdwisData.violations
       .filter(violation => violation.lat && violation.lng)
       .map(violation => ({
-        id: violation.violationId || violation.id,
+        id: violation.pwsid,
         lat: violation.lat,
         lng: violation.lng,
-        violationDate: violation.compliancePeriodBeginDate || violation.violationBeginDate,
-        systemId: violation.pwsId || violation.systemId,
+        violationDate: violation.compliancePeriod,
+        systemId: violation.pwsid,
       }));
 
     console.log(`Loaded ${waterViolations.length} violations for correlation`);

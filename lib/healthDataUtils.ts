@@ -335,7 +335,7 @@ export function analyzeHealthEnvironmentCorrelation(
 
 // ─── Data Validation Utilities ───────────────────────────────────────────────
 
-export function validateHealthLocation(location: Partial<HealthLocation>): location is HealthLocation {
+export function validateHealthLocation<T extends Partial<HealthLocation>>(location: T): location is T & HealthLocation {
   return !!(
     location.lat &&
     location.lng &&

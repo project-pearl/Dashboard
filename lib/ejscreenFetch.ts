@@ -29,6 +29,8 @@
 
 import { getEJData, type EJStateData } from './ejVulnerability';
 import { getEJScreenNearest } from './ejscreenCache';
+import { getCdcEjiNearest } from './cdcEjiCache';
+import { getCdcSviNearest } from './cdcSviCache';
 
 // ── Endpoint URLs ──────────────────────────────────────────────────────────────
 
@@ -164,7 +166,69 @@ export async function ejscreenFetch(
     };
   }
 
-  // Tier 1 + 2: Try remote endpoints
+  // Tier 0.5: CDC EJI tract-level data (actively maintained federal source)
+  const eji = getCdcEjiNearest(lat, lng);
+  if (eji) {
+    return {
+      data: {
+        LOWINCPCT: (eji.povertyPct ?? 0) / 100,
+        MINORPCT: (eji.minorityPct ?? 0) / 100,
+        LINGISOPCT: (eji.lingIsolationPct ?? 0) / 100,
+        EJINDEX: eji.ejiRank * 100,
+        P_LDPNT_D2: eji.ejiRank * 100,
+        P_DWATER: eji.waterDischarge ?? 0,
+        D_DWATER_2: eji.waterDischarge ?? 0,
+        PM25: eji.pm25,
+        OZONE: eji.ozone,
+        DSLPM: eji.dieselPm,
+        PNPL: eji.superfundProx,
+        // Additional EJI-specific fields
+        ENV_BURDEN_RANK: eji.envBurdenRank,
+        SOCIAL_VULN_RANK: eji.socialVulnRank,
+        HEALTH_VULN_RANK: eji.healthVulnRank,
+        CLIMATE_BURDEN_RANK: eji.climateBurdenRank,
+        ASTHMA_RATE: eji.asthmaRate,
+        CANCER_RATE: eji.cancerRate,
+        HEART_DISEASE_RATE: eji.heartDiseaseRate,
+        DIABETES_RATE: eji.diabetesRate,
+        LIFE_EXPECTANCY: eji.lifeExpectancy,
+        _source: 'cdc-eji-2024',
+        _degraded: false,
+        _tractFips: eji.tractFips,
+      },
+      source: 'epa-ejscreen', // compatible source type for downstream consumers
+      degraded: false,
+    };
+  }
+
+  // Tier 0.6: CDC SVI tract-level social vulnerability
+  const svi = getCdcSviNearest(lat, lng);
+  if (svi) {
+    return {
+      data: {
+        LOWINCPCT: (svi.povertyPct ?? 0) / 100,
+        MINORPCT: (svi.minorityPct ?? 0) / 100,
+        LINGISOPCT: (svi.lingIsolationPct ?? 0) / 100,
+        EJINDEX: svi.sviOverall * 100,
+        P_LDPNT_D2: svi.sviOverall * 100,
+        P_DWATER: 0,
+        D_DWATER_2: 0,
+        SVI_THEME1: svi.theme1Socioeconomic,
+        SVI_THEME2: svi.theme2HouseholdDisability,
+        SVI_THEME3: svi.theme3MinorityStatus,
+        SVI_THEME4: svi.theme4HousingTransport,
+        DISABILITY_PCT: svi.disabilityPct,
+        NO_VEHICLE_PCT: svi.noVehiclePct,
+        _source: 'cdc-svi-2022',
+        _degraded: false,
+        _tractFips: svi.tractFips,
+      },
+      source: 'epa-ejscreen',
+      degraded: false,
+    };
+  }
+
+  // Tier 1 + 2: Try remote endpoints (EPA EJScreen — offline since Feb 2025)
   const remote = await tryRemoteEjscreen(lat, lng);
   if (remote) return remote;
 

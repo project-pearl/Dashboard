@@ -4,7 +4,8 @@
  * Supports Socrata APIs, CDC WONDER queries, Tracking Network, Open FDA, and more
  */
 
-import { haversineDistance, type MilitaryInstallationRef } from './healthDataUtils';
+import { haversineDistance } from './geoUtils';
+import { type MilitaryInstallationRef } from './healthDataUtils';
 
 // ─── Core Types & Interfaces ─────────────────────────────────────────────────
 
@@ -451,11 +452,11 @@ export class CDCWonderClient {
 /**
  * Add military installation proximity to HHS health records
  */
-export function addMilitaryProximity(
-  record: HHSHealthRecord,
-  militaryInstallations: MilitaryInstallationRef[]
-): HHSHealthRecord {
-  if (!record.location.lat || !record.location.lng) {
+export function addMilitaryProximity<T extends HHSHealthRecord>(
+  record: T,
+  militaryInstallations?: MilitaryInstallationRef[]
+): T {
+  if (!record.location.lat || !record.location.lng || !militaryInstallations?.length) {
     return record;
   }
 
@@ -468,7 +469,7 @@ export function addMilitaryProximity(
   let shortestDistance = Infinity;
 
   for (const installation of militaryInstallations) {
-    const distance = haversineDistance(recordLocation, installation.location);
+    const distance = haversineDistance(recordLocation, { lat: installation.lat, lng: installation.lng });
     if (distance < shortestDistance) {
       shortestDistance = distance;
       nearestInstallation = installation.name;
@@ -488,10 +489,10 @@ export function addMilitaryProximity(
 /**
  * Batch process health records with military proximity
  */
-export function batchAddMilitaryProximity(
-  records: HHSHealthRecord[],
-  militaryInstallations: MilitaryInstallationRef[]
-): HHSHealthRecord[] {
+export function batchAddMilitaryProximity<T extends HHSHealthRecord>(
+  records: T[],
+  militaryInstallations?: MilitaryInstallationRef[]
+): T[] {
   return records.map(record =>
     addMilitaryProximity(record, militaryInstallations)
   );

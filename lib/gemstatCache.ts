@@ -1,8 +1,13 @@
 /**
- * GEMStat Cache — Global freshwater quality data from GEMStat database.
+ * GEMStat Cache — Server-side flat cache for UNEP GEMS/Water global
+ * freshwater quality monitoring data aggregated by country.
  *
- * Populated by /api/cron/rebuild-gemstat (weekly cron).
- * Country-keyed flat cache (no grid indexing).
+ * Populated by /api/cron/rebuild-gemstat (weekly, Monday 4 AM UTC).
+ * Source: https://gemstat.org/ — UN Environment Programme Global
+ * Environment Monitoring System for freshwater quality.
+ *
+ * Flat cache: Record<string, GemsStatCountry> keyed by ISO-3166 alpha-3
+ * country code (e.g. "USA", "DEU", "BRA").
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
@@ -10,45 +15,44 @@ import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-export interface GemStatIndicator {
-  median: number | null;
+export interface GemsIndicator {
+  median: number;
   unit: string;
 }
 
-export interface GemStatCountry {
+export interface GemsStatCountry {
   countryCode: string;
   countryName: string;
   stationCount: number;
   latestYear: number;
   indicators: {
-    dissolvedOxygen: GemStatIndicator;
-    pH: GemStatIndicator;
-    bod: GemStatIndicator;
-    nitrate: GemStatIndicator;
-    phosphorus: GemStatIndicator;
-    turbidity: GemStatIndicator;
-    fecalColiform: GemStatIndicator;
-    conductivity: GemStatIndicator;
+    dissolvedOxygen: GemsIndicator | null;
+    pH: GemsIndicator | null;
+    bod: GemsIndicator | null;
+    nitrate: GemsIndicator | null;
+    phosphorus: GemsIndicator | null;
+    turbidity: GemsIndicator | null;
+    fecalColiform: GemsIndicator | null;
+    conductivity: GemsIndicator | null;
   };
-  overallGrade: 'A' | 'B' | 'C' | 'D' | 'F';
+  overallGrade: string;
 }
 
-export interface GemStatCacheMeta {
+interface GemsStatCacheMeta {
   built: string;
   countryCount: number;
   totalStations: number;
-  latestDataYear: number;
 }
 
-interface GemStatCacheData {
-  _meta: GemStatCacheMeta;
-  countries: Record<string, GemStatCountry>;
+interface GemsStatCacheData {
+  _meta: GemsStatCacheMeta;
+  countries: Record<string, GemsStatCountry>;
 }
 
 // ── Cache Singleton ──────────────────────────────────────────────────────────
 
-let _memCache: GemStatCacheData | null = null;
-let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _memCache: GemsStatCacheData | null = null;
+let _cacheSource: string | null = null;
 let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
@@ -65,9 +69,11 @@ function loadFromDisk(): boolean {
     if (!data?.meta || !data?.countries) return false;
     _memCache = { _meta: data.meta, countries: data.countries };
     _cacheSource = 'disk';
-    console.log(`[GEMStat Cache] Loaded from disk (${_memCache._meta.countryCount} countries)`);
+    console.log(`[GEMStat Cache] Loaded from disk (${data.meta.countryCount} countries, built ${data.meta.built})`);
     return true;
-  } catch { return false; }
+  } catch {
+    return false;
+  }
 }
 
 function saveToDisk(): void {
@@ -76,15 +82,23 @@ function saveToDisk(): void {
     const fs = require('fs');
     const path = require('path');
     const dir = path.join(process.cwd(), '.cache');
+    const file = path.join(dir, 'gemstat.json');
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     const payload = JSON.stringify({ meta: _memCache._meta, countries: _memCache.countries });
-    fs.writeFileSync(path.join(dir, 'gemstat.json'), payload, 'utf-8');
-    console.log(`[GEMStat Cache] Saved to disk (${(Buffer.byteLength(payload) / 1024 / 1024).toFixed(1)}MB)`);
-  } catch { /* optional */ }
+    fs.writeFileSync(file, payload, 'utf-8');
+    console.log(`[GEMStat Cache] Saved to disk`);
+  } catch {
+    // fail silently
+  }
 }
 
 let _diskLoaded = false;
-function ensureDiskLoaded() { if (!_diskLoaded) { _diskLoaded = true; loadFromDisk(); } }
+function ensureDiskLoaded() {
+  if (!_diskLoaded) {
+    _diskLoaded = true;
+    loadFromDisk();
+  }
+}
 
 let _blobChecked = false;
 export async function ensureWarmed(): Promise<void> {
@@ -95,30 +109,37 @@ export async function ensureWarmed(): Promise<void> {
   const data = await loadCacheFromBlob<{ meta: any; countries: any }>('cache/gemstat.json');
   if (data?.meta && data?.countries) {
     _memCache = { _meta: data.meta, countries: data.countries };
-    _cacheSource = 'disk';
+    _cacheSource = 'blob';
     console.warn(`[GEMStat Cache] Loaded from blob (${data.meta.countryCount} countries)`);
   }
 }
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
-export function getGemsStatAll(): Record<string, GemStatCountry> | null {
+export function getGemsStatAll(): Record<string, GemsStatCountry> {
   ensureDiskLoaded();
-  return _memCache?.countries ?? null;
+  if (!_memCache) return {};
+  return _memCache.countries;
 }
 
-export function getGemsStatCountry(code: string): GemStatCountry | null {
+export function getGemsStatCountry(code: string): GemsStatCountry | null {
   ensureDiskLoaded();
-  return _memCache?.countries[code.toUpperCase()] ?? null;
+  if (!_memCache) return null;
+  return _memCache.countries[code.toUpperCase()] || null;
 }
 
-export async function setGemStatCache(data: GemStatCacheData): Promise<void> {
-  const prev = _memCache ? { countryCount: _memCache._meta.countryCount, totalStations: _memCache._meta.totalStations } : null;
-  const next = { countryCount: data._meta.countryCount, totalStations: data._meta.totalStations };
-  _lastDelta = computeCacheDelta(prev, next, _memCache?._meta.built ?? null);
+export async function setGemsStatCache(data: GemsStatCacheData): Promise<void> {
+  const prevCounts = _memCache
+    ? { countryCount: _memCache._meta.countryCount, totalStations: _memCache._meta.totalStations }
+    : null;
+  const newCounts = { countryCount: data._meta.countryCount, totalStations: data._meta.totalStations };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null);
   _memCache = data;
   _cacheSource = 'memory (cron)';
-  console.log(`[GEMStat Cache] Updated: ${data._meta.countryCount} countries, ${data._meta.totalStations} stations`);
+  console.log(
+    `[GEMStat Cache] Updated: ${data._meta.countryCount} countries, ` +
+    `${data._meta.totalStations} stations`,
+  );
   saveToDisk();
   await saveCacheToBlob('cache/gemstat.json', { meta: data._meta, countries: data.countries });
 }
@@ -129,16 +150,18 @@ let _buildInProgress = false;
 let _buildStartedAt = 0;
 const BUILD_LOCK_TIMEOUT_MS = 12 * 60 * 1000;
 
-export function isGemStatBuildInProgress(): boolean {
+export function isGemsStatBuildInProgress(): boolean {
   if (_buildInProgress && _buildStartedAt > 0 && Date.now() - _buildStartedAt > BUILD_LOCK_TIMEOUT_MS) {
-    console.warn('[GEMStat Cache] Auto-clearing stale build lock');
-    _buildInProgress = false; _buildStartedAt = 0;
+    console.warn('[GEMStat Cache] Auto-clearing stale build lock (>12 min)');
+    _buildInProgress = false;
+    _buildStartedAt = 0;
   }
   return _buildInProgress;
 }
 
-export function setGemStatBuildInProgress(v: boolean): void {
-  _buildInProgress = v; _buildStartedAt = v ? Date.now() : 0;
+export function setGemsStatBuildInProgress(v: boolean): void {
+  _buildInProgress = v;
+  _buildStartedAt = v ? Date.now() : 0;
 }
 
 // ── Status ───────────────────────────────────────────────────────────────────
@@ -147,9 +170,11 @@ export function getGemsStatCacheStatus() {
   ensureDiskLoaded();
   if (!_memCache) return { loaded: false, source: null as string | null };
   return {
-    loaded: true, source: _cacheSource || 'memory (cron)',
-    built: _memCache._meta.built, countryCount: _memCache._meta.countryCount,
-    totalStations: _memCache._meta.totalStations, latestDataYear: _memCache._meta.latestDataYear,
+    loaded: true,
+    source: _cacheSource || 'memory (cron)',
+    built: _memCache._meta.built,
+    countryCount: _memCache._meta.countryCount,
+    totalStations: _memCache._meta.totalStations,
     lastDelta: _lastDelta,
   };
 }

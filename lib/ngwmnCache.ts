@@ -1,13 +1,13 @@
 /**
- * NGWMN Cache — National Ground Water Monitoring Network.
+ * National Ground Water Monitoring Network (NGWMN) Cache — Server-side
+ * spatial cache for groundwater monitoring sites, water levels, and quality.
  *
- * Populated by /api/cron/rebuild-ngwmn (daily cron).
- * Pulls groundwater monitoring data from CIDA USGS NGWMN REST API.
- * Grid-indexed (0.1°) for spatial lookups.
+ * Data source: NGWMN web services (provider-batched fetching).
+ * Grid resolution: 0.1° (~11km). Lookup checks target cell + 8 neighbors.
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
-import { computeCacheDelta, gridKey, neighborKeys, type CacheDelta } from './cacheUtils';
+import { gridKey, neighborKeys, computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -18,10 +18,10 @@ export interface NgwmnWaterLevel {
 }
 
 export interface NgwmnWaterQuality {
+  date: string;
   parameter: string;
   value: number;
   unit: string;
-  date: string;
 }
 
 export interface NgwmnSite {
@@ -39,30 +39,27 @@ export interface NgwmnSite {
   waterQuality: NgwmnWaterQuality[];
 }
 
-export interface NgwmnCacheMeta {
+interface GridCell {
+  sites: NgwmnSite[];
+}
+
+interface NgwmnCacheMeta {
   built: string;
   siteCount: number;
-  stateCount: number;
   providerCount: number;
-  qualityResultCount: number;
+  gridCells: number;
 }
 
 interface NgwmnCacheData {
   _meta: NgwmnCacheMeta;
-  grid: Record<string, NgwmnSite[]>;
-  byState: Record<string, NgwmnSite[]>;
-}
-
-export interface NgwmnLookupResult {
-  sites: NgwmnSite[];
-  cacheBuilt: string;
-  fromCache: true;
+  grid: Record<string, GridCell>;
+  stateIndex: Record<string, NgwmnSite[]>;
 }
 
 // ── Cache Singleton ──────────────────────────────────────────────────────────
 
 let _memCache: NgwmnCacheData | null = null;
-let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _cacheSource: string | null = null;
 let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
@@ -77,11 +74,13 @@ function loadFromDisk(): boolean {
     const raw = fs.readFileSync(file, 'utf-8');
     const data = JSON.parse(raw);
     if (!data?.meta || !data?.grid) return false;
-    _memCache = { _meta: data.meta, grid: data.grid, byState: data.byState || {} };
+    _memCache = { _meta: data.meta, grid: data.grid, stateIndex: data.stateIndex || {} };
     _cacheSource = 'disk';
-    console.log(`[NGWMN Cache] Loaded from disk (${_memCache._meta.siteCount} sites, ${_memCache._meta.stateCount} states)`);
+    console.log(`[NGWMN Cache] Loaded from disk (${data.meta.siteCount} sites, built ${data.meta.built})`);
     return true;
-  } catch { return false; }
+  } catch {
+    return false;
+  }
 }
 
 function saveToDisk(): void {
@@ -90,15 +89,27 @@ function saveToDisk(): void {
     const fs = require('fs');
     const path = require('path');
     const dir = path.join(process.cwd(), '.cache');
+    const file = path.join(dir, 'ngwmn.json');
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    const payload = JSON.stringify({ meta: _memCache._meta, grid: _memCache.grid, byState: _memCache.byState });
-    fs.writeFileSync(path.join(dir, 'ngwmn.json'), payload, 'utf-8');
-    console.log(`[NGWMN Cache] Saved to disk (${(Buffer.byteLength(payload) / 1024 / 1024).toFixed(1)}MB)`);
-  } catch { /* optional */ }
+    const payload = JSON.stringify({
+      meta: _memCache._meta,
+      grid: _memCache.grid,
+      stateIndex: _memCache.stateIndex,
+    });
+    fs.writeFileSync(file, payload, 'utf-8');
+    console.log(`[NGWMN Cache] Saved to disk (${(Buffer.byteLength(payload) / 1024).toFixed(1)} KB)`);
+  } catch {
+    // fail silently
+  }
 }
 
 let _diskLoaded = false;
-function ensureDiskLoaded() { if (!_diskLoaded) { _diskLoaded = true; loadFromDisk(); } }
+function ensureDiskLoaded() {
+  if (!_diskLoaded) {
+    _diskLoaded = true;
+    loadFromDisk();
+  }
+}
 
 let _blobChecked = false;
 export async function ensureWarmed(): Promise<void> {
@@ -106,50 +117,64 @@ export async function ensureWarmed(): Promise<void> {
   if (_memCache !== null) return;
   if (_blobChecked) return;
   _blobChecked = true;
-  const data = await loadCacheFromBlob<{ meta: any; grid: any; byState: any }>('cache/ngwmn.json');
+  const data = await loadCacheFromBlob<{ meta: any; grid: any; stateIndex: any }>('cache/ngwmn.json');
   if (data?.meta && data?.grid) {
-    _memCache = { _meta: data.meta, grid: data.grid, byState: data.byState || {} };
-    _cacheSource = 'disk';
+    _memCache = { _meta: data.meta, grid: data.grid, stateIndex: data.stateIndex || {} };
+    _cacheSource = 'blob';
     console.warn(`[NGWMN Cache] Loaded from blob (${data.meta.siteCount} sites)`);
   }
 }
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
-export function getNgwmnCache(lat: number, lng: number): NgwmnLookupResult | null {
+export function getNgwmnCache(lat: number, lng: number): NgwmnSite[] | null {
   ensureDiskLoaded();
   if (!_memCache) return null;
-  const keys = neighborKeys(lat, lng);
   const sites: NgwmnSite[] = [];
-  const seen = new Set<string>();
-  for (const k of keys) {
-    for (const s of _memCache.grid[k] || []) {
-      if (!seen.has(s.id)) { seen.add(s.id); sites.push(s); }
-    }
+  for (const key of neighborKeys(lat, lng)) {
+    const cell = _memCache.grid[key];
+    if (cell) sites.push(...cell.sites);
   }
-  if (sites.length === 0) return null;
-  return { sites, cacheBuilt: _memCache._meta.built, fromCache: true };
+  return sites.length > 0 ? sites : null;
 }
 
-export function getNgwmnAllSites(): Record<string, NgwmnSite[]> | null {
+export function getNgwmnAllSites(): NgwmnSite[] {
   ensureDiskLoaded();
-  return _memCache?.byState ?? null;
+  if (!_memCache) return [];
+  const all: NgwmnSite[] = [];
+  for (const cell of Object.values(_memCache.grid)) {
+    all.push(...cell.sites);
+  }
+  return all;
 }
 
-export function getNgwmnByState(state: string): NgwmnSite[] | null {
+export function getNgwmnByState(state: string): NgwmnSite[] {
   ensureDiskLoaded();
-  return _memCache?.byState[state.toUpperCase()] ?? null;
+  if (!_memCache) return [];
+  const upper = state.toUpperCase();
+  return _memCache.stateIndex[upper] || [];
 }
+
+// ── Setter ───────────────────────────────────────────────────────────────────
 
 export async function setNgwmnCache(data: NgwmnCacheData): Promise<void> {
-  const prev = _memCache ? { siteCount: _memCache._meta.siteCount, stateCount: _memCache._meta.stateCount } : null;
-  const next = { siteCount: data._meta.siteCount, stateCount: data._meta.stateCount };
-  _lastDelta = computeCacheDelta(prev, next, _memCache?._meta.built ?? null);
+  const prevCounts = _memCache
+    ? { siteCount: _memCache._meta.siteCount, gridCells: _memCache._meta.gridCells }
+    : null;
+  const newCounts = { siteCount: data._meta.siteCount, gridCells: data._meta.gridCells };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null);
   _memCache = data;
   _cacheSource = 'memory (cron)';
-  console.log(`[NGWMN Cache] Updated: ${data._meta.siteCount} sites, ${data._meta.stateCount} states`);
+  console.log(
+    `[NGWMN Cache] Updated: ${data._meta.siteCount} sites, ` +
+    `${data._meta.gridCells} cells, ${data._meta.providerCount} providers`,
+  );
   saveToDisk();
-  await saveCacheToBlob('cache/ngwmn.json', { meta: data._meta, grid: data.grid, byState: data.byState });
+  await saveCacheToBlob('cache/ngwmn.json', {
+    meta: data._meta,
+    grid: data.grid,
+    stateIndex: data.stateIndex,
+  });
 }
 
 // ── Build Lock ───────────────────────────────────────────────────────────────
@@ -160,14 +185,16 @@ const BUILD_LOCK_TIMEOUT_MS = 12 * 60 * 1000;
 
 export function isNgwmnBuildInProgress(): boolean {
   if (_buildInProgress && _buildStartedAt > 0 && Date.now() - _buildStartedAt > BUILD_LOCK_TIMEOUT_MS) {
-    console.warn('[NGWMN Cache] Auto-clearing stale build lock');
-    _buildInProgress = false; _buildStartedAt = 0;
+    console.warn('[NGWMN Cache] Auto-clearing stale build lock (>12 min)');
+    _buildInProgress = false;
+    _buildStartedAt = 0;
   }
   return _buildInProgress;
 }
 
 export function setNgwmnBuildInProgress(v: boolean): void {
-  _buildInProgress = v; _buildStartedAt = v ? Date.now() : 0;
+  _buildInProgress = v;
+  _buildStartedAt = v ? Date.now() : 0;
 }
 
 // ── Status ───────────────────────────────────────────────────────────────────
@@ -176,9 +203,14 @@ export function getNgwmnCacheStatus() {
   ensureDiskLoaded();
   if (!_memCache) return { loaded: false, source: null as string | null };
   return {
-    loaded: true, source: _cacheSource || 'memory (cron)',
-    built: _memCache._meta.built, siteCount: _memCache._meta.siteCount,
-    stateCount: _memCache._meta.stateCount, providerCount: _memCache._meta.providerCount,
-    qualityResultCount: _memCache._meta.qualityResultCount, lastDelta: _lastDelta,
+    loaded: true,
+    source: _cacheSource || 'memory (cron)',
+    built: _memCache._meta.built,
+    siteCount: _memCache._meta.siteCount,
+    providerCount: _memCache._meta.providerCount,
+    gridCells: _memCache._meta.gridCells,
+    lastDelta: _lastDelta,
   };
 }
+
+export { gridKey };

@@ -230,8 +230,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Step 2: Fetch sites for all providers in batches
-    const grid: Record<string, NgwmnSite[]> = {};
-    const byState: Record<string, NgwmnSite[]> = {};
+    const grid: Record<string, { sites: NgwmnSite[] }> = {};
+    const stateIndex: Record<string, NgwmnSite[]> = {};
     let totalSites = 0;
     const providerResults: string[] = [];
     const failedProviders: string[] = [];
@@ -255,14 +255,14 @@ export async function GET(request: NextRequest) {
             for (const site of sites) {
               // Grid index
               const key = gridKey(site.lat, site.lng);
-              if (!grid[key]) grid[key] = [];
-              grid[key].push(site);
+              if (!grid[key]) grid[key] = { sites: [] };
+              grid[key].sites.push(site);
 
-              // byState index
+              // stateIndex
               if (site.state) {
                 const st = site.state.toUpperCase();
-                if (!byState[st]) byState[st] = [];
-                byState[st].push(site);
+                if (!stateIndex[st]) stateIndex[st] = [];
+                stateIndex[st].push(site);
               }
             }
 
@@ -296,13 +296,13 @@ export async function GET(request: NextRequest) {
           if (sites.length > 0) {
             for (const site of sites) {
               const key = gridKey(site.lat, site.lng);
-              if (!grid[key]) grid[key] = [];
-              grid[key].push(site);
+              if (!grid[key]) grid[key] = { sites: [] };
+              grid[key].sites.push(site);
 
               if (site.state) {
                 const st = site.state.toUpperCase();
-                if (!byState[st]) byState[st] = [];
-                byState[st].push(site);
+                if (!stateIndex[st]) stateIndex[st] = [];
+                stateIndex[st].push(site);
               }
             }
 
@@ -332,18 +332,17 @@ export async function GET(request: NextRequest) {
       _meta: {
         built: new Date().toISOString(),
         siteCount: totalSites,
-        stateCount: Object.keys(byState).length,
         providerCount: providers.length,
-        qualityResultCount: 0, // Initial catalog — water quality fetched separately
+        gridCells: Object.keys(grid).length,
       },
       grid,
-      byState,
+      stateIndex,
     });
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(
       `[NGWMN Cron] Build complete in ${elapsed}s — ` +
-      `${totalSites} sites, ${Object.keys(byState).length} states, ` +
+      `${totalSites} sites, ${Object.keys(stateIndex).length} states, ` +
       `${providers.length} providers, ${Object.keys(grid).length} cells`,
     );
 
@@ -353,10 +352,9 @@ export async function GET(request: NextRequest) {
       status: 'complete',
       duration: `${elapsed}s`,
       siteCount: totalSites,
-      stateCount: Object.keys(byState).length,
+      stateCount: Object.keys(stateIndex).length,
       providerCount: providers.length,
       gridCells: Object.keys(grid).length,
-      qualityResultCount: 0,
       providerBreakdown: providerResults,
       cache: getNgwmnCacheStatus(),
     });

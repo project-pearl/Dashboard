@@ -16,7 +16,7 @@ import {
   getEpaPfasAllStates,
   ensureWarmed as warmPfas,
 } from '../../epaPfasAnalyticsCache';
-import type { EpaPfasFacility, PfasAnalyte } from '../../epaPfasAnalyticsCache';
+import type { EpaPfasFacility, EpaPfasAnalyte } from '../../epaPfasAnalyticsCache';
 import {
   getDodPfasAllSites,
   ensureWarmed as warmDodPfas,

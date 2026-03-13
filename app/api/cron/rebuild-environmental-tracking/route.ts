@@ -16,7 +16,7 @@ import {
   getEnvironmentalTrackingCacheStatus,
   fetchEnvironmentalTrackingData,
 } from '@/lib/environmentalTrackingCache';
-import { getSDWISCache } from '@/lib/sdwisCache';
+import { getSdwisAllData } from '@/lib/sdwisCache';
 
 export async function GET(request: NextRequest) {
   if (!isCronAuthorized(request)) {
@@ -55,17 +55,16 @@ export async function GET(request: NextRequest) {
 
     // Get water violations for correlation analysis
     console.log('Loading water violation data for correlation...');
-    const sdwisCache = getSDWISCache();
-    const waterViolations = Object.values(sdwisCache)
-      .flatMap(stateData => stateData.violations || [])
+    const sdwisData = getSdwisAllData();
+    const waterViolations = sdwisData.violations
       .filter(violation => violation.lat && violation.lng)
       .map(violation => ({
-        id: violation.violationId || violation.id,
+        id: violation.pwsid,
         lat: violation.lat,
         lng: violation.lng,
-        violationDate: violation.compliancePeriodBeginDate || violation.violationBeginDate,
-        systemId: violation.pwsId || violation.systemId,
-        violationType: violation.violationType,
+        violationDate: violation.compliancePeriod,
+        systemId: violation.pwsid,
+        violationType: violation.rule,
       }));
 
     console.log(`Loaded ${waterViolations.length} water violations for correlation analysis`);
@@ -269,7 +268,7 @@ function generateEnvironmentalAlerts(records: any[]): any[] {
   const alerts: any[] = [];
 
   // Define alert thresholds for different indicator types
-  const alertThresholds = {
+  const alertThresholds: Record<string, { high: number; critical: number }> = {
     drinking_water: { high: 10, critical: 20 },
     air_quality: { high: 35, critical: 55 }, // AQI thresholds
     respiratory: { high: 15, critical: 25 }, // Prevalence %
@@ -279,7 +278,7 @@ function generateEnvironmentalAlerts(records: any[]): any[] {
   };
 
   records.forEach(record => {
-    const indicatorType = record.trackingSpecific.indicatorType;
+    const indicatorType = record.trackingSpecific.indicatorType as string;
     const dataValue = record.trackingSpecific.dataValue;
     const thresholds = alertThresholds[indicatorType];
 

@@ -304,10 +304,6 @@ const STATE_REGIONS: Record<string, string> = {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function gridKey(lat: number, lng: number): string {
-  return `${(Math.floor(lat * 10) / 10).toFixed(1)},${(Math.floor(lng * 10) / 10).toFixed(1)}`;
-}
-
 /**
  * Deterministic pseudo-random from string seed.
  * Returns number in [0, 1).
@@ -390,51 +386,35 @@ function buildStateIndicators(state: string): WaterAvailIndicator[] {
 
   return hucs.map(huc => {
     const seed = `${huc.huc8}-${state}`;
-    const dateStr = new Date().toISOString().split('T')[0];
 
     const precipitation = Math.round(randRange(seed, 1, baseline.precipRange[0], baseline.precipRange[1]) * 10) / 10;
     const soilMoisture = Math.round(randRange(seed, 2, baseline.soilMoistureRange[0], baseline.soilMoistureRange[1]) * 10) / 10;
     const baseflowIndex = Math.round(randRange(seed, 3, baseline.baseflowRange[0], baseline.baseflowRange[1]) * 1000) / 1000;
 
-    // Streamflow percentile: inversely related to drought severity
     const droughtSeverity = assignDroughtSeverity(seed, baseline.droughtBias);
-    const droughtPenalty = ({ None: 0, D0: 15, D1: 25, D2: 40, D3: 55, D4: 70 } as Record<string, number>)[droughtSeverity] || 0;
-    const streamflowPercentile = Math.max(
-      1,
-      Math.min(99, Math.round(50 + randRange(seed, 4, -25, 25) - droughtPenalty)),
-    );
-
-    // Groundwater percentile: less volatile than surface water
-    const gwPercentile = Math.max(
-      1,
-      Math.min(99, Math.round(50 + randRange(seed, 5, -20, 20) - droughtPenalty * 0.7)),
-    );
-
     const trend = assignTrend(droughtSeverity, seed);
 
-    // Water stress index: composite score 0-100 (higher = more stress)
-    const stressFromDrought = droughtPenalty * 1.2;
-    const stressFromMoisture = Math.max(0, (50 - soilMoisture) * 0.8);
-    const stressFromStream = Math.max(0, (50 - streamflowPercentile) * 0.6);
-    const waterStressIndex = Math.min(100, Math.round(
-      stressFromDrought * 0.4 + stressFromMoisture * 0.3 + stressFromStream * 0.3,
-    ));
+    // Compute water budget components from precipitation
+    const runoffFraction = randRange(seed, 6, 0.2, 0.5);
+    const etFraction = randRange(seed, 7, 0.3, 0.6);
+    const surplus = Math.max(0, Math.round((precipitation * (1 - runoffFraction - etFraction)) * 10) / 10);
+    const deficit = droughtSeverity !== 'None'
+      ? Math.round(randRange(seed, 8, 0.5, precipitation * 0.3) * 10) / 10
+      : 0;
 
     return {
       huc8: huc.huc8,
-      hucName: huc.name,
+      huc8Name: huc.name,
       state: huc.state,
-      lat: huc.lat,
-      lng: huc.lng,
       baseflowIndex,
       soilMoisture,
-      precipitation,
+      waterBudgetSurplus: surplus,
+      waterBudgetDeficit: deficit,
+      annualPrecip: precipitation,
+      annualRunoff: Math.round(precipitation * runoffFraction * 10) / 10,
+      annualET: Math.round(precipitation * etFraction * 10) / 10,
       droughtSeverity,
-      streamflowPercentile,
-      groundwaterPercentile: gwPercentile,
-      waterStressIndex,
       trend,
-      reportDate: dateStr,
     };
   });
 }
@@ -460,7 +440,7 @@ export async function GET(request: NextRequest) {
   try {
     const allIndicators: WaterAvailIndicator[] = [];
     const processedStates: string[] = [];
-    const stateResults: Record<string, { hucCount: number; avgStress: number }> = {};
+    const stateResults: Record<string, { hucCount: number; avgDeficit: number }> = {};
 
     // ── Generate indicators for all states ───────────────────────────────
     for (const state of ALL_STATES) {
@@ -470,74 +450,26 @@ export async function GET(request: NextRequest) {
           allIndicators.push(...indicators);
           processedStates.push(state);
 
-          const avgStress = Math.round(
-            indicators.reduce((sum, ind) => sum + ind.waterStressIndex, 0) / indicators.length,
-          );
-          stateResults[state] = { hucCount: indicators.length, avgStress };
+          const avgDeficit = Math.round(
+            indicators.reduce((sum, ind) => sum + ind.waterBudgetDeficit, 0) / indicators.length * 10,
+          ) / 10;
+          stateResults[state] = { hucCount: indicators.length, avgDeficit };
 
           console.log(
-            `[USGS Water Avail Cron] ${state}: ${indicators.length} HUC-8s, avg stress=${avgStress}`,
+            `[USGS Water Avail Cron] ${state}: ${indicators.length} HUC-8s, avg deficit=${avgDeficit}`,
           );
         }
       } catch (err: any) {
         console.warn(`[USGS Water Avail Cron] ${state} failed: ${err.message}`);
-        stateResults[state] = { hucCount: 0, avgStress: 0 };
+        stateResults[state] = { hucCount: 0, avgDeficit: 0 };
       }
     }
 
-    // ── Build grid index ────────────────────────────────────────────────
-    const grid: Record<string, { indicators: WaterAvailIndicator[] }> = {};
-    for (const ind of allIndicators) {
-      const key = gridKey(ind.lat, ind.lng);
-      if (!grid[key]) grid[key] = { indicators: [] };
-      grid[key].indicators.push(ind);
-    }
-
-    // ── Build state summaries ───────────────────────────────────────────
-    const stateSummaries: Record<string, {
-      state: string;
-      hucCount: number;
-      avgBaseflowIndex: number;
-      avgSoilMoisture: number;
-      avgPrecipitation: number;
-      avgWaterStressIndex: number;
-      droughtDistribution: Record<string, number>;
-      trendDistribution: Record<string, number>;
-    }> = {};
-
+    // ── Build state-keyed index ────────────────────────────────────────
     const byState: Record<string, WaterAvailIndicator[]> = {};
     for (const ind of allIndicators) {
       if (!byState[ind.state]) byState[ind.state] = [];
       byState[ind.state].push(ind);
-    }
-
-    for (const [state, indicators] of Object.entries(byState)) {
-      const droughtDist: Record<string, number> = {};
-      const trendDist: Record<string, number> = {};
-
-      for (const ind of indicators) {
-        droughtDist[ind.droughtSeverity] = (droughtDist[ind.droughtSeverity] || 0) + 1;
-        trendDist[ind.trend] = (trendDist[ind.trend] || 0) + 1;
-      }
-
-      stateSummaries[state] = {
-        state,
-        hucCount: indicators.length,
-        avgBaseflowIndex: Math.round(
-          (indicators.reduce((s, i) => s + i.baseflowIndex, 0) / indicators.length) * 1000,
-        ) / 1000,
-        avgSoilMoisture: Math.round(
-          (indicators.reduce((s, i) => s + i.soilMoisture, 0) / indicators.length) * 10,
-        ) / 10,
-        avgPrecipitation: Math.round(
-          (indicators.reduce((s, i) => s + i.precipitation, 0) / indicators.length) * 10,
-        ) / 10,
-        avgWaterStressIndex: Math.round(
-          indicators.reduce((s, i) => s + i.waterStressIndex, 0) / indicators.length,
-        ),
-        droughtDistribution: droughtDist,
-        trendDistribution: trendDist,
-      };
     }
 
     // ── Empty-data guard ────────────────────────────────────────────────
@@ -552,14 +484,8 @@ export async function GET(request: NextRequest) {
     }
 
     // ── Compute national stats ──────────────────────────────────────────
-    const avgStressNational = Math.round(
-      allIndicators.reduce((s, i) => s + i.waterStressIndex, 0) / allIndicators.length,
-    );
     const droughtCount = allIndicators.filter(
       i => i.droughtSeverity !== 'None',
-    ).length;
-    const severeCount = allIndicators.filter(
-      i => ['D3', 'D4'].includes(i.droughtSeverity),
     ).length;
     const decliningCount = allIndicators.filter(i => i.trend === 'declining').length;
 
@@ -568,21 +494,17 @@ export async function GET(request: NextRequest) {
       _meta: {
         built: new Date().toISOString(),
         indicatorCount: allIndicators.length,
-        statesWithData: Object.keys(stateSummaries).length,
-        gridCells: Object.keys(grid).length,
-        avgStressNational,
-        droughtAffectedCount: droughtCount,
-        severeCount,
+        stateCount: Object.keys(byState).length,
+        droughtHucCount: droughtCount,
+        decliningCount,
       },
-      grid,
-      stateSummaries,
+      states: byState,
     });
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(
       `[USGS Water Avail Cron] Complete in ${elapsed}s — ${allIndicators.length} indicators, ` +
-      `${Object.keys(grid).length} cells, ${processedStates.length} states, ` +
-      `avg national stress=${avgStressNational}, ${severeCount} severe drought HUCs`,
+      `${processedStates.length} states, ${droughtCount} drought HUCs, ${decliningCount} declining`,
     );
 
     recordCronRun('rebuild-usgs-water-avail', 'success', Date.now() - startTime);
@@ -592,10 +514,8 @@ export async function GET(request: NextRequest) {
       duration: `${elapsed}s`,
       indicatorCount: allIndicators.length,
       statesProcessed: processedStates.length,
-      gridCells: Object.keys(grid).length,
-      avgStressNational,
-      droughtAffectedCount: droughtCount,
-      severeCount,
+      stateCount: Object.keys(byState).length,
+      droughtHucCount: droughtCount,
       decliningCount,
       states: stateResults,
       cache: getWaterAvailCacheStatus(),

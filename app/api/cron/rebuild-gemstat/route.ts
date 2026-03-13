@@ -8,9 +8,9 @@ export const maxDuration = 120;
 
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  setGemStatCache, getGemsStatCacheStatus,
-  isGemStatBuildInProgress, setGemStatBuildInProgress,
-  type GemStatCountry,
+  setGemsStatCache, getGemsStatCacheStatus,
+  isGemsStatBuildInProgress, setGemsStatBuildInProgress,
+  type GemsStatCountry,
 } from '@/lib/gemstatCache';
 import { isCronAuthorized } from '@/lib/apiAuth';
 import * as Sentry from '@sentry/nextjs';
@@ -201,7 +201,7 @@ function rangeVal(rng: () => number, min: number, max: number, decimals: number)
   return Math.round(val * factor) / factor;
 }
 
-function generateCountryData(def: CountryDef): GemStatCountry {
+function generateCountryData(def: CountryDef): GemsStatCountry {
   const rng = xorshift32(seedFromString(`gemstat-${def.code}-2026`));
   const range = RANGES[def.tier];
 
@@ -234,7 +234,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  if (isGemStatBuildInProgress()) {
+  if (isGemsStatBuildInProgress()) {
     return NextResponse.json({
       status: 'skipped',
       reason: 'GEMStat build already in progress',
@@ -242,14 +242,14 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  setGemStatBuildInProgress(true);
+  setGemsStatBuildInProgress(true);
   const startTime = Date.now();
 
   try {
     console.log(`[GEMStat Cron] Starting build (${COUNTRIES.length} countries, sample data)`);
 
     // ── Generate country data ───────────────────────────────────────────
-    const countries: Record<string, GemStatCountry> = {};
+    const countries: Record<string, GemsStatCountry> = {};
     let totalStations = 0;
 
     for (const def of COUNTRIES) {
@@ -282,12 +282,11 @@ export async function GET(request: NextRequest) {
     }
 
     // ── Save cache ──────────────────────────────────────────────────────
-    await setGemStatCache({
+    await setGemsStatCache({
       _meta: {
         built: new Date().toISOString(),
         countryCount,
         totalStations,
-        latestDataYear: 2025,
       },
       countries,
     });
@@ -326,6 +325,6 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   } finally {
-    setGemStatBuildInProgress(false);
+    setGemsStatBuildInProgress(false);
   }
 }

@@ -16,7 +16,7 @@ import {
   fetchUSGSWQPData,
   processUSGSWQPData,
 } from '@/lib/usgsWqpCache';
-import { getSDWISCache } from '@/lib/sdwisCache';
+import { getSdwisAllData } from '@/lib/sdwisCache';
 
 export async function GET(request: NextRequest) {
   if (!isCronAuthorized(request)) {
@@ -55,17 +55,16 @@ export async function GET(request: NextRequest) {
 
     // Get water violations for correlation analysis
     console.log('Loading water violation data for correlation...');
-    const sdwisCache = getSDWISCache();
-    const waterViolations = Object.values(sdwisCache)
-      .flatMap(stateData => stateData.violations || [])
-      .filter(violation => violation.lat && violation.lng)
-      .map(violation => ({
-        id: violation.violationId || violation.id,
-        lat: violation.lat,
-        lng: violation.lng,
-        violationDate: violation.compliancePeriodBeginDate || violation.violationBeginDate,
-        systemId: violation.pwsId || violation.systemId,
-        violationType: violation.violationType,
+    const sdwisData = getSdwisAllData();
+    const waterViolations = (sdwisData.violations || [])
+      .filter((v: any) => v.lat && v.lng)
+      .map((v: any) => ({
+        id: v.pwsid || v.id,
+        lat: v.lat,
+        lng: v.lng,
+        violationDate: v.compliancePeriod || v.beginDate,
+        systemId: v.pwsid,
+        violationType: v.rule,
       }));
 
     console.log(`Loaded ${waterViolations.length} water violations for correlation analysis`);
