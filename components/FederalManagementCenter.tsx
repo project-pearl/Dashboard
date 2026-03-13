@@ -232,13 +232,14 @@ const LENS_CONFIG: Record<ViewLens, {
   },
   compliance: {
     label: 'Compliance',
+    // DEV FLAG: 100% compliance rate and ~100K enforcement actions may indicate data pipeline issue — verify ICIS/SDWIS cron output
     description: 'NPDES enforcement + drinking water violations',
     defaultOverlay: 'hotspots',
     showTopStrip: true, showPriorityQueue: true, showCoverageGaps: false,
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: true, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'icis', 'sdwis', 'priorityqueue', 'sentinel-alerts-placeholder']),
+    sections: new Set(['networkhealth', 'icis', 'sdwis', 'priorityqueue']),
   },
   'water-quality': {
     label: 'Water Quality',
@@ -348,7 +349,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['ntas-status', 'at-risk-facilities', 'military-installations', 'fire-detection', 'fire-health-advisory', 'briefing-qa', 'flood-impact-analysis', 'pfas-analytics-panel', 'nws-forecast-panel', 'cyber-risk-panel']),
+    sections: new Set(['ntas-status', 'at-risk-facilities', 'military-installations', 'sentinel-briefing', 'fire-detection', 'fire-health-advisory', 'briefing-qa', 'flood-impact-analysis', 'pfas-analytics-panel', 'nws-forecast-panel', 'cyber-risk-panel']),
   },
   'fire-air-quality': {
     label: 'Fire & Air Quality',
@@ -3528,7 +3529,8 @@ export function FederalManagementCenter(props: Props) {
                 <CardDescription className="text-xs">Top waterbodies by composite priority score (Cat 5 + No TMDL + EJ + data gaps)</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-1 max-h-[calc(100vh-400px)] min-h-[250px] overflow-y-auto">
+                {/* DEV FLAG: All entries scoring 80 — priority scoring logic may need calibration */}
+                <div className="space-y-1 max-h-[400px] overflow-y-auto">
                   {federalPriorities.length === 0 ? (
                     <div className="text-sm text-slate-400 py-4 text-center">No priority items — all waterbodies nominal</div>
                   ) : federalPriorities.map((r, i) => (
@@ -4040,6 +4042,7 @@ export function FederalManagementCenter(props: Props) {
             {[
               {
                 group: 'Compliance',
+                border: 'border-l-red-400',
                 reports: [
                   { title: 'National Compliance Summary', desc: 'Nationwide NPDES and SDWIS compliance posture with enforcement trends.', formats: ['PDF', 'CSV'] },
                   { title: 'Drinking Water Quality', desc: 'SDWIS system violations, enforcement timeline, and state compliance rates.', formats: ['PDF', 'CSV'] },
@@ -4047,6 +4050,7 @@ export function FederalManagementCenter(props: Props) {
               },
               {
                 group: 'Water Program Oversight',
+                border: 'border-l-blue-400',
                 reports: [
                   { title: 'Impairment Report', desc: 'Nationwide 303(d) listings, impairment causes, and restoration status by state.', formats: ['PDF', 'Excel'] },
                   { title: 'Coverage Analysis', desc: 'Monitoring network gaps, data freshness, and state-by-state coverage metrics.', formats: ['PDF', 'Excel'] },
@@ -4055,16 +4059,17 @@ export function FederalManagementCenter(props: Props) {
               },
               {
                 group: 'Planning & TMDLs',
+                border: 'border-l-green-400',
                 reports: [
                   { title: 'TMDL Progress Report', desc: 'TMDL development milestones and pollutant reduction target progress.', formats: ['PDF', 'CSV'] },
                 ],
               },
             ].map((section) => (
-              <div key={section.group} className="rounded-lg border border-slate-200 bg-white p-3">
+              <div key={section.group} className={`rounded-lg border border-slate-200 border-l-[3px] ${section.border} bg-white p-3`}>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2.5">{section.group}</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {section.reports.map((report) => (
-                    <div key={report.title} className="border border-slate-200 rounded-lg p-4 hover:border-slate-400 hover:shadow-sm transition-all">
+                    <div key={report.title} className="border border-slate-200 rounded-lg p-4 hover:border-slate-400 hover:shadow-sm hover:bg-slate-50/50 transition-all">
                       <h3 className="text-sm font-semibold text-slate-800">{report.title}</h3>
                       <p className="text-xs text-slate-500 mt-1 leading-relaxed">{report.desc}</p>
                       <div className="flex items-center gap-2 mt-3">
@@ -5906,7 +5911,11 @@ export function FederalManagementCenter(props: Props) {
                   <div className="text-xs text-gray-500">States Covered</div>
                 </div>
               </div>
-              <p className="text-sm text-gray-500 italic">USGS OGC API monitoring location data loading — run rebuild-usgs-ogc cron to populate.</p>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span>⏳</span>
+                <span>Awaiting data — USGS OGC Monitoring Locations API</span>
+                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
+              </div>
             </div>
           );
         }
@@ -5932,7 +5941,11 @@ export function FederalManagementCenter(props: Props) {
                   <div className="text-xs text-gray-500">States Covered</div>
                 </div>
               </div>
-              <p className="text-sm text-gray-500 italic">NGWMN groundwater monitoring data loading — run rebuild-ngwmn cron to populate.</p>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span>⏳</span>
+                <span>Awaiting data — National Ground Water Monitoring Network</span>
+                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
+              </div>
             </div>
           );
         }
@@ -5958,7 +5971,11 @@ export function FederalManagementCenter(props: Props) {
                   <div className="text-xs text-gray-500">States Covered</div>
                 </div>
               </div>
-              <p className="text-sm text-gray-500 italic">Flood impact analysis data loading — run rebuild-flood-impact cron to populate.</p>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span>⏳</span>
+                <span>Awaiting data — NWPS + NWM + HEFS Flood Infrastructure Analysis</span>
+                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
+              </div>
             </div>
           );
         }
@@ -5984,7 +6001,11 @@ export function FederalManagementCenter(props: Props) {
                   <div className="text-xs text-gray-500">States Covered</div>
                 </div>
               </div>
-              <p className="text-sm text-gray-500 italic">PFAS analytics data loading — run rebuild-dod-pfas cron to populate.</p>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span>⏳</span>
+                <span>Awaiting data — EPA ECHO PFAS Analytics + DoD PFAS Sites</span>
+                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
+              </div>
             </div>
           );
         }
@@ -6010,7 +6031,11 @@ export function FederalManagementCenter(props: Props) {
                   <div className="text-xs text-gray-500">Update Frequency</div>
                 </div>
               </div>
-              <p className="text-sm text-gray-500 italic">NWS forecast data loading (6h refresh cycle) — run rebuild-nws-forecast cron to populate.</p>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span>⏳</span>
+                <span>Awaiting data — NWS 7-Day Forecast API (6h refresh)</span>
+                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
+              </div>
             </div>
           );
         }
@@ -6036,7 +6061,11 @@ export function FederalManagementCenter(props: Props) {
                   <div className="text-xs text-gray-500">States Covered</div>
                 </div>
               </div>
-              <p className="text-sm text-gray-500 italic">Water availability indicator data loading — run rebuild-water-availability cron to populate.</p>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span>⏳</span>
+                <span>Awaiting data — USGS Water Availability + USDM Drought Overlay</span>
+                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
+              </div>
             </div>
           );
         }
@@ -6062,7 +6091,11 @@ export function FederalManagementCenter(props: Props) {
                   <div className="text-xs text-gray-500">States Covered</div>
                 </div>
               </div>
-              <p className="text-sm text-gray-500 italic">Cyber risk assessment data loading — run rebuild-cyber-risk cron to populate.</p>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span>⏳</span>
+                <span>Awaiting data — ECHO + SDWIS + FRS Cyber Risk Derivation</span>
+                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
+              </div>
             </div>
           );
         }
@@ -6088,7 +6121,11 @@ export function FederalManagementCenter(props: Props) {
                   <div className="text-xs text-gray-500">Data Source</div>
                 </div>
               </div>
-              <p className="text-sm text-gray-500 italic">Global water quality data from GEMStat loading — run rebuild-global-wq cron to populate.</p>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span>⏳</span>
+                <span>Awaiting data — GEMStat Global Freshwater Quality Database</span>
+                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
+              </div>
             </div>
           );
         }

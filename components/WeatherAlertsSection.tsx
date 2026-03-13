@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ChevronUp,
   CloudLightning,
+  HelpCircle,
   Loader2,
   MapPin,
   Clock,
@@ -151,20 +152,25 @@ export function WeatherAlertsSection({ userState }: Props) {
 
   /* ── Active warnings ───────────────────────────────────────────── */
   return (
-    <Card className="border border-slate-200/80">
+    <Card className="border border-gray-200/60">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-          <AlertTriangle size={16} className="text-amber-500" />
-          Severe Weather Warnings
-          <span className="ml-1 text-xs font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
-            {raw.length}
-          </span>
-          {userState && (
-            <span className="ml-auto text-xs font-normal px-2 py-0.5 rounded-full" style={{ background: 'var(--surface-secondary)', color: 'var(--text-secondary)' }}>
-              {userState}
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            <AlertTriangle size={18} className="text-amber-500" />
+            Severe Weather Warnings
+            <span className="ml-1 text-xs font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+              {raw.length}
             </span>
-          )}
-        </CardTitle>
+            {userState && (
+              <span className="ml-auto text-xs font-normal px-2 py-0.5 rounded-full" style={{ background: 'var(--surface-secondary)', color: 'var(--text-secondary)' }}>
+                {userState}
+              </span>
+            )}
+          </CardTitle>
+          <button className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm hover:bg-slate-50 transition-colors" title="Active severe weather warnings from the NWS Weather Alerts API. Categories include tornado, severe thunderstorm, flash flood, hurricane, and high wind events. Refreshed every 10 minutes.">
+            <HelpCircle size={16} className="text-slate-400" />
+          </button>
+        </div>
       </CardHeader>
 
       <CardContent className="pt-0 space-y-3">
@@ -180,7 +186,7 @@ export function WeatherAlertsSection({ userState }: Props) {
               <button
                 type="button"
                 onClick={() => toggle(category)}
-                className="w-full flex items-center gap-2 text-sm font-medium py-1 px-1 rounded hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                className="w-full flex items-center gap-2 text-sm font-semibold py-1 px-1 rounded hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                 style={{ color: 'var(--text-primary)' }}
               >
                 <span className={`inline-block w-2.5 h-2.5 rounded-full shrink-0 ${meta.dot}`} />
@@ -194,7 +200,7 @@ export function WeatherAlertsSection({ userState }: Props) {
               </button>
 
               {/* Alert rows */}
-              <div className="space-y-1 pl-1">
+              <div className={`space-y-1 pl-1 ${expanded ? 'max-h-[200px] overflow-y-auto' : ''}`}>
                 {shown.map((a) => (
                   <div
                     key={a.id}

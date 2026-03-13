@@ -209,7 +209,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Monitoring',
     description: 'Monitoring network, data management, and optimization',
     defaultOverlay: 'coverage',
-    sections: new Set(['mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'stormsim', 'weather-alerts', 'provenance', 'disclaimer']),
+    sections: new Set(['mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'stormsim', 'weather-alerts', 'disclaimer']),
   },
   disaster: {
     label: 'Disaster & Emergency Response',

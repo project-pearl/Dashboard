@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Zap, Wind, AlertTriangle, Heart, HelpCircle } from 'lucide-react';
+import { Zap, Wind, AlertTriangle, Heart, HelpCircle, ChevronUp, ChevronDown } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -187,6 +187,18 @@ export function FireAqCorrelationCard() {
     return deduped.slice(0, 20);
   }, [data]);
 
+  const criticalInsights = insights.filter(i => i.severity === 'critical');
+  const warningInsights = insights.filter(i => i.severity === 'warning');
+  const infoInsights = insights.filter(i => i.severity === 'info');
+
+  const [expandedTiers, setExpandedTiers] = useState<Set<string>>(new Set(['critical']));
+  const toggleTier = (tier: string) =>
+    setExpandedTiers(prev => {
+      const next = new Set(prev);
+      if (next.has(tier)) next.delete(tier); else next.add(tier);
+      return next;
+    });
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -203,23 +215,88 @@ export function FireAqCorrelationCard() {
           Cross-source narratives correlating fire detections, air quality, wind patterns, and installation proximity.
         </CardDescription>
       </CardHeader>
-      <CardContent className="pt-0 space-y-2">
+      <CardContent className="pt-0 space-y-3">
         {!data && <div className="text-xs text-slate-500">Loading correlation data...</div>}
         {data && insights.length === 0 && (
           <div className="text-xs text-slate-500 bg-green-50 border border-green-200 rounded-lg p-3">
             No significant fire-AQ correlations detected. All installations clear.
           </div>
         )}
-        {insights.map((insight, i) => (
-          <div key={i} className={`border rounded-lg p-3 ${SEVERITY_STYLES[insight.severity]}`}>
-            <div className="flex items-center gap-2 mb-1">
-              {TYPE_ICONS[insight.type]}
-              <span className="text-sm font-semibold text-slate-700">{insight.title}</span>
-              <Badge variant="outline" className="ml-auto text-2xs">{insight.severity}</Badge>
-            </div>
-            <p className="text-xs text-slate-600">{insight.detail}</p>
-          </div>
-        ))}
+        {data && insights.length > 0 && (
+          <>
+            {/* Critical tier */}
+            {criticalInsights.length > 0 && (
+              <div>
+                <button type="button" onClick={() => toggleTier('critical')} className="w-full flex items-center gap-2 text-sm font-semibold py-1 px-1 rounded hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-red-700">
+                  <span className="w-2 h-2 rounded-full bg-red-500" />
+                  Critical ({criticalInsights.length})
+                  <span className="ml-auto">{expandedTiers.has('critical') ? <ChevronUp size={12} /> : <ChevronDown size={12} />}</span>
+                </button>
+                {expandedTiers.has('critical') && (
+                  <div className={`space-y-2 mt-1 ${criticalInsights.length > 3 ? 'max-h-[240px] overflow-y-auto' : ''}`}>
+                    {criticalInsights.map((insight, i) => (
+                      <div key={i} className={`border rounded-lg p-3 ${SEVERITY_STYLES[insight.severity]}`}>
+                        <div className="flex items-center gap-2 mb-1">
+                          {TYPE_ICONS[insight.type]}
+                          <span className="text-sm font-semibold text-slate-700">{insight.title}</span>
+                        </div>
+                        <p className="text-xs text-slate-600">{insight.detail}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Warning tier */}
+            {warningInsights.length > 0 && (
+              <div>
+                <button type="button" onClick={() => toggleTier('warning')} className="w-full flex items-center gap-2 text-sm font-semibold py-1 px-1 rounded hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-amber-700">
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  Warning ({warningInsights.length})
+                  <span className="ml-auto">{expandedTiers.has('warning') ? <ChevronUp size={12} /> : <ChevronDown size={12} />}</span>
+                </button>
+                {expandedTiers.has('warning') && (
+                  <div className={`space-y-2 mt-1 ${warningInsights.length > 3 ? 'max-h-[240px] overflow-y-auto' : ''}`}>
+                    {warningInsights.map((insight, i) => (
+                      <div key={i} className={`border rounded-lg p-3 ${SEVERITY_STYLES[insight.severity]}`}>
+                        <div className="flex items-center gap-2 mb-1">
+                          {TYPE_ICONS[insight.type]}
+                          <span className="text-sm font-semibold text-slate-700">{insight.title}</span>
+                        </div>
+                        <p className="text-xs text-slate-600">{insight.detail}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Info tier */}
+            {infoInsights.length > 0 && (
+              <div>
+                <button type="button" onClick={() => toggleTier('info')} className="w-full flex items-center gap-2 text-sm font-semibold py-1 px-1 rounded hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-blue-700">
+                  <span className="w-2 h-2 rounded-full bg-blue-500" />
+                  Info ({infoInsights.length})
+                  <span className="ml-auto">{expandedTiers.has('info') ? <ChevronUp size={12} /> : <ChevronDown size={12} />}</span>
+                </button>
+                {expandedTiers.has('info') && (
+                  <div className={`space-y-2 mt-1 ${infoInsights.length > 3 ? 'max-h-[240px] overflow-y-auto' : ''}`}>
+                    {infoInsights.map((insight, i) => (
+                      <div key={i} className={`border rounded-lg p-3 ${SEVERITY_STYLES[insight.severity]}`}>
+                        <div className="flex items-center gap-2 mb-1">
+                          {TYPE_ICONS[insight.type]}
+                          <span className="text-sm font-semibold text-slate-700">{insight.title}</span>
+                        </div>
+                        <p className="text-xs text-slate-600">{insight.detail}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
       </CardContent>
     </Card>
   );

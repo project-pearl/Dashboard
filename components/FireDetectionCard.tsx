@@ -376,47 +376,49 @@ export function FireDetectionCard({
             {/* ── Detection Detail Table (focus-region mode) ── */}
             {focusDetail && sortedDetections.length > 0 && (
               <div className="border rounded-lg overflow-hidden">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="bg-slate-50 text-left text-slate-500">
-                      <th className="px-2 py-1.5 font-medium">Date</th>
-                      <th className="px-2 py-1.5 font-medium">Time (UTC)</th>
-                      <th className="px-2 py-1.5 font-medium">Lat/Lng</th>
-                      <th className="px-2 py-1.5 font-medium text-right">FRP (MW)</th>
-                      <th className="px-2 py-1.5 font-medium">Conf</th>
-                      <th className="px-2 py-1.5 font-medium">Nearest Base</th>
-                      <th className="px-2 py-1.5 font-medium text-right">Dist (mi)</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y text-slate-700">
-                    {sortedDetections.slice(0, showCount).map((d, i) => (
-                      <tr key={i} className={d.confidence === 'high' ? 'bg-red-50/40' : ''}>
-                        <td className="px-2 py-1.5 font-mono whitespace-nowrap">{d.acq_date}</td>
-                        <td className="px-2 py-1.5 font-mono">{formatTime(d.acq_time)}</td>
-                        <td className="px-2 py-1.5 font-mono whitespace-nowrap">
-                          {d.lat.toFixed(3)}, {d.lng.toFixed(3)}
-                        </td>
-                        <td className="px-2 py-1.5 text-right font-mono font-semibold">{d.frp.toFixed(1)}</td>
-                        <td className="px-2 py-1.5">
-                          <Badge
-                            variant="outline"
-                            className={
-                              d.confidence === 'high'
-                                ? 'bg-red-50 text-red-700 border-red-200 text-2xs'
-                                : 'bg-slate-50 text-slate-600 border-slate-200 text-2xs'
-                            }
-                          >
-                            {d.confidence}
-                          </Badge>
-                        </td>
-                        <td className="px-2 py-1.5 truncate max-w-[140px]">{d.nearestInstallation ?? '—'}</td>
-                        <td className="px-2 py-1.5 text-right font-mono">
-                          {d.distanceToInstallationMi != null ? d.distanceToInstallationMi.toFixed(1) : '—'}
-                        </td>
+                <div className="max-h-[320px] overflow-y-auto">
+                  <table className="w-full text-xs">
+                    <thead className="sticky top-0 z-10">
+                      <tr className="bg-slate-50 text-left text-slate-500">
+                        <th className="px-2 py-1.5 font-medium">Date</th>
+                        <th className="px-2 py-1.5 font-medium">Time (UTC)</th>
+                        <th className="px-2 py-1.5 font-medium">Lat/Lng</th>
+                        <th className="px-2 py-1.5 font-medium text-right">FRP (MW)</th>
+                        <th className="px-2 py-1.5 font-medium">Conf</th>
+                        <th className="px-2 py-1.5 font-medium">Nearest Base</th>
+                        <th className="px-2 py-1.5 font-medium text-right">Dist (mi)</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y text-slate-700">
+                      {sortedDetections.slice(0, showCount).map((d, i) => (
+                        <tr key={i} className={d.confidence === 'high' ? 'bg-red-50/40' : ''}>
+                          <td className="px-2 py-1.5 font-mono whitespace-nowrap">{d.acq_date}</td>
+                          <td className="px-2 py-1.5 font-mono">{formatTime(d.acq_time)}</td>
+                          <td className="px-2 py-1.5 font-mono whitespace-nowrap">
+                            {d.lat.toFixed(3)}, {d.lng.toFixed(3)}
+                          </td>
+                          <td className="px-2 py-1.5 text-right font-mono font-semibold">{d.frp.toFixed(1)}</td>
+                          <td className="px-2 py-1.5">
+                            <Badge
+                              variant="outline"
+                              className={
+                                d.confidence === 'high'
+                                  ? 'bg-red-50 text-red-700 border-red-200 text-2xs'
+                                  : 'bg-slate-50 text-slate-600 border-slate-200 text-2xs'
+                              }
+                            >
+                              {d.confidence}
+                            </Badge>
+                          </td>
+                          <td className="px-2 py-1.5 truncate max-w-[140px]">{d.nearestInstallation ?? '—'}</td>
+                          <td className="px-2 py-1.5 text-right font-mono">
+                            {d.distanceToInstallationMi != null ? d.distanceToInstallationMi.toFixed(1) : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
                 {/* Show more / summary */}
                 {sortedDetections.length > showCount && (
                   <div className="px-3 py-2 bg-slate-50 border-t text-center">

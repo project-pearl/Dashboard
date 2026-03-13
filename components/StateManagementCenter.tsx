@@ -6419,7 +6419,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       <div className="text-xs text-gray-500">States Covered</div>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-500 italic">USGS OGC monitoring stations for {stateAbbr} — run rebuild-usgs-ogc cron to populate.</p>
+                  <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — USGS OGC Monitoring Locations</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>
                 </div>
               );
             }
@@ -6445,7 +6445,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       <div className="text-xs text-gray-500">States</div>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-500 italic">NGWMN groundwater monitoring for {stateAbbr} — run rebuild-ngwmn cron to populate.</p>
+                  <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — NGWMN Groundwater Network</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>
                 </div>
               );
             }
@@ -6471,7 +6471,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       <div className="text-xs text-gray-500">States</div>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-500 italic">Flood impact analysis for {stateAbbr} — run rebuild-flood-impact cron to populate.</p>
+                  <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — Flood Infrastructure Analysis</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>
                 </div>
               );
             }
@@ -6497,7 +6497,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       <div className="text-xs text-gray-500">States</div>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-500 italic">PFAS analytics for {stateAbbr} — run rebuild-dod-pfas cron to populate.</p>
+                  <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — EPA PFAS Analytics</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>
                 </div>
               );
             }
@@ -6523,7 +6523,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       <div className="text-xs text-gray-500">Refresh Rate</div>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-500 italic">NWS forecast data for {stateAbbr} — run rebuild-nws-forecast cron to populate.</p>
+                  <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — NWS 7-Day Forecast</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>
                 </div>
               );
             }
@@ -6549,7 +6549,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       <div className="text-xs text-gray-500">States</div>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-500 italic">Water availability indicators for {stateAbbr} — run rebuild-water-availability cron to populate.</p>
+                  <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — USGS Water Availability</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>
                 </div>
               );
             }
@@ -6575,7 +6575,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       <div className="text-xs text-gray-500">States</div>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-500 italic">Cyber risk assessment for {stateAbbr} water systems — run rebuild-cyber-risk cron to populate.</p>
+                  <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — Cyber Risk Assessment</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>
                 </div>
               );
             }
@@ -6601,7 +6601,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       <div className="text-xs text-gray-500">Source</div>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-500 italic">Global water quality benchmarks for {stateAbbr} comparison — run rebuild-global-wq cron to populate.</p>
+                  <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — GEMStat Global Water Quality</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>
                 </div>
               );
             }

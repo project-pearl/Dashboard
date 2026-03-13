@@ -554,7 +554,7 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
               <div className="text-xs tracking-[0.16em] text-slate-500 dark:text-slate-400 uppercase">For Official Use</div>
               <CardTitle className="text-lg md:text-xl flex items-center gap-2">
                 <Radar className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                PIN Sentinel Commander Water Threat Brief
+                Commander Threat Brief
               </CardTitle>
               <CardDescription>
                 {commanderBrief.installationName} | {commanderBrief.displayDate} | {commanderBrief.displayTime} EST

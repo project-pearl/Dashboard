@@ -626,7 +626,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'impairmentprofile',  label: 'Waterbody & Impairment Profile', order: 2,  visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'ai-water-intelligence', label: 'PIN Insights',              order: 3,  visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'national-briefing',  label: 'National Intelligence Briefing', order: 4, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'sentinel-briefing',  label: 'Sentinel System Health',      order: 5,  visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'sentinel-briefing',  label: 'Sentinel System Health',      order: 5.015, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'air-quality-briefing', label: 'Air Quality Monitoring',     order: 5.04, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'flood-status',       label: 'River Flood Status',           order: 5.05, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'flood-risk-summary', label: 'Flood Risk by Watershed',       order: 5.06, visible: true, defaultExpanded: true, lensControlled: true },
