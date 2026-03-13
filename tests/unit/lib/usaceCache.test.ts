@@ -23,7 +23,7 @@ describe('usaceCache', () => {
         _meta: {
           built: new Date().toISOString(),
           locationCount: 1,
-          officesQueried: ['Baltimore'],
+          officesQueried: 1,
           withWaterTemp: 1,
           gridCells: 1,
         },
@@ -52,7 +52,7 @@ describe('usaceCache', () => {
         _meta: {
           built: new Date().toISOString(),
           locationCount: 2,
-          officesQueried: ['Baltimore'],
+          officesQueried: 1,
           withWaterTemp: 2,
           gridCells: 2,
         },
@@ -98,7 +98,7 @@ describe('usaceCache', () => {
         _meta: {
           built: new Date().toISOString(),
           locationCount: 3,
-          officesQueried: ['Baltimore'],
+          officesQueried: 1,
           withWaterTemp: 2,
           gridCells: 2,
         },

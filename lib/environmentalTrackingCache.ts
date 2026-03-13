@@ -17,7 +17,9 @@ import {
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
 import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 import { PRIORITY_STATES } from './constants';
-import { militaryInstallations } from '../data/military-installations';
+// @ts-ignore - JSON module without type declarations
+import militaryInstallationsData from '../data/military-installations.json';
+const militaryInstallations = militaryInstallationsData as any[];
 
 // ─── Types & Interfaces ──────────────────────────────────────────────────────
 
@@ -211,7 +213,7 @@ export async function ensureWarmed(): Promise<void> {
   try {
     // Try disk first
     const diskData = await loadFromDisk();
-    if (diskData?.records?.length > 0) {
+    if (diskData && diskData.records && diskData.records.length > 0) {
       environmentalTrackingCache = diskData;
       _environmentalTrackingCacheLoaded = true;
       return;
@@ -223,7 +225,7 @@ export async function ensureWarmed(): Promise<void> {
   try {
     // Fallback to blob
     const blobData = await loadCacheFromBlob<EnvironmentalTrackingCacheData>(CACHE_FILE);
-    if (blobData?.records?.length > 0) {
+    if (blobData && blobData.records && blobData.records.length > 0) {
       environmentalTrackingCache = blobData;
       _environmentalTrackingCacheLoaded = true;
       await saveToDisk(blobData);
@@ -462,8 +464,8 @@ export async function buildEnvironmentalTrackingCacheData(
 }
 
 function buildTrackingSummary(records: EnvironmentalTrackingRecord[]): EnvironmentalTrackingCacheData['summary'] {
-  const statesCovered = [...new Set(records.map(r => r.location.state).filter(Boolean))];
-  const yearsCovered = [...new Set(records.map(r => r.temporal.year).filter(Boolean))];
+  const statesCovered = [...new Set(records.map(r => r.location.state).filter((s): s is string => !!s))];
+  const yearsCovered = [...new Set(records.map(r => r.temporal.year).filter((y): y is number => !!y))];
 
   // Count by indicator type
   const indicatorTypes: Record<TrackingIndicatorType, number> = {
@@ -568,11 +570,11 @@ function getUniqueIndicators(records: EnvironmentalTrackingRecord[]): number[] {
 }
 
 function getUniqueStates(records: EnvironmentalTrackingRecord[]): string[] {
-  return [...new Set(records.map(r => r.location.state).filter(Boolean))];
+  return [...new Set(records.map(r => r.location.state).filter((s): s is string => !!s))];
 }
 
 function getUniqueYears(records: EnvironmentalTrackingRecord[]): string[] {
-  return [...new Set(records.map(r => r.temporal.year?.toString()).filter(Boolean))];
+  return [...new Set(records.map(r => r.temporal.year?.toString()).filter((s): s is string => !!s))];
 }
 
 // ─── Data Fetching Functions ──────────────────────────────────────────────────

@@ -16,7 +16,9 @@ import {
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
 import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 import { PRIORITY_STATES } from './constants';
-import { militaryInstallations } from '../data/military-installations';
+// @ts-ignore - JSON module without type declarations
+import militaryInstallationsData from '../data/military-installations.json';
+const militaryInstallations = militaryInstallationsData as any[];
 
 // ─── Types & Interfaces ──────────────────────────────────────────────────────
 
@@ -239,7 +241,7 @@ export async function ensureWarmed(): Promise<void> {
   try {
     // Try disk first
     const diskData = await loadFromDisk();
-    if (diskData?.records?.length > 0) {
+    if (diskData && diskData.records && diskData.records.length > 0) {
       openFDACache = diskData;
       _openFDACacheLoaded = true;
       return;
@@ -251,7 +253,7 @@ export async function ensureWarmed(): Promise<void> {
   try {
     // Fallback to blob
     const blobData = await loadCacheFromBlob<OpenFDACacheData>(CACHE_FILE);
-    if (blobData?.records?.length > 0) {
+    if (blobData && blobData.records && blobData.records.length > 0) {
       openFDACache = blobData;
       _openFDACacheLoaded = true;
       await saveToDisk(blobData);
@@ -807,7 +809,7 @@ export async function buildOpenFDACacheData(
 }
 
 function buildOpenFDASummary(records: OpenFDARecord[]): OpenFDACacheData['summary'] {
-  const statesCovered = [...new Set(records.map(r => r.location.state).filter(Boolean))];
+  const statesCovered = [...new Set(records.map(r => r.location.state).filter((s): s is string => !!s))];
 
   // Category counts
   const categoryCounts: Record<OpenFDACategory, number> = {
@@ -882,11 +884,11 @@ function buildOpenFDACorrelations(
 
   // Build supply chain risks
   const supplyChainRisks = records
-    .filter(r => ['high', 'critical'].includes(r.fdaSpecific.supplyChainRisk))
+    .filter(r => r.fdaSpecific.supplyChainRisk && ['high', 'critical'].includes(r.fdaSpecific.supplyChainRisk))
     .map(record => ({
-      location: `${record.location.city || 'Unknown'}, ${record.location.state || 'Unknown'}`,
+      location: `${record.location.county || 'Unknown'}, ${record.location.state || 'Unknown'}`,
       category: record.fdaSpecific.recordType,
-      riskLevel: record.fdaSpecific.supplyChainRisk,
+      riskLevel: record.fdaSpecific.supplyChainRisk!,
       firmName: record.fdaSpecific.firmName || 'Unknown',
       productDescription: record.fdaSpecific.productDescription || 'Unknown Product',
       reasonForRecall: record.fdaSpecific.reasonForRecall || 'Unknown Reason',
@@ -902,7 +904,7 @@ function buildOpenFDACorrelations(
   const contaminationAlerts = records
     .filter(r => r.fdaSpecific.contaminationType && r.fdaSpecific.contaminationType !== 'unknown')
     .map(record => ({
-      location: `${record.location.city || record.location.state || 'Unknown'}`,
+      location: `${record.location.county || record.location.state || 'Unknown'}`,
       contaminationType: record.fdaSpecific.contaminationType || 'Unknown',
       productType: record.fdaSpecific.productDescription || 'Unknown Product',
       severity: record.fdaSpecific.recallClassification || 'Class III' as RecallClassification,

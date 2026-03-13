@@ -26,7 +26,7 @@ export function makeToxRecord(overrides: Partial<ToxRecord> = {}): ToxRecord {
     val: 85,
     mean: 82.5,
     unit: '%',
-    sig: false,
+    sig: 'false',
     lat: 38.46,
     lng: -121.50,
     ...overrides,

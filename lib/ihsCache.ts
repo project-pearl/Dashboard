@@ -385,10 +385,12 @@ function isBuildInProgress(): boolean {
 // Cache warming
 export async function ensureWarmed(): Promise<void> {
   if (ihsCache.serviceUnits.size === 0) {
-    await loadCacheFromDisk(ihsCache, CACHE_FILE);
+    const diskData = loadCacheFromDisk<IHSCache>(CACHE_FILE);
+    if (diskData) Object.assign(ihsCache, diskData);
 
     if (ihsCache.serviceUnits.size === 0) {
-      await loadCacheFromBlob(ihsCache, BLOB_KEY);
+      const blobData = await loadCacheFromBlob<IHSCache>(BLOB_KEY);
+      if (blobData) Object.assign(ihsCache, blobData);
     }
   }
 }
@@ -398,7 +400,7 @@ export async function getIHSServicesByLocation(lat: number, lng: number, radius:
   await ensureWarmed();
 
   const centerGrid = gridKey(lat, lng);
-  const searchGrids = [centerGrid, ...neighborKeys(lat, lng, Math.ceil(radius / 11.1))];
+  const searchGrids = [centerGrid, ...neighborKeys(lat, lng)];
 
   const serviceUnits: IHSServiceUnit[] = [];
 
@@ -700,8 +702,8 @@ export async function setIHSCache(
 
     ihsCache._lastUpdated = new Date().toISOString();
 
-    await saveCacheToDisk(ihsCache, CACHE_FILE);
-    await saveCacheToBlob(ihsCache, BLOB_KEY);
+    saveCacheToDisk(CACHE_FILE, ihsCache);
+    await saveCacheToBlob(BLOB_KEY, ihsCache);
 
   } finally {
     ihsCache._buildInProgress = false;

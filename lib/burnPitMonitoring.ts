@@ -8,7 +8,7 @@
  */
 
 import { estimatePlumeArrival, findTargetsAtRisk, Wind } from './plumeProjection';
-import { haversineKm } from './geoUtils';
+import { haversineDistance as haversineKm } from './geoUtils';
 import { getNdbcCache } from './ndbcCache';
 import installationsJson from '@/data/military-installations-fixed.json';
 import { getBurnPitConfig, getAllBurnPitConfigs, BurnPitInstallationConfig } from './burnPitConfig';
@@ -238,9 +238,9 @@ export async function assessBurnPitRisk(
   }
 
   const obs = bestStation.observation;
-  const windSpeed = obs.windSpeed; // m/s
-  const windDirection = obs.windDir; // degrees
-  const temperature = obs.temperature || 20; // default if missing
+  const windSpeed = obs.windSpeed ?? 0; // m/s
+  const windDirection = obs.windDir ?? 0; // degrees
+  const temperature = obs.airTemp ?? 20; // default if missing
 
   // Assess atmospheric conditions
   const stability = assessAtmosphericStability(windSpeed, temperature, timeOfDay);
@@ -266,10 +266,13 @@ export async function assessBurnPitRisk(
 
   // Stability assessment
   if (stability === 'very_stable' || stability === 'stable') {
-    riskLevel = Math.max(riskLevel === 'minimal' ? 0 :
-                        riskLevel === 'low' ? 1 :
-                        riskLevel === 'moderate' ? 2 :
-                        riskLevel === 'high' ? 3 : 4, 2) as any; // Bump to at least moderate
+    const riskStr: string = riskLevel;
+    const riskNumeric = riskStr === 'minimal' ? 0 :
+                        riskStr === 'low' ? 1 :
+                        riskStr === 'moderate' ? 2 :
+                        riskStr === 'high' ? 3 : 4;
+    const bumpedLevel = Math.max(riskNumeric, 2); // Bump to at least moderate
+    riskLevel = bumpedLevel >= 4 ? 'extreme' : bumpedLevel >= 3 ? 'high' : 'moderate';
     atmosphericStability = 'accumulative';
   }
 

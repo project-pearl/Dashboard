@@ -23,7 +23,11 @@ export async function GET(request: NextRequest) {
     // Load waterway fixes from JSON file
     const filePath = path.join(process.cwd(), 'data', 'fixed-coordinates', 'maryland-waterways-fixed.json');
     const fileContent = fs.readFileSync(filePath, 'utf-8');
-    const waterwayFixes = JSON.parse(fileContent);
+    const waterwayFixes = JSON.parse(fileContent) as {
+      fixes: Array<{ name: string; fixedLat: number; fixedLng: number; reason: string; priority: string; id?: string }>;
+      summary: unknown;
+      timestamp: string;
+    };
     switch (action) {
       case 'fixes':
         // Return all coordinate fixes for Maryland waterways

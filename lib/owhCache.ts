@@ -634,10 +634,12 @@ function isBuildInProgress(): boolean {
 // Cache warming
 export async function ensureWarmed(): Promise<void> {
   if (owhCache.womensHealthPrograms.size === 0) {
-    await loadCacheFromDisk(owhCache, CACHE_FILE);
+    const diskData = loadCacheFromDisk<OWHCache>(CACHE_FILE);
+    if (diskData) Object.assign(owhCache, diskData);
 
     if (owhCache.womensHealthPrograms.size === 0) {
-      await loadCacheFromBlob(owhCache, BLOB_KEY);
+      const blobData = await loadCacheFromBlob<OWHCache>(BLOB_KEY);
+      if (blobData) Object.assign(owhCache, blobData);
     }
   }
 }
@@ -656,7 +658,7 @@ export async function getMilitaryWomensHealthServices(
   await ensureWarmed();
 
   const centerGrid = gridKey(lat, lng);
-  const searchGrids = [centerGrid, ...neighborKeys(lat, lng, Math.ceil(radius / 11.1))];
+  const searchGrids = [centerGrid, ...neighborKeys(lat, lng)];
 
   const healthPrograms: WomensHealthProgram[] = [];
   const maternalServices: MaternalHealthInitiative[] = [];
@@ -920,8 +922,8 @@ export async function setOWHCache(
 
     owhCache._lastUpdated = new Date().toISOString();
 
-    await saveCacheToDisk(owhCache, CACHE_FILE);
-    await saveCacheToBlob(owhCache, BLOB_KEY);
+    saveCacheToDisk(CACHE_FILE, owhCache);
+    await saveCacheToBlob(BLOB_KEY, owhCache);
 
   } finally {
     owhCache._buildInProgress = false;

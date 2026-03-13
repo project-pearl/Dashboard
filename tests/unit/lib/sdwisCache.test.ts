@@ -115,8 +115,9 @@ describe('sdwisCache', () => {
       });
 
       const mdData = getSdwisForState('MD');
-      expect(mdData.systems.every(s => s.state === 'MD')).toBe(true);
-      expect(mdData.systems.length).toBeGreaterThanOrEqual(1);
+      expect(mdData).not.toBeNull();
+      expect(mdData!.systems.every(s => s.state === 'MD')).toBe(true);
+      expect(mdData!.systems.length).toBeGreaterThanOrEqual(1);
     });
 
     it('returns empty or null for unknown state', () => {

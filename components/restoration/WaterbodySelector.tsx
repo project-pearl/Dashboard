@@ -156,7 +156,7 @@ export default function WaterbodySelector({
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [allStates, setAllStates] = useState(defaultAllStates ?? false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const search = useCallback(async (q: string, searchMode: SearchMode) => {
     if (!q.trim() || q.trim().length < 2) {

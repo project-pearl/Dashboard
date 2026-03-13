@@ -6,7 +6,7 @@ export function makeNarsSite(overrides: Partial<NarsSite> = {}): NarsSite {
     uniqueId: 'NLA17-0001-2017',
     name: 'Loch Raven Reservoir',
     survey: 'NLA',
-    surveyYear: 2017,
+    surveyYear: '2017',
     lat: 39.42,
     lng: -76.55,
     state: 'MD',

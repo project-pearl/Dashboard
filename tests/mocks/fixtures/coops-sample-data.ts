@@ -12,7 +12,7 @@ export function makeCoopsStation(overrides: Partial<CoopsStation> = {}): CoopsSt
     airTemp: 28.5,
     waterTemp: 24.2,
     windSpeed: 8.5,
-    windDir: 180,
+    windDir: '180',
     conductivity: null,
     salinity: null,
     humidity: null,

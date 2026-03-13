@@ -9,6 +9,11 @@ export interface AriaProps {
   'aria-expanded'?: boolean;
   'aria-current'?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
   'aria-hidden'?: boolean;
+  'aria-live'?: 'polite' | 'assertive' | 'off';
+  'aria-busy'?: boolean;
+  'aria-required'?: boolean;
+  'aria-invalid'?: boolean;
+  'aria-controls'?: string;
   role?: string;
   tabIndex?: number;
 }

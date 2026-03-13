@@ -57,8 +57,8 @@ describe('bwbCache', () => {
           gridCells: 2,
         },
         grid: {
-          [key1]: { stations: [makeBwbStation({ stationId: 'A' })] },
-          [key2]: { stations: [makeBwbStation({ stationId: 'B' })] },
+          [key1]: { stations: [makeBwbStation({ stationId: 2 })] },
+          [key2]: { stations: [makeBwbStation({ stationId: 3 })] },
         },
       });
 
@@ -105,8 +105,8 @@ describe('bwbCache', () => {
           gridCells: 2,
         },
         grid: {
-          [key1]: { stations: [makeBwbStation({ stationId: 'A' }), makeBwbStation({ stationId: 'B' })] },
-          [key2]: { stations: [makeBwbStation({ stationId: 'C' })] },
+          [key1]: { stations: [makeBwbStation({ stationId: 4 }), makeBwbStation({ stationId: 5 })] },
+          [key2]: { stations: [makeBwbStation({ stationId: 6 })] },
         },
       });
 

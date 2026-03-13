@@ -23,8 +23,8 @@ describe('narsCache', () => {
         _meta: {
           built: new Date().toISOString(),
           siteCount: 1,
-          surveys: ['NLA'],
-          statesWithData: ['MD'],
+          surveys: { NLA: 1 },
+          statesWithData: 1,
           gridCells: 1,
         },
         grid: {
@@ -52,8 +52,8 @@ describe('narsCache', () => {
         _meta: {
           built: new Date().toISOString(),
           siteCount: 2,
-          surveys: ['NLA'],
-          statesWithData: ['MD'],
+          surveys: { NLA: 1 },
+          statesWithData: 1,
           gridCells: 2,
         },
         grid: {
@@ -91,8 +91,8 @@ describe('narsCache', () => {
         _meta: {
           built: new Date().toISOString(),
           siteCount: 3,
-          surveys: ['NLA'],
-          statesWithData: ['MD'],
+          surveys: { NLA: 1 },
+          statesWithData: 1,
           gridCells: 2,
         },
         grid: {

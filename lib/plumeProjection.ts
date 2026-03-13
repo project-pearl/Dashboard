@@ -6,7 +6,22 @@
  * the target. Used by Sentinel scoring and fire-AQ risk assessment.
  */
 
-import { haversineKm, calculateBearing } from './geoUtils';
+import { haversineDistance } from './geoUtils';
+
+/** Alias for km-based haversine (haversineDistance returns km). */
+const haversineKm = haversineDistance;
+
+/**
+ * Calculate initial bearing from point 1 to point 2 in degrees (0-360).
+ */
+function calculateBearing(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const la1 = (lat1 * Math.PI) / 180;
+  const la2 = (lat2 * Math.PI) / 180;
+  const y = Math.sin(dLng) * Math.cos(la2);
+  const x = Math.cos(la1) * Math.sin(la2) - Math.sin(la1) * Math.cos(la2) * Math.cos(dLng);
+  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+}
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

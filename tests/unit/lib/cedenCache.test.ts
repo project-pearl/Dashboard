@@ -108,14 +108,14 @@ describe('cedenCache', () => {
         grid: {
           [key]: {
             chemistry: [],
-            toxicity: [makeToxRecord({ organism: 'Ceriodaphnia dubia', sig: true })],
+            toxicity: [makeToxRecord({ organism: 'Ceriodaphnia dubia', sig: 'SL' })],
           },
         },
       });
 
       const result = getCedenCache(38.46, -121.50);
       expect(result!.toxicity[0].organism).toBe('Ceriodaphnia dubia');
-      expect(result!.toxicity[0].sig).toBe(true);
+      expect(result!.toxicity[0].sig).toBe('SL');
     });
   });
 

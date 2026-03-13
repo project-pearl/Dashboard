@@ -401,7 +401,7 @@ export async function buildCMSCacheData(records: CMSRecord[]): Promise<CMSCacheD
 
   enrichedRecords.forEach(record => {
     // Spatial indexing
-    const grid = gridKey(record.location.lat, record.location.lng);
+    const grid = gridKey(record.location.lat ?? 0, record.location.lng ?? 0);
     if (!spatialIndex[grid]) spatialIndex[grid] = [];
     spatialIndex[grid].push(record);
 
@@ -409,7 +409,8 @@ export async function buildCMSCacheData(records: CMSRecord[]): Promise<CMSCacheD
     dataTypeDistribution[record.cmsSpecific.dataType]++;
     providerTypeDistribution[record.cmsSpecific.providerType]++;
     ownershipDistribution[record.cmsSpecific.ownership] = (ownershipDistribution[record.cmsSpecific.ownership] || 0) + 1;
-    stateDistribution[record.location.state] = (stateDistribution[record.location.state] || 0) + 1;
+    const cmsState = record.location.state ?? 'Unknown';
+    stateDistribution[cmsState] = (stateDistribution[cmsState] || 0) + 1;
 
     if (record.cmsSpecific.qualityMetrics.overallRating) {
       qualityRatingDistribution[record.cmsSpecific.qualityMetrics.overallRating]++;
@@ -502,7 +503,7 @@ function buildAccessibilityGaps(records: CMSRecord[]): any[] {
       provider_id: record.cmsSpecific.providerId,
       provider_name: record.cmsSpecific.providerName,
       provider_type: record.cmsSpecific.providerType,
-      location: `${record.location.city}, ${record.location.state}`,
+      location: `${(record.location as any).city ?? 'Unknown'}, ${record.location.state ?? 'Unknown'}`,
       rural_designation: record.cmsSpecific.accessibilityFactors.ruralDesignation,
       transportation_access: record.cmsSpecific.accessibilityFactors.transportationAccess,
       hpsa: record.cmsSpecific.accessibilityFactors.healthcareProfessionalShortageArea,
@@ -597,7 +598,7 @@ function buildUtilizationPatterns(records: CMSRecord[]): any[] {
       provider_id: record.cmsSpecific.providerId,
       provider_name: record.cmsSpecific.providerName,
       provider_type: record.cmsSpecific.providerType,
-      location: `${record.location.city}, ${record.location.state}`,
+      location: `${(record.location as any).city ?? 'Unknown'}, ${record.location.state ?? 'Unknown'}`,
       total_discharges: record.cmsSpecific.utilizationMetrics.totalDischarges,
       readmission_rate: record.cmsSpecific.utilizationMetrics.readmissionRate,
       average_length_of_stay: record.cmsSpecific.utilizationMetrics.averageLengthOfStay,

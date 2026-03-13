@@ -324,7 +324,7 @@ export async function buildSAMHSACacheData(records: SAMHSARecord[]): Promise<SAM
 
   enrichedRecords.forEach(record => {
     // Spatial indexing
-    const grid = gridKey(record.location.lat, record.location.lng);
+    const grid = gridKey(record.location.lat ?? 0, record.location.lng ?? 0);
     if (!spatialIndex[grid]) spatialIndex[grid] = [];
     spatialIndex[grid].push(record);
 
@@ -336,7 +336,8 @@ export async function buildSAMHSACacheData(records: SAMHSARecord[]): Promise<SAM
       substanceDistribution[substance]++;
     });
 
-    stateDistribution[record.location.state] = (stateDistribution[record.location.state] || 0) + 1;
+    const samhsaState = record.location.state ?? 'Unknown';
+    stateDistribution[samhsaState] = (stateDistribution[samhsaState] || 0) + 1;
 
     if (record.samhsaSpecific.admissionCount) totalAdmissions += record.samhsaSpecific.admissionCount;
     if (record.samhsaSpecific.militaryFriendly) militaryFriendlyFacilities++;
@@ -412,7 +413,7 @@ function buildEnvironmentalHealthCorrelations(records: SAMHSARecord[]): any[] {
     .map(record => ({
       facility_id: record.samhsaSpecific.facilityId,
       facility_name: record.samhsaSpecific.facilityName,
-      location: `${record.location.city}, ${record.location.state}`,
+      location: `${(record.location as any).city ?? 'Unknown'}, ${record.location.state ?? 'Unknown'}`,
       environmental_factors: record.samhsaSpecific.environmentalCorrelations,
       substance_categories: record.samhsaSpecific.substanceCategories,
       admission_count: record.samhsaSpecific.admissionCount,
@@ -427,7 +428,7 @@ function buildAccessibilityGaps(records: SAMHSARecord[]): any[] {
     .map(record => ({
       facility_id: record.samhsaSpecific.facilityId,
       facility_name: record.samhsaSpecific.facilityName,
-      location: `${record.location.city}, ${record.location.state}`,
+      location: `${(record.location as any).city ?? 'Unknown'}, ${record.location.state ?? 'Unknown'}`,
       accessibility_score: record.samhsaSpecific.geospatialFactors.accessibilityScore,
       rural_urban_code: record.samhsaSpecific.geospatialFactors.ruralUrbanCode,
       poverty_level: record.samhsaSpecific.geospatialFactors.povertyLevel,
@@ -452,7 +453,7 @@ function buildDemographicDisparities(records: SAMHSARecord[]): any[] {
           disparityAnalysis.push({
             facility_id: record.samhsaSpecific.facilityId,
             facility_name: record.samhsaSpecific.facilityName,
-            location: `${record.location.city}, ${record.location.state}`,
+            location: `${(record.location as any).city ?? 'Unknown'}, ${record.location.state ?? 'Unknown'}`,
             ethnicity,
             count,
             completion_rate: completionRate,

@@ -165,7 +165,7 @@ export function findNearestInstallation(
   let nearest: MilitaryInstallationRef | null = null;
   let minDistance = Infinity;
 
-  installations.forEach(installation => {
+  for (const installation of installations) {
     const distance = haversineDistance(
       location.lat,
       location.lng,
@@ -177,7 +177,7 @@ export function findNearestInstallation(
       minDistance = distance;
       nearest = installation;
     }
-  });
+  }
 
   if (!nearest) return null;
 

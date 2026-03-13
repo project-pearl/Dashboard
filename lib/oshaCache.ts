@@ -455,7 +455,7 @@ export async function buildOSHACacheData(records: OSHARecord[]): Promise<OSHACac
 
   enrichedRecords.forEach(record => {
     // Spatial indexing
-    const grid = gridKey(record.location.lat, record.location.lng);
+    const grid = gridKey(record.location.lat ?? 0, record.location.lng ?? 0);
     if (!spatialIndex[grid]) spatialIndex[grid] = [];
     spatialIndex[grid].push(record);
 
@@ -463,7 +463,8 @@ export async function buildOSHACacheData(records: OSHARecord[]): Promise<OSHACac
     dataTypeDistribution[record.oshaSpecific.dataType]++;
     if (record.oshaSpecific.inspectionType) inspectionTypeDistribution[record.oshaSpecific.inspectionType]++;
     industryDistribution[record.oshaSpecific.industryCategory]++;
-    stateDistribution[record.location.state] = (stateDistribution[record.location.state] || 0) + 1;
+    const oshaState = record.location.state ?? 'Unknown';
+    stateDistribution[oshaState] = (stateDistribution[oshaState] || 0) + 1;
 
     // Violation type distributions
     violationTypeDistribution.serious += record.oshaSpecific.violations.serious;
@@ -485,8 +486,9 @@ export async function buildOSHACacheData(records: OSHARecord[]): Promise<OSHACac
     if (record.oshaSpecific.militaryRelevance.nearMilitaryInstallation) nearMilitaryInstallations++;
     if (Object.values(record.oshaSpecific.environmentalCorrelations).some(v => v)) environmentallyRelatedIncidents++;
 
-    if (record.temporal.year < earliestYear) earliestYear = record.temporal.year;
-    if (record.temporal.year > latestYear) latestYear = record.temporal.year;
+    const recYear = record.temporal.year ?? new Date().getFullYear();
+    if (recYear < earliestYear) earliestYear = recYear;
+    if (recYear > latestYear) latestYear = recYear;
   });
 
   const uniqueEstablishments = new Set(enrichedRecords.map(r => r.oshaSpecific.establishmentName)).size;
@@ -550,7 +552,7 @@ function buildEnvironmentalHazardCorrelations(records: OSHARecord[]): any[] {
     .map(record => ({
       activity_nr: record.oshaSpecific.activityNr,
       establishment_name: record.oshaSpecific.establishmentName,
-      location: `${record.location.city}, ${record.location.state}`,
+      location: `${(record.location as any).city ?? 'Unknown'}, ${record.location.state ?? 'Unknown'}`,
       industry_category: record.oshaSpecific.industryCategory,
       hazard_exposures: Object.entries(record.oshaSpecific.hazardExposure)
         .filter(([, value]) => value)

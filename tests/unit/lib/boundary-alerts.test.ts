@@ -16,12 +16,16 @@ function makePermit(overrides: Partial<{
   permitId: string;
   permitteeName: string;
   contactName: string;
+  contactEmail: string;
+  state: string;
   assignedWaterbodyIds: string[];
 }> = {}) {
   return {
     permitId: overrides.permitId ?? 'PERMIT-001',
     permitteeName: overrides.permitteeName ?? 'Test County',
     contactName: overrides.contactName ?? 'Jane Doe',
+    contactEmail: overrides.contactEmail ?? 'jane@example.com',
+    state: overrides.state ?? 'MD',
     assignedWaterbodyIds: overrides.assignedWaterbodyIds ?? ['WB-A', 'WB-B'],
   };
 }

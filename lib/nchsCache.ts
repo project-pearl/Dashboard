@@ -496,7 +496,7 @@ function buildEnvironmentalHealthCorrelations(records: NCHSRecord[]): any[] {
       data_reliability: record.nchsSpecific.dataReliability,
       temporal_trend: record.nchsSpecific.temporalTrend,
     }))
-    .sort((a, b) => b.data_value - a.data_value)
+    .sort((a, b) => Number(b.data_value) - Number(a.data_value))
     .slice(0, 20);
 }
 
@@ -517,7 +517,7 @@ function buildMilitaryHealthOutcomes(records: NCHSRecord[]): any[] {
       location: record.location.state || 'US',
       temporal_trend: record.nchsSpecific.temporalTrend,
     }))
-    .sort((a, b) => (b.age_adjusted_rate || b.data_value) - (a.age_adjusted_rate || a.data_value))
+    .sort((a, b) => (b.age_adjusted_rate || Number(b.data_value)) - (a.age_adjusted_rate || Number(a.data_value)))
     .slice(0, 15);
 }
 
@@ -535,7 +535,7 @@ function buildHealthDisparityAlerts(records: NCHSRecord[]): any[] {
       data_reliability: record.nchsSpecific.dataReliability,
       temporal_trend: record.nchsSpecific.temporalTrend,
     }))
-    .sort((a, b) => b.data_value - a.data_value)
+    .sort((a, b) => Number(b.data_value) - Number(a.data_value))
     .slice(0, 25);
 }
 

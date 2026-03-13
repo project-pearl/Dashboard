@@ -687,10 +687,12 @@ function isBuildInProgress(): boolean {
 // Cache warming
 export async function ensureWarmed(): Promise<void> {
   if (odphpCache.healthyPeopleObjectives.size === 0) {
-    await loadCacheFromDisk(odphpCache, CACHE_FILE);
+    const diskData = loadCacheFromDisk<ODPHPCache>(CACHE_FILE);
+    if (diskData) Object.assign(odphpCache, diskData);
 
     if (odphpCache.healthyPeopleObjectives.size === 0) {
-      await loadCacheFromBlob(odphpCache, BLOB_KEY);
+      const blobData = await loadCacheFromBlob<ODPHPCache>(BLOB_KEY);
+      if (blobData) Object.assign(odphpCache, blobData);
     }
   }
 }
@@ -709,7 +711,7 @@ export async function getMilitaryWellnessPrograms(
   await ensureWarmed();
 
   const centerGrid = gridKey(lat, lng);
-  const searchGrids = [centerGrid, ...neighborKeys(lat, lng, Math.ceil(radius / 11.1))];
+  const searchGrids = [centerGrid, ...neighborKeys(lat, lng)];
 
   const physicalActivityPrograms: PhysicalActivityProgram[] = [];
   const nutritionPrograms: NutritionProgram[] = [];
@@ -1011,8 +1013,8 @@ export async function setODPHPCache(
 
     odphpCache._lastUpdated = new Date().toISOString();
 
-    await saveCacheToDisk(odphpCache, CACHE_FILE);
-    await saveCacheToBlob(odphpCache, BLOB_KEY);
+    saveCacheToDisk(CACHE_FILE, odphpCache);
+    await saveCacheToBlob(BLOB_KEY, odphpCache);
 
   } finally {
     odphpCache._buildInProgress = false;

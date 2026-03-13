@@ -461,10 +461,12 @@ function isBuildInProgress(): boolean {
 // Cache warming
 export async function ensureWarmed(): Promise<void> {
   if (aspeCache.healthPolicyResearch.size === 0) {
-    await loadCacheFromDisk(aspeCache, CACHE_FILE);
+    const diskData = loadCacheFromDisk<ASPECache>(CACHE_FILE);
+    if (diskData) Object.assign(aspeCache, diskData);
 
     if (aspeCache.healthPolicyResearch.size === 0) {
-      await loadCacheFromBlob(aspeCache, BLOB_KEY);
+      const blobData = await loadCacheFromBlob<ASPECache>(BLOB_KEY);
+      if (blobData) Object.assign(aspeCache, blobData);
     }
   }
 }
@@ -783,8 +785,8 @@ export async function setASPECache(
 
     aspeCache._lastUpdated = new Date().toISOString();
 
-    await saveCacheToDisk(aspeCache, CACHE_FILE);
-    await saveCacheToBlob(aspeCache, BLOB_KEY);
+    saveCacheToDisk(CACHE_FILE, aspeCache);
+    await saveCacheToBlob(BLOB_KEY, aspeCache);
 
   } finally {
     aspeCache._buildInProgress = false;

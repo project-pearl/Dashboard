@@ -2,9 +2,10 @@
 // Hospital facility data cache with military installation proximity
 // Provides medical facility locations and capacity for force protection and emergency response
 
-import { loadCacheFromDisk, saveCacheToDisk, loadCacheFromBlob, saveCacheToBlob } from './cacheUtils';
+import { loadCacheFromDisk, saveCacheToDisk } from './cacheUtils';
+import { loadCacheFromBlob, saveCacheToBlob } from './blobPersistence';
 import { HospitalFacility, findNearestInstallation, MilitaryInstallationRef, validateHospitalFacility } from './healthDataUtils';
-import { militaryInstallations } from '../data/military-installations';
+const militaryInstallations: any[] = require('../data/military-installations').militaryInstallations ?? require('../data/military-installations').default ?? require('../data/military-installations');
 
 // ─── Cache State ─────────────────────────────────────────────────────────────
 
@@ -33,8 +34,8 @@ export async function setHospitalCache(hospitals: HospitalFacility[]): Promise<v
   lastFetched = new Date().toISOString();
   _hospitalCacheLoaded = true;
 
-  await saveCacheToDisk(hospitals, CACHE_FILE);
-  await saveCacheToBlob(hospitals, CACHE_FILE);
+  saveCacheToDisk(CACHE_FILE, hospitals);
+  await saveCacheToBlob(CACHE_FILE, hospitals);
 }
 
 export function isHospitalCacheLoaded(): boolean {
@@ -95,7 +96,7 @@ export async function ensureHospitalCacheWarmed(): Promise<void> {
       console.log(`Hospital cache warmed from blob: ${blobData.length} facilities`);
 
       // Save to disk for faster future access
-      await saveCacheToDisk(blobData, CACHE_FILE);
+      saveCacheToDisk(CACHE_FILE, blobData);
       return;
     }
 
@@ -112,7 +113,7 @@ export async function ensureHospitalCacheWarmed(): Promise<void> {
  */
 export function processHospitalData(rawHospitals: any[]): HospitalFacility[] {
   const processedHospitals: HospitalFacility[] = [];
-  const installations: MilitaryInstallationRef[] = militaryInstallations.map(inst => ({
+  const installations: MilitaryInstallationRef[] = militaryInstallations.map((inst: any) => ({
     id: inst.id,
     name: inst.name,
     lat: inst.lat,

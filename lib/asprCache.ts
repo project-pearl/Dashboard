@@ -499,10 +499,12 @@ function isBuildInProgress(): boolean {
 // Cache warming
 export async function ensureWarmed(): Promise<void> {
   if (asprCache.hospitalPreparedness.size === 0) {
-    await loadCacheFromDisk(asprCache, CACHE_FILE);
+    const diskData = loadCacheFromDisk<ASPRCache>(CACHE_FILE);
+    if (diskData) Object.assign(asprCache, diskData);
 
     if (asprCache.hospitalPreparedness.size === 0) {
-      await loadCacheFromBlob(asprCache, BLOB_KEY);
+      const blobData = await loadCacheFromBlob<ASPRCache>(BLOB_KEY);
+      if (blobData) Object.assign(asprCache, blobData);
     }
   }
 }
@@ -521,7 +523,7 @@ export async function getEmergencyPreparednessNearMilitary(
   await ensureWarmed();
 
   const centerGrid = gridKey(lat, lng);
-  const searchGrids = [centerGrid, ...neighborKeys(lat, lng, Math.ceil(radius / 11.1))];
+  const searchGrids = [centerGrid, ...neighborKeys(lat, lng)];
 
   const hospitals: HospitalPreparedness[] = [];
   const stockpiles: StrategicNationalStockpile[] = [];
@@ -817,8 +819,8 @@ export async function setASPRCache(
 
     asprCache._lastUpdated = new Date().toISOString();
 
-    await saveCacheToDisk(asprCache, CACHE_FILE);
-    await saveCacheToBlob(asprCache, BLOB_KEY);
+    saveCacheToDisk(CACHE_FILE, asprCache);
+    await saveCacheToBlob(BLOB_KEY, asprCache);
 
   } finally {
     asprCache._buildInProgress = false;

@@ -544,10 +544,12 @@ function isBuildInProgress(): boolean {
 // Cache warming
 export async function ensureWarmed(): Promise<void> {
   if (omhCache.disparitiesData.size === 0) {
-    await loadCacheFromDisk(omhCache, CACHE_FILE);
+    const diskData = loadCacheFromDisk<OMHCache>(CACHE_FILE);
+    if (diskData) Object.assign(omhCache, diskData);
 
     if (omhCache.disparitiesData.size === 0) {
-      await loadCacheFromBlob(omhCache, BLOB_KEY);
+      const blobData = await loadCacheFromBlob<OMHCache>(BLOB_KEY);
+      if (blobData) Object.assign(omhCache, blobData);
     }
   }
 }
@@ -566,7 +568,7 @@ export async function getHealthDisparitiesNearMilitary(
   await ensureWarmed();
 
   const centerGrid = gridKey(lat, lng);
-  const searchGrids = [centerGrid, ...neighborKeys(lat, lng, Math.ceil(radius / 11.1))];
+  const searchGrids = [centerGrid, ...neighborKeys(lat, lng)];
 
   const disparitiesData: HealthDisparitiesData[] = [];
   const culturalPrograms: CommunityHealthWorker[] = [];
@@ -871,8 +873,8 @@ export async function setOMHCache(
 
     omhCache._lastUpdated = new Date().toISOString();
 
-    await saveCacheToDisk(omhCache, CACHE_FILE);
-    await saveCacheToBlob(omhCache, BLOB_KEY);
+    saveCacheToDisk(CACHE_FILE, omhCache);
+    await saveCacheToBlob(BLOB_KEY, omhCache);
 
   } finally {
     omhCache._buildInProgress = false;

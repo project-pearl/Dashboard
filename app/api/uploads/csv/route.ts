@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     const {
       csv_text, user_id, user_role, column_mapping, state_abbr,
       volunteer_id, teacher_uid, original_file,
-    } = csvResult.data;
+    } = parsed.data;
 
     // Parse CSV
     const csvResult = Papa.parse<Record<string, string>>(csv_text, {
@@ -60,12 +60,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Find lat/lng/date columns
-    const latCol = headers.find(h => /^(lat|latitude)$/i.test(h.trim()));
-    const lngCol = headers.find(h => /^(lng|lon|longitude)$/i.test(h.trim()));
-    const dateCol = headers.find(h => /^(date|sample_date|sample date|datetime)$/i.test(h.trim()));
-    const siteCol = headers.find(h => /^(site|station|location|location_name|site_name)$/i.test(h.trim()));
-    const studentCol = headers.find(h => /^(student|student_name)$/i.test(h.trim()));
-    const teamCol = headers.find(h => /^(team|team_name|group)$/i.test(h.trim()));
+    const latCol = headers.find((h: string) => /^(lat|latitude)$/i.test(h.trim()));
+    const lngCol = headers.find((h: string) => /^(lng|lon|longitude)$/i.test(h.trim()));
+    const dateCol = headers.find((h: string) => /^(date|sample_date|sample date|datetime)$/i.test(h.trim()));
+    const siteCol = headers.find((h: string) => /^(site|station|location|location_name|site_name)$/i.test(h.trim()));
+    const studentCol = headers.find((h: string) => /^(student|student_name)$/i.test(h.trim()));
+    const teamCol = headers.find((h: string) => /^(team|team_name|group)$/i.test(h.trim()));
 
     const provenance = user_role === 'NGO' ? 'CITIZEN_SCIENCE' : 'EDUCATIONAL';
     const batch_id = crypto.randomUUID();

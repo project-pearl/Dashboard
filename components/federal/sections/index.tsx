@@ -2,7 +2,6 @@
 
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
-import type { DraggableSectionProps } from '@/components/DraggableSection';
 
 // Loading skeleton for lazy sections
 function SectionSkeleton() {
@@ -14,17 +13,18 @@ function SectionSkeleton() {
 }
 
 // Lazy-loaded section components
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sections = {
-  'ai-water-intelligence': dynamic(() =>
-    import('./AIWaterIntelligenceSection').then(m => ({ default: m.AIWaterIntelligenceSection })),
+  'ai-water-intelligence': dynamic<any>(() =>
+    import('./AIWaterIntelligenceSection').then(m => ({ default: m.AIWaterIntelligenceSection as any })),
     { loading: SectionSkeleton }
   ),
-  'national-briefing': dynamic(() =>
-    import('./NationalBriefingSection').then(m => ({ default: m.NationalBriefingSection })),
+  'national-briefing': dynamic<any>(() =>
+    import('./NationalBriefingSection').then(m => ({ default: m.NationalBriefingSection as any })),
     { loading: SectionSkeleton }
   ),
-  'icis': dynamic(() =>
-    import('./ICISSection').then(m => ({ default: m.ICISSection })),
+  'icis': dynamic<any>(() =>
+    import('./ICISSection').then(m => ({ default: m.ICISSection as any })),
     { loading: SectionSkeleton }
   ),
   // Add more sections as they are extracted...

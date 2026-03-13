@@ -481,10 +481,12 @@ function isBuildInProgress(): boolean {
 // Cache warming
 export async function ensureWarmed(): Promise<void> {
   if (pscCache.officers.size === 0) {
-    await loadCacheFromDisk(pscCache, CACHE_FILE);
+    const diskData = loadCacheFromDisk<PSCCache>(CACHE_FILE);
+    if (diskData) Object.assign(pscCache, diskData);
 
     if (pscCache.officers.size === 0) {
-      await loadCacheFromBlob(pscCache, BLOB_KEY);
+      const blobData = await loadCacheFromBlob<PSCCache>(BLOB_KEY);
+      if (blobData) Object.assign(pscCache, blobData);
     }
   }
 }
@@ -503,7 +505,7 @@ export async function getPHSOfficersNearMilitary(
   await ensureWarmed();
 
   const centerGrid = gridKey(lat, lng);
-  const searchGrids = [centerGrid, ...neighborKeys(lat, lng, Math.ceil(radius / 11.1))];
+  const searchGrids = [centerGrid, ...neighborKeys(lat, lng)];
 
   const officers: CommissionedOfficer[] = [];
   const programs: PublicHealthProgram[] = [];
@@ -784,8 +786,8 @@ export async function setPSCCache(
 
     pscCache._lastUpdated = new Date().toISOString();
 
-    await saveCacheToDisk(pscCache, CACHE_FILE);
-    await saveCacheToBlob(pscCache, BLOB_KEY);
+    saveCacheToDisk(CACHE_FILE, pscCache);
+    await saveCacheToBlob(BLOB_KEY, pscCache);
 
   } finally {
     pscCache._buildInProgress = false;

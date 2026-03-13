@@ -250,10 +250,12 @@ function isBuildInProgress(): boolean {
 // Cache warming and persistence
 export async function ensureWarmed(): Promise<void> {
   if (ahrqCache.facilities.size === 0) {
-    await loadCacheFromDisk(ahrqCache, CACHE_FILE);
+    const diskData = loadCacheFromDisk<AHRQCache>(CACHE_FILE);
+    if (diskData) Object.assign(ahrqCache, diskData);
 
     if (ahrqCache.facilities.size === 0) {
-      await loadCacheFromBlob(ahrqCache, BLOB_KEY);
+      const blobData = await loadCacheFromBlob<AHRQCache>(BLOB_KEY);
+      if (blobData) Object.assign(ahrqCache, blobData);
     }
   }
 }
@@ -263,7 +265,7 @@ export async function getAHRQFacilitiesByLocation(lat: number, lng: number, radi
   await ensureWarmed();
 
   const centerGrid = gridKey(lat, lng);
-  const searchGrids = [centerGrid, ...neighborKeys(lat, lng, Math.ceil(radius / 11.1))];
+  const searchGrids = [centerGrid, ...neighborKeys(lat, lng)];
 
   const facilities: AHRQFacility[] = [];
 
@@ -474,8 +476,8 @@ export async function setAHRQCache(
     ahrqCache._lastUpdated = new Date().toISOString();
 
     // Persist to disk and blob
-    await saveCacheToDisk(ahrqCache, CACHE_FILE);
-    await saveCacheToBlob(ahrqCache, BLOB_KEY);
+    saveCacheToDisk(CACHE_FILE, ahrqCache);
+    await saveCacheToBlob(BLOB_KEY, ahrqCache);
 
   } finally {
     // Clear build lock

@@ -283,7 +283,7 @@ describe('sentinel/scoringEngine', () => {
       vi.mocked(getAllEvents).mockReturnValue([event]);
       vi.mocked(getActiveHucs).mockReturnValue(['02070010']);
       vi.mocked(getEventsForHuc).mockReturnValue([event]);
-      vi.mocked(getStateForHuc).mockReturnValue(null);
+      vi.mocked(getStateForHuc).mockReturnValue(undefined);
 
       const result = await scoreAllHucs();
       expect(result[0].stateAbbr).toBe('VA');

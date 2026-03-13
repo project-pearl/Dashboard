@@ -399,7 +399,7 @@ function parseInterventions(interventions: any): { type: InterventionType; name:
     try { interventionList = JSON.parse(interventions); } catch { interventionList = [{ name: interventions }]; }
   }
 
-  return interventionList.map(intervention => ({
+  return interventionList.map((intervention: any) => ({
     type: determineInterventionType(intervention.type || intervention.intervention_type || intervention.name),
     name: intervention.name || intervention.intervention_name || String(intervention),
     description: intervention.description,
@@ -449,7 +449,7 @@ function parseStudyLocations(studyLocations: any): any[] {
     try { locations = JSON.parse(studyLocations); } catch { locations = []; }
   }
 
-  return locations.map(location => ({
+  return locations.map((location: any) => ({
     facility: location.facility || location.name || 'Unknown Facility',
     city: location.city,
     state: location.state,

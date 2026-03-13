@@ -648,10 +648,12 @@ function isBuildInProgress(): boolean {
 // Cache warming
 export async function ensureWarmed(): Promise<void> {
   if (epaHealthCache.environmentalHealthRisks.size === 0) {
-    await loadCacheFromDisk(epaHealthCache, CACHE_FILE);
+    const diskData = loadCacheFromDisk<EPAHealthCache>(CACHE_FILE);
+    if (diskData) { Object.assign(epaHealthCache, diskData); }
 
     if (epaHealthCache.environmentalHealthRisks.size === 0) {
-      await loadCacheFromBlob(epaHealthCache, BLOB_KEY);
+      const blobData = await loadCacheFromBlob<EPAHealthCache>(BLOB_KEY);
+      if (blobData) { Object.assign(epaHealthCache, blobData); }
     }
   }
 }
@@ -670,7 +672,7 @@ export async function getEnvironmentalHealthRisksNearMilitary(
   await ensureWarmed();
 
   const centerGrid = gridKey(lat, lng);
-  const searchGrids = [centerGrid, ...neighborKeys(lat, lng, Math.ceil(radius / 11.1))];
+  const searchGrids = [centerGrid, ...neighborKeys(lat, lng)];
 
   const healthRisks: EnvironmentalHealthRisk[] = [];
   const superfundSites: SuperfundHealthData[] = [];
@@ -967,8 +969,8 @@ export async function setEPAHealthCache(
 
     epaHealthCache._lastUpdated = new Date().toISOString();
 
-    await saveCacheToDisk(epaHealthCache, CACHE_FILE);
-    await saveCacheToBlob(epaHealthCache, BLOB_KEY);
+    saveCacheToDisk(CACHE_FILE, epaHealthCache);
+    await saveCacheToBlob(BLOB_KEY, epaHealthCache);
 
   } finally {
     epaHealthCache._buildInProgress = false;

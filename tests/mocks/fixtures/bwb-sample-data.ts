@@ -2,8 +2,8 @@ import type { BwbStation } from '@/lib/bwbCache';
 
 export function makeBwbStation(overrides: Partial<BwbStation> = {}): BwbStation {
   return {
-    stationId: 'BWB-001',
-    datasetId: 'chesapeake-bay',
+    stationId: 1,
+    datasetId: 100,
     name: 'Chesapeake Bay Station Alpha',
     lat: 38.93,
     lng: -76.38,

@@ -317,7 +317,7 @@ export async function buildUSGSWQPCacheData(records: USGSWQPRecord[], waterViola
 
   enrichedRecords.forEach(record => {
     // Spatial indexing
-    const grid = gridKey(record.location.lat, record.location.lng);
+    const grid = gridKey(record.location.lat ?? 0, record.location.lng ?? 0);
     if (!spatialIndex[grid]) spatialIndex[grid] = [];
     spatialIndex[grid].push(record);
 
@@ -325,7 +325,8 @@ export async function buildUSGSWQPCacheData(records: USGSWQPRecord[], waterViola
     dataTypeDistribution[record.wqpSpecific.dataType]++;
     mediaBreakdown[record.wqpSpecific.sampleMedia]++;
     monitoringTypeDistribution[record.wqpSpecific.monitoringType]++;
-    stateDistribution[record.location.state] = (stateDistribution[record.location.state] || 0) + 1;
+    const wqpState = record.location.state ?? 'Unknown';
+    stateDistribution[wqpState] = (stateDistribution[wqpState] || 0) + 1;
 
     if (record.wqpSpecific.complianceStatus === 'violation') complianceViolations++;
     if (record.wqpSpecific.exceedsStandard) exceedsStandardCount++;
@@ -379,7 +380,7 @@ function buildMilitaryProximityAlerts(records: USGSWQPRecord[]): any[] {
       military_installation: record.proximityToMilitary?.nearestInstallation,
       distance_km: record.proximityToMilitary?.distanceKm,
       sample_date: record.wqpSpecific.sampleDateTime,
-      location: `${record.location.city || 'Unknown'}, ${record.location.state}`,
+      location: `${(record.location as any).city || 'Unknown'}, ${record.location.state ?? 'Unknown'}`,
     }))
     .sort((a, b) => (a.distance_km || 999) - (b.distance_km || 999))
     .slice(0, 20);

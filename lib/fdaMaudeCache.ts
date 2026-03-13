@@ -652,7 +652,7 @@ function buildEnvironmentalExposureCorrelations(records: FDAMAUDERecord[]): any[
       report_type: record.fdaMaudeSpecific.reportType,
       device_problem: record.fdaMaudeSpecific.adverseEventDescription.deviceProblem,
       facility_type: record.fdaMaudeSpecific.facilityInformation?.facilityType,
-      location: `${record.location.city || 'Unknown'}, ${record.location.state}`,
+      location: `${record.location.county || 'Unknown'}, ${record.location.state}`,
     }))
     .slice(0, 15);
 }

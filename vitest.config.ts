@@ -13,9 +13,6 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    environmentMatchGlobs: [
-      ['tests/components/**', 'jsdom'],
-    ],
     pool: 'forks',
     setupFiles: ['tests/setup.ts'],
     include: ['tests/**/*.test.{ts,tsx}'],

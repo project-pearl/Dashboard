@@ -357,10 +357,12 @@ function isBuildInProgress(): boolean {
 // Cache warming
 export async function ensureWarmed(): Promise<void> {
   if (hrsaCache.hpsaDesignations.size === 0) {
-    await loadCacheFromDisk(hrsaCache, CACHE_FILE);
+    const diskData = loadCacheFromDisk<HRSACache>(CACHE_FILE);
+    if (diskData) Object.assign(hrsaCache, diskData);
 
     if (hrsaCache.hpsaDesignations.size === 0) {
-      await loadCacheFromBlob(hrsaCache, BLOB_KEY);
+      const blobData = await loadCacheFromBlob<HRSACache>(BLOB_KEY);
+      if (blobData) Object.assign(hrsaCache, blobData);
     }
   }
 }
@@ -370,7 +372,7 @@ export async function getHPSAsByLocation(lat: number, lng: number, radius: numbe
   await ensureWarmed();
 
   const centerGrid = gridKey(lat, lng);
-  const searchGrids = [centerGrid, ...neighborKeys(lat, lng, Math.ceil(radius / 11.1))];
+  const searchGrids = [centerGrid, ...neighborKeys(lat, lng)];
 
   const designations: HPSADesignation[] = [];
 
@@ -628,8 +630,8 @@ export async function setHRSACache(
 
     hrsaCache._lastUpdated = new Date().toISOString();
 
-    await saveCacheToDisk(hrsaCache, CACHE_FILE);
-    await saveCacheToBlob(hrsaCache, BLOB_KEY);
+    saveCacheToDisk(CACHE_FILE, hrsaCache);
+    await saveCacheToBlob(BLOB_KEY, hrsaCache);
 
   } finally {
     hrsaCache._buildInProgress = false;

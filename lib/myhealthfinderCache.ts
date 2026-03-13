@@ -131,7 +131,7 @@ export function processMyHealthfinderData(rawRecords: any[]): MyHealthfinderReco
       topicId: raw.Id || raw.topic_id,
       title: raw.Title || raw.topic_title || 'Untitled Topic',
       category: categorizeHealthTopic(raw.Categories || raw.category),
-      audienceType: raw.Sections?.find(s => s.Title === 'Who needs this')?.Description || 'general',
+      audienceType: raw.Sections?.find((s: any) => s.Title === 'Who needs this')?.Description || 'general',
       ageGroup: extractAgeGroups(raw.MyHFTitle || raw.title),
       sexRestriction: extractSexRestriction(raw.MyHFTitle || raw.title),
       recommendationText: extractRecommendationText(raw.Sections || []),

@@ -16,7 +16,7 @@ import {
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
 import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 import { PRIORITY_STATES } from './constants';
-import { militaryInstallations } from '../data/military-installations';
+const militaryInstallations: any[] = require('../data/military-installations').militaryInstallations ?? require('../data/military-installations').default ?? require('../data/military-installations');
 
 // ─── Types & Interfaces ──────────────────────────────────────────────────────
 
@@ -178,7 +178,7 @@ export async function ensureWarmed(): Promise<void> {
 
   try {
     const diskData = await loadFromDisk();
-    if (diskData?.records?.length > 0) {
+    if (diskData?.records?.length && diskData.records.length > 0) {
       hrsaDataCache = diskData;
       _hrsaDataCacheLoaded = true;
       return;
@@ -189,10 +189,10 @@ export async function ensureWarmed(): Promise<void> {
 
   try {
     const blobData = await loadCacheFromBlob<HRSADataCacheData>(CACHE_FILE);
-    if (blobData?.records?.length > 0) {
+    if (blobData?.records?.length && blobData.records.length > 0) {
       hrsaDataCache = blobData;
       _hrsaDataCacheLoaded = true;
-      await saveToDisk(blobData);
+      await saveToDisk(blobData!);
     }
   } catch (error) {
     console.warn('Failed to load HRSA Data cache from blob:', error);
@@ -336,7 +336,7 @@ function extractAccessBarriers(raw: any): string[] {
   barrierFields.forEach(field => {
     if (raw[field]) {
       if (typeof raw[field] === 'string') {
-        barriers.push(...raw[field].split(',').map(b => b.trim()));
+        barriers.push(...raw[field].split(',').map((b: string) => b.trim()));
       }
     }
   });
@@ -457,7 +457,7 @@ function buildHRSASummary(records: HRSARecord[]): HRSADataCacheData['summary'] {
   return {
     totalRecords: records.length,
     categoryCounts,
-    statesCovered: [...new Set(records.map(r => r.location.state).filter(Boolean))],
+    statesCovered: [...new Set(records.map(r => r.location.state).filter((s): s is string => Boolean(s)))],
     totalPopulationAffected,
     totalProvidersNeeded,
     severityDistribution,

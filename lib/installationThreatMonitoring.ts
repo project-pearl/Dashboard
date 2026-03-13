@@ -8,7 +8,7 @@
  */
 
 import { estimatePlumeArrival, findTargetsAtRisk, Wind } from './plumeProjection';
-import { haversineKm } from './geoUtils';
+import { haversineDistance as haversineKm } from './geoUtils';
 import { getNdbcCache } from './ndbcCache';
 import installationsJson from '@/data/military-installations-fixed.json';
 
@@ -227,7 +227,7 @@ export async function assessInstallationThreats(
   let windDirection = 270; // default west
   let temperature = 20; // default celsius
 
-  if (ndbcResult?.stations?.length > 0) {
+  if (ndbcResult && ndbcResult.stations && ndbcResult.stations.length > 0) {
     // Find nearest station with wind data
     let bestStation = null;
     let bestDistance = Infinity;
@@ -242,9 +242,9 @@ export async function assessInstallationThreats(
     }
 
     if (bestStation?.observation) {
-      windSpeed = bestStation.observation.windSpeed;
-      windDirection = bestStation.observation.windDir;
-      temperature = bestStation.observation.temperature || 20;
+      windSpeed = bestStation.observation.windSpeed ?? 5;
+      windDirection = bestStation.observation.windDir ?? 270;
+      temperature = bestStation.observation.airTemp ?? 20;
     }
   }
 

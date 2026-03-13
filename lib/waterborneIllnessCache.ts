@@ -2,7 +2,8 @@
 // CDC waterborne illness outbreak surveillance data cache
 // Correlates outbreaks with water quality violations for direct health-water quality evidence
 
-import { loadCacheFromDisk, saveCacheToDisk, loadCacheFromBlob, saveCacheToBlob } from './cacheUtils';
+import { loadCacheFromDisk, saveCacheToDisk } from './cacheUtils';
+import { loadCacheFromBlob, saveCacheToBlob } from './blobPersistence';
 import {
   WaterborneOutbreak,
   findNearestInstallation,
@@ -10,7 +11,7 @@ import {
   validateWaterborneOutbreak,
   correlateOutbreakWithViolations,
 } from './healthDataUtils';
-import { militaryInstallations } from '../data/military-installations';
+const militaryInstallations: any[] = require('../data/military-installations').militaryInstallations ?? require('../data/military-installations').default ?? require('../data/military-installations');
 
 // ─── Cache State ─────────────────────────────────────────────────────────────
 
@@ -39,8 +40,8 @@ export async function setWaterborneOutbreakCache(outbreaks: WaterborneOutbreak[]
   lastFetched = new Date().toISOString();
   _outbreakCacheLoaded = true;
 
-  await saveCacheToDisk(outbreaks, CACHE_FILE);
-  await saveCacheToBlob(outbreaks, CACHE_FILE);
+  saveCacheToDisk(CACHE_FILE, outbreaks);
+  await saveCacheToBlob(CACHE_FILE, outbreaks);
 }
 
 export function isWaterborneOutbreakCacheLoaded(): boolean {
@@ -101,7 +102,7 @@ export async function ensureWaterborneOutbreakCacheWarmed(): Promise<void> {
       console.log(`Outbreak cache warmed from blob: ${blobData.length} outbreaks`);
 
       // Save to disk for faster future access
-      await saveCacheToDisk(blobData, CACHE_FILE);
+      saveCacheToDisk(CACHE_FILE, blobData);
       return;
     }
 
@@ -121,7 +122,7 @@ export function processOutbreakData(
   waterViolations: Array<{ id: string; lat?: number; lng?: number; violationDate: string; systemId: string }> = []
 ): WaterborneOutbreak[] {
   const processedOutbreaks: WaterborneOutbreak[] = [];
-  const installations: MilitaryInstallationRef[] = militaryInstallations.map(inst => ({
+  const installations: MilitaryInstallationRef[] = militaryInstallations.map((inst: any) => ({
     id: inst.id,
     name: inst.name,
     lat: inst.lat,

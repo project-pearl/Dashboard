@@ -386,7 +386,7 @@ function buildWaterHealthCorrelations(records: DataCDCGovRecord[]): any[] {
       indicator: record.cdcDataSpecific.indicatorName,
       value: record.cdcDataSpecific.indicatorValue,
       unit: record.cdcDataSpecific.indicatorUnit,
-      location: `${record.location.city || ''} ${record.location.county || ''} ${record.location.state || ''}`.trim(),
+      location: `${record.location.county || ''} ${record.location.state || ''}`.trim(),
       reporting_level: record.cdcDataSpecific.reportingLevel,
       priority: record.cdcDataSpecific.publicHealthPriority,
       surveillance_period: record.cdcDataSpecific.surveillancePeriod,

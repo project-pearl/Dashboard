@@ -16,7 +16,9 @@ import {
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
 import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 import { PRIORITY_STATES } from './constants';
-import { militaryInstallations } from '../data/military-installations';
+// @ts-ignore - JSON module without type declarations
+import militaryInstallationsData from '../data/military-installations.json';
+const militaryInstallations = militaryInstallationsData as any[];
 
 // ─── Types & Interfaces ──────────────────────────────────────────────────────
 
@@ -285,7 +287,7 @@ export async function ensureWarmed(): Promise<void> {
   try {
     // Try disk first
     const diskData = await loadFromDisk();
-    if (diskData?.records?.length > 0) {
+    if (diskData && diskData.records && diskData.records.length > 0) {
       healthDataGovCache = diskData;
       _healthDataGovCacheLoaded = true;
       return;
@@ -297,7 +299,7 @@ export async function ensureWarmed(): Promise<void> {
   try {
     // Fallback to blob
     const blobData = await loadCacheFromBlob<HealthDataGovCacheData>(CACHE_FILE);
-    if (blobData?.records?.length > 0) {
+    if (blobData && blobData.records && blobData.records.length > 0) {
       healthDataGovCache = blobData;
       _healthDataGovCacheLoaded = true;
       await saveToDisk(blobData);
@@ -821,7 +823,7 @@ export async function buildHealthDataGovCacheData(
 }
 
 function buildHealthDataGovSummary(records: HealthDataGovRecord[]): HealthDataGovCacheData['summary'] {
-  const statesCovered = [...new Set(records.map(r => r.location.state).filter(Boolean))];
+  const statesCovered = [...new Set(records.map(r => r.location.state).filter((s): s is string => !!s))];
   const datasetCount = [...new Set(records.map(r => r.socrataSpecific.datasetId))].length;
 
   // Category counts
@@ -910,7 +912,7 @@ function buildHealthDataGovCorrelations(
     emergencyPreparednessRecords,
     nearMilitaryFacilities,
     correlatedWithViolations,
-    highRiskAreas: highRiskAlerts
+    highRiskAlerts: highRiskAlerts
       .sort((a, b) => {
         const levelOrder = { critical: 3, high: 2, moderate: 1 };
         return (levelOrder[b.alertLevel] || 0) - (levelOrder[a.alertLevel] || 0);

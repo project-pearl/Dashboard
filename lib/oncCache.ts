@@ -706,10 +706,12 @@ function isBuildInProgress(): boolean {
 // Cache warming
 export async function ensureWarmed(): Promise<void> {
   if (oncCache.healthInformationExchanges.size === 0) {
-    await loadCacheFromDisk(oncCache, CACHE_FILE);
+    const diskData = loadCacheFromDisk<ONCCache>(CACHE_FILE);
+    if (diskData) Object.assign(oncCache, diskData);
 
     if (oncCache.healthInformationExchanges.size === 0) {
-      await loadCacheFromBlob(oncCache, BLOB_KEY);
+      const blobData = await loadCacheFromBlob<ONCCache>(BLOB_KEY);
+      if (blobData) Object.assign(oncCache, blobData);
     }
   }
 }
@@ -728,7 +730,7 @@ export async function getMilitaryHealthITServices(
   await ensureWarmed();
 
   const centerGrid = gridKey(lat, lng);
-  const searchGrids = [centerGrid, ...neighborKeys(lat, lng, Math.ceil(radius / 11.1))];
+  const searchGrids = [centerGrid, ...neighborKeys(lat, lng)];
 
   const hieNetworks: HealthInformationExchange[] = [];
   const ehrFacilities: EHRAdoptionData[] = [];
@@ -1048,8 +1050,8 @@ export async function setONCCache(
 
     oncCache._lastUpdated = new Date().toISOString();
 
-    await saveCacheToDisk(oncCache, CACHE_FILE);
-    await saveCacheToBlob(oncCache, BLOB_KEY);
+    saveCacheToDisk(CACHE_FILE, oncCache);
+    await saveCacheToBlob(BLOB_KEY, oncCache);
 
   } finally {
     oncCache._buildInProgress = false;

@@ -27,12 +27,12 @@ function emptyInput(): RiskScoreInput {
 /** Build a "high quality" input with good WQP grade and clean records. */
 function highScoreInput(): RiskScoreInput {
   return {
-    wqpGrade: { canBeGraded: true, score: 95, letter: 'A', gradedParamCount: 6, gradedParamTotal: 7 },
+    wqpGrade: { canBeGraded: true, score: 95, letter: 'A', gradedParamCount: 6, gradedParamTotal: 7 } as any,
     hucIndices: {
-      infrastructureFailure: { value: 15, confidence: 70, trend: 'stable' },
-      permitRiskExposure: { value: 10, confidence: 70, trend: 'improving' },
-      ejVulnerability: { value: 20, confidence: 60, trend: 'stable' },
-    },
+      infrastructureFailure: { value: 15, confidence: 70, trend: 'stable' } as any,
+      permitRiskExposure: { value: 10, confidence: 70, trend: 'improving' } as any,
+      ejVulnerability: { value: 20, confidence: 60, trend: 'stable' } as any,
+    } as any,
     sdwis: { systems: [{}], violations: [], enforcement: [] },
     icis: { permits: [{}], violations: [], enforcement: [] },
     echo: { facilities: [{}], violations: [] },
@@ -46,12 +46,12 @@ function highScoreInput(): RiskScoreInput {
 /** Build a "low quality" input with poor WQP grade and many violations. */
 function lowScoreInput(): RiskScoreInput {
   return {
-    wqpGrade: { canBeGraded: true, score: 30, letter: 'F', gradedParamCount: 5, gradedParamTotal: 7 },
+    wqpGrade: { canBeGraded: true, score: 30, letter: 'F', gradedParamCount: 5, gradedParamTotal: 7 } as any,
     hucIndices: {
-      infrastructureFailure: { value: 80, confidence: 70, trend: 'worsening' },
-      permitRiskExposure: { value: 75, confidence: 70, trend: 'worsening' },
-      ejVulnerability: { value: 85, confidence: 60, trend: 'worsening' },
-    },
+      infrastructureFailure: { value: 80, confidence: 70, trend: 'declining' } as any,
+      permitRiskExposure: { value: 75, confidence: 70, trend: 'declining' } as any,
+      ejVulnerability: { value: 85, confidence: 60, trend: 'declining' } as any,
+    } as any,
     sdwis: { systems: [{}], violations: [{}, {}, {}], enforcement: [] },
     icis: { permits: [{}], violations: [{}, {}, {}, {}], enforcement: [{}, {}] },
     echo: { facilities: [{}], violations: [{}, {}, {}] },
@@ -247,7 +247,7 @@ describe('waterRiskScore', () => {
   describe('dataSources', () => {
     it('includes WQP when wqpGrade is gradable', () => {
       const input = emptyInput();
-      input.wqpGrade = { canBeGraded: true, score: 80, letter: 'B-', gradedParamCount: 3, gradedParamTotal: 7 };
+      input.wqpGrade = { canBeGraded: true, score: 80, letter: 'B-', gradedParamCount: 3, gradedParamTotal: 7 } as any;
 
       const result = computeWaterRiskScore(input);
       expect(result.dataSources).toContain('EPA Water Quality Portal');
@@ -255,7 +255,7 @@ describe('waterRiskScore', () => {
 
     it('does not include WQP when canBeGraded is false', () => {
       const input = emptyInput();
-      input.wqpGrade = { canBeGraded: false, score: null, letter: 'F', gradedParamCount: 0, gradedParamTotal: 7 };
+      input.wqpGrade = { canBeGraded: false, score: null, letter: 'F', gradedParamCount: 0, gradedParamTotal: 7 } as any;
 
       const result = computeWaterRiskScore(input);
       expect(result.dataSources).not.toContain('EPA Water Quality Portal');
@@ -329,7 +329,7 @@ describe('waterRiskScore', () => {
       const input = emptyInput();
       input.hucIndices = {
         infrastructureFailure: { value: 30, confidence: 50, trend: 'stable' },
-      };
+      } as any;
 
       const result = computeWaterRiskScore(input);
       expect(result.dataSources).toContain('PEARL HUC-8 Indices');
@@ -351,12 +351,12 @@ describe('waterRiskScore', () => {
 
       // Boost waterQuality to 95 via wqpGrade
       const wqBoost = emptyInput();
-      wqBoost.wqpGrade = { canBeGraded: true, score: 95, letter: 'A', gradedParamCount: 6, gradedParamTotal: 7 };
+      wqBoost.wqpGrade = { canBeGraded: true, score: 95, letter: 'A', gradedParamCount: 6, gradedParamTotal: 7 } as any;
       const wqResult = computeWaterRiskScore(wqBoost);
 
       // Boost EJ to a high score via hucIndices
       const ejBoost = emptyInput();
-      ejBoost.hucIndices = { ejVulnerability: { value: 5, confidence: 70, trend: 'stable' } };
+      ejBoost.hucIndices = { ejVulnerability: { value: 5, confidence: 70, trend: 'stable' } } as any;
       const ejResult = computeWaterRiskScore(ejBoost);
 
       const wqDelta = wqResult.composite.score - baselineResult.composite.score;
@@ -369,11 +369,11 @@ describe('waterRiskScore', () => {
     it('waterQuality at weight 0.30 dominates compliance at 0.20', () => {
       // Both boosted from 50 to ~90+
       const wqBoost = emptyInput();
-      wqBoost.wqpGrade = { canBeGraded: true, score: 95, letter: 'A', gradedParamCount: 6, gradedParamTotal: 7 };
+      wqBoost.wqpGrade = { canBeGraded: true, score: 95, letter: 'A', gradedParamCount: 6, gradedParamTotal: 7 } as any;
       const wqResult = computeWaterRiskScore(wqBoost);
 
       const compBoost = emptyInput();
-      compBoost.hucIndices = { permitRiskExposure: { value: 5, confidence: 70, trend: 'stable' } };
+      compBoost.hucIndices = { permitRiskExposure: { value: 5, confidence: 70, trend: 'stable' } } as any;
       // Also add permits with no violations to boost compliance
       compBoost.icis = { permits: [{}], violations: [], enforcement: [] };
       const compResult = computeWaterRiskScore(compBoost);
@@ -510,7 +510,7 @@ describe('waterRiskScore', () => {
   describe('infrastructure category', () => {
     it('inverts HUC index: low infrastructure failure index => high score', () => {
       const input = emptyInput();
-      input.hucIndices = { infrastructureFailure: { value: 10, confidence: 70, trend: 'stable' } };
+      input.hucIndices = { infrastructureFailure: { value: 10, confidence: 70, trend: 'stable' } } as any;
 
       const result = computeWaterRiskScore(input);
       expect(result.categories.infrastructure.score).toBe(90);

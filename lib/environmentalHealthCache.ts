@@ -2,7 +2,8 @@
 // Environmental health metrics cache with air/water quality health outcome correlations
 // Integrates NIEHS, EPA environmental justice, and state health tracking data
 
-import { loadCacheFromDisk, saveCacheToDisk, loadCacheFromBlob, saveCacheToBlob } from './cacheUtils';
+import { loadCacheFromDisk, saveCacheToDisk } from './cacheUtils';
+import { loadCacheFromBlob, saveCacheToBlob } from './blobPersistence';
 import {
   EnvironmentalHealthMetric,
   findNearestInstallation,
@@ -11,7 +12,7 @@ import {
   calculateEnvironmentalRiskScore,
   analyzeHealthEnvironmentCorrelation,
 } from './healthDataUtils';
-import { militaryInstallations } from '../data/military-installations';
+const militaryInstallations: any[] = require('../data/military-installations').militaryInstallations ?? require('../data/military-installations').default ?? require('../data/military-installations');
 
 // ─── Cache State ─────────────────────────────────────────────────────────────
 
@@ -40,8 +41,8 @@ export async function setEnvironmentalHealthCache(metrics: EnvironmentalHealthMe
   lastFetched = new Date().toISOString();
   _environmentalHealthCacheLoaded = true;
 
-  await saveCacheToDisk(metrics, CACHE_FILE);
-  await saveCacheToBlob(metrics, CACHE_FILE);
+  saveCacheToDisk(CACHE_FILE, metrics);
+  await saveCacheToBlob(CACHE_FILE, metrics);
 }
 
 export function isEnvironmentalHealthCacheLoaded(): boolean {
@@ -102,7 +103,7 @@ export async function ensureEnvironmentalHealthCacheWarmed(): Promise<void> {
       console.log(`Environmental health cache warmed from blob: ${blobData.length} metrics`);
 
       // Save to disk for faster future access
-      await saveCacheToDisk(blobData, CACHE_FILE);
+      saveCacheToDisk(CACHE_FILE, blobData);
       return;
     }
 
@@ -122,7 +123,7 @@ export function processEnvironmentalHealthData(
   dataSource: 'niehs' | 'epa_ejscreen' | 'state_tracking' | 'combined' = 'combined'
 ): EnvironmentalHealthMetric[] {
   const processedMetrics: EnvironmentalHealthMetric[] = [];
-  const installations: MilitaryInstallationRef[] = militaryInstallations.map(inst => ({
+  const installations: MilitaryInstallationRef[] = militaryInstallations.map((inst: any) => ({
     id: inst.id,
     name: inst.name,
     lat: inst.lat,

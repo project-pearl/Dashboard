@@ -121,7 +121,7 @@ describe('constants', () => {
     });
 
     it('is a subset of ALL_STATES', () => {
-      const allSet = new Set(ALL_STATES);
+      const allSet = new Set<string>(ALL_STATES);
       for (const st of NUTRIENT_TRADING_STATES) {
         expect(allSet.has(st)).toBe(true);
       }

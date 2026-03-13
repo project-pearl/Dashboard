@@ -43,7 +43,8 @@ export function resolveMarylandWaterwayCoordinates(
 
   // Find coordinate fix by name
   const fix = waterwayFixes.fixes.find(f => {
-    if (waterway.id && f.id && f.id === waterway.id) {
+    const fixRecord = f as typeof f & { id?: string };
+    if (waterway.id && fixRecord.id && fixRecord.id === waterway.id) {
       return true; // Exact ID match
     }
 
@@ -72,14 +73,17 @@ export function resolveMarylandWaterwayCoordinates(
  * Get all Maryland waterway coordinate fixes
  */
 export function getAllMarylandWaterwayFixes(): WaterwayCoordinate[] {
-  return waterwayFixes.fixes.map(fix => ({
-    name: fix.name,
-    id: fix.id,
-    lat: fix.fixedLat,
-    lng: fix.fixedLng,
-    reason: fix.reason,
-    priority: fix.priority,
-  }));
+  return waterwayFixes.fixes.map(fix => {
+    const fixRecord = fix as typeof fix & { id?: string };
+    return {
+      name: fix.name,
+      id: fixRecord.id,
+      lat: fix.fixedLat,
+      lng: fix.fixedLng,
+      reason: fix.reason,
+      priority: fix.priority as WaterwayCoordinate['priority'],
+    };
+  });
 }
 
 /**
@@ -94,7 +98,7 @@ export function getBushRiverCoordinates() {
     waterway: 'Bush River',
     variants: bushRiverFixes.map(fix => ({
       name: fix.name,
-      id: fix.id,
+      id: (fix as typeof fix & { id?: string }).id,
       lat: fix.fixedLat,
       lng: fix.fixedLng,
       reason: fix.reason,
@@ -119,7 +123,7 @@ export function getTimberRunCoordinates() {
     waterway: 'Timber Run',
     variants: timberRunFixes.map(fix => ({
       name: fix.name,
-      id: fix.id,
+      id: (fix as typeof fix & { id?: string }).id,
       lat: fix.fixedLat,
       lng: fix.fixedLng,
       reason: fix.reason,

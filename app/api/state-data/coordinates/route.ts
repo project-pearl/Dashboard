@@ -148,7 +148,7 @@ async function analyzeStateCaching(targetState?: string, dataSource = 'all') {
       });
 
     } catch (fileError) {
-      console.log(`Could not analyze ${filename}:`, fileError.message);
+      console.log(`Could not analyze ${filename}:`, fileError instanceof Error ? fileError.message : fileError);
       continue;
     }
   }
@@ -239,7 +239,7 @@ async function getMarylandCoordinateFixes() {
   return {
     state: 'MD',
     fixesAvailable: Object.keys(applyMarylandCoordinateFixes([])).length,
-    fixes: Object.entries({}).map(([id, fix]) => ({ // Maryland fixes would go here
+    fixes: Object.entries({} as Record<string, Record<string, unknown>>).map(([id, fix]) => ({
       id,
       ...fix,
     })),

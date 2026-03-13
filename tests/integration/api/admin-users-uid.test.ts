@@ -42,7 +42,7 @@ describe('DELETE /api/admin/users/[uid]', () => {
   it('returns 401 without auth token', async () => {
     const { DELETE } = await import('@/app/api/admin/users/[uid]/route');
     const req = makeNextRequest(BASE, { method: 'DELETE' });
-    const res = await DELETE(req, { params: { uid: 'target-uid' } });
+    const res = await DELETE(req, { params: Promise.resolve({ uid: 'target-uid' }) });
     expect(res.status).toBe(401);
   });
 
@@ -52,7 +52,7 @@ describe('DELETE /api/admin/users/[uid]', () => {
       method: 'DELETE',
       headers: { authorization: 'Bearer valid-token' },
     });
-    const res = await DELETE(req, { params: { uid: 'target-uid' } });
+    const res = await DELETE(req, { params: Promise.resolve({ uid: 'target-uid' }) });
     expect(res.status).not.toBe(401);
   });
 
@@ -62,7 +62,7 @@ describe('DELETE /api/admin/users/[uid]', () => {
       method: 'DELETE',
       headers: { authorization: 'Bearer valid-token' },
     });
-    const res = await DELETE(req, { params: { uid: '' } });
+    const res = await DELETE(req, { params: Promise.resolve({ uid: '' }) });
     expect(res.status).toBe(400);
   });
 
@@ -72,7 +72,7 @@ describe('DELETE /api/admin/users/[uid]', () => {
       method: 'DELETE',
       headers: { authorization: 'Bearer valid-token' },
     });
-    const res = await DELETE(req, { params: { uid: 'caller-uid' } });
+    const res = await DELETE(req, { params: Promise.resolve({ uid: 'caller-uid' }) });
     // Should be 400 or 403 (can't delete yourself)
     expect([400, 403]).toContain(res.status);
   });
@@ -83,7 +83,7 @@ describe('DELETE /api/admin/users/[uid]', () => {
       method: 'DELETE',
       headers: { authorization: 'Bearer valid-token' },
     });
-    const res = await DELETE(req, { params: { uid: 'target-uid' } });
+    const res = await DELETE(req, { params: Promise.resolve({ uid: 'target-uid' }) });
     const json = await res.json();
     expect(typeof json).toBe('object');
   });

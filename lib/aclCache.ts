@@ -653,10 +653,12 @@ function isBuildInProgress(): boolean {
 // Cache warming
 export async function ensureWarmed(): Promise<void> {
   if (aclCache.areaAgencies.size === 0) {
-    await loadCacheFromDisk(aclCache, CACHE_FILE);
+    const diskData = loadCacheFromDisk<ACLCache>(CACHE_FILE);
+    if (diskData) Object.assign(aclCache, diskData);
 
     if (aclCache.areaAgencies.size === 0) {
-      await loadCacheFromBlob(aclCache, BLOB_KEY);
+      const blobData = await loadCacheFromBlob<ACLCache>(BLOB_KEY);
+      if (blobData) Object.assign(aclCache, blobData);
     }
   }
 }
@@ -674,7 +676,7 @@ export async function getAgingServicesNearMilitary(
   await ensureWarmed();
 
   const centerGrid = gridKey(lat, lng);
-  const searchGrids = [centerGrid, ...neighborKeys(lat, lng, Math.ceil(radius / 11.1))];
+  const searchGrids = [centerGrid, ...neighborKeys(lat, lng)];
 
   const areaAgencies: AreaAgencyOnAging[] = [];
   const nutritionPrograms: NutritionProgram[] = [];
@@ -967,8 +969,8 @@ export async function setACLCache(
 
     aclCache._lastUpdated = new Date().toISOString();
 
-    await saveCacheToDisk(aclCache, CACHE_FILE);
-    await saveCacheToBlob(aclCache, BLOB_KEY);
+    saveCacheToDisk(CACHE_FILE, aclCache);
+    await saveCacheToBlob(BLOB_KEY, aclCache);
 
   } finally {
     aclCache._buildInProgress = false;
