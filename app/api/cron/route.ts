@@ -22,6 +22,7 @@ async function callOpenAI(systemPrompt: string, userMessage: string): Promise<st
     body: JSON.stringify({
       model: 'gpt-4o-mini',
       max_tokens: 1500,
+      temperature: 0.3,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
