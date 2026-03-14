@@ -94,6 +94,7 @@ import StateRollupTable from '@/components/federal/StateRollupTable';
 import NationalMapSection from '@/components/federal/NationalMapSection';
 import { SectionLoader, isSectionExtracted } from '@/components/federal/sections';
 import { TriageQueueSection } from './TriageQueueSection';
+import CorrelationBreakthroughsPanel from '@/components/CorrelationBreakthroughsPanel';
 
 
 import hucNamesData from '@/data/huc8-names.json';
@@ -206,7 +207,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['usmap', 'pol-constituent-concerns', 'ask-pin-universal', 'triage-queue', 'wqx-modern-results', 'flood-event-viewer', 'dmr-violations-panel', 'hab-forecast-panel', 'cdc-places-health', 'severe-weather-panel', 'nexrad-precip-panel', 'congress-legislation']),
+    sections: new Set(['usmap', 'pol-constituent-concerns', 'ask-pin-universal', 'triage-queue', 'wqx-modern-results', 'flood-event-viewer', 'dmr-violations-panel', 'hab-forecast-panel', 'cdc-places-health', 'severe-weather-panel', 'nexrad-precip-panel', 'congress-legislation', 'correlation-breakthroughs']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -216,7 +217,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: true,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['ai-water-intelligence', 'briefing-actions', 'triage-queue', 'briefing-qa', 'ask-pin-universal']),
+    sections: new Set(['ai-water-intelligence', 'briefing-actions', 'triage-queue', 'briefing-qa', 'ask-pin-universal', 'correlation-breakthroughs']),
   },
   'political-briefing': {
     label: 'Political Briefing',
@@ -241,7 +242,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: true, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'icis', 'sdwis', 'priorityqueue', 'dmr-violations-panel']),
+    sections: new Set(['networkhealth', 'icis', 'sdwis', 'priorityqueue', 'dmr-violations-panel', 'correlation-breakthroughs']),
   },
   'water-quality': {
     label: 'Water Quality',
@@ -251,7 +252,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: true, showSituationSummary: true, showTimeRange: true,
     showSLA: false, showRestorationPlan: false, collapseStateTable: false,
-    sections: new Set(['wq-domain-tabs', 'networkhealth', 'impairmentprofile', 'coveragegaps', 'situation', 'statebystatesummary', 'usgs-ogc-stations', 'ngwmn-groundwater', 'water-availability', 'wqx-modern-results', 'dmr-violations-panel']),
+    sections: new Set(['wq-domain-tabs', 'networkhealth', 'impairmentprofile', 'coveragegaps', 'situation', 'statebystatesummary', 'usgs-ogc-stations', 'ngwmn-groundwater', 'water-availability', 'wqx-modern-results', 'dmr-violations-panel', 'correlation-breakthroughs']),
   },
   infrastructure: {
     label: 'Infrastructure',
@@ -271,7 +272,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: true, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: true, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'data-latency', 'sentinel-briefing', 'air-quality-briefing', 'fire-detection', 'flood-status', 'flood-risk-summary', 'weather-alerts', 'delta-changelog', 'usgs-ogc-stations', 'ngwmn-groundwater', 'nws-forecast-panel', 'water-availability', 'wqx-modern-results', 'hab-forecast-panel', 'nexrad-precip-panel', 'severe-weather-panel']),
+    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'data-latency', 'sentinel-briefing', 'air-quality-briefing', 'fire-detection', 'flood-status', 'flood-risk-summary', 'weather-alerts', 'delta-changelog', 'usgs-ogc-stations', 'ngwmn-groundwater', 'nws-forecast-panel', 'water-availability', 'wqx-modern-results', 'hab-forecast-panel', 'nexrad-precip-panel', 'severe-weather-panel', 'correlation-breakthroughs']),
   },
   'sentinel-monitoring': {
     label: 'Sentinel Monitoring',
@@ -371,7 +372,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['scorecard-kpis', 'scorecard-grades', 'scorecard-choropleth', 'scorecard-rankings', 'scorecard-trends', 'global-water-quality', 'cdc-places-health']),
+    sections: new Set(['scorecard-kpis', 'scorecard-grades', 'scorecard-choropleth', 'scorecard-rankings', 'scorecard-trends', 'global-water-quality', 'cdc-places-health', 'correlation-breakthroughs']),
   },
   reports: {
     label: 'Reports',
@@ -6378,6 +6379,10 @@ export function FederalManagementCenter(props: Props) {
             </div>
           );
         }
+
+        case 'correlation-breakthroughs': return DS(
+          <CorrelationBreakthroughsPanel state={selectedState} />
+        );
 
         default: return null;
         } {/* end switch */}

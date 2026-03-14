@@ -68,6 +68,7 @@ import { UserManagementPanel } from './UserManagementPanel';
 import { getInvitableRoles } from '@/lib/adminHierarchy';
 import { BriefingQACard } from '@/components/BriefingQACard';
 import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
+import CorrelationBreakthroughsPanel from '@/components/CorrelationBreakthroughsPanel';
 
 
 const GrantOpportunityMatcher = dynamic(
@@ -144,7 +145,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Overview',
     description: 'State operational dashboard — morning check before the day starts',
     defaultOverlay: 'risk',
-    sections: new Set(['regprofile', 'operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'briefing-actions', 'triage-queue', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'ask-pin-universal']),
+    sections: new Set(['regprofile', 'operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'briefing-actions', 'triage-queue', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'ask-pin-universal', 'correlation-breakthroughs']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -178,19 +179,19 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Compliance',
     description: 'Impairment severity, permits, enforcement, and drinking water',
     defaultOverlay: 'risk',
-    sections: new Set(['icis', 'sdwis', 'ms4jurisdictions', 'compliance-assessment', 'compliance-analytics', 'cyber-risk-panel', 'dmr-violations-panel', 'disclaimer']),
+    sections: new Set(['icis', 'sdwis', 'ms4jurisdictions', 'compliance-assessment', 'compliance-analytics', 'cyber-risk-panel', 'dmr-violations-panel', 'correlation-breakthroughs', 'disclaimer']),
   },
   'water-quality': {
     label: 'Water Quality',
     description: 'Standards, assessment, station data, and field integration',
     defaultOverlay: 'risk',
-    sections: new Set(['regprofile', 'local-panel', 'groundwater', 'wq-standards', 'wq-assessment', 'wq-stations', 'usgs-ogc-stations', 'ngwmn-groundwater', 'water-availability', 'wqx-modern-results', 'dmr-violations-panel', 'disclaimer']),
+    sections: new Set(['regprofile', 'local-panel', 'groundwater', 'wq-standards', 'wq-assessment', 'wq-stations', 'usgs-ogc-stations', 'ngwmn-groundwater', 'water-availability', 'wqx-modern-results', 'dmr-violations-panel', 'correlation-breakthroughs', 'disclaimer']),
   },
   'public-health': {
     label: 'Public Health & Contaminants',
     description: 'Contaminant tracking, health coordination, and lab capacity',
     defaultOverlay: 'risk',
-    sections: new Set(['sdwis', 'ph-contaminants', 'ph-health-coord', 'ph-lab-capacity', 'ph-mortality-context', 'ph-healthcare-access', 'ph-outbreak-tracker', 'ph-env-health-corr', 'pfas-analytics-panel', 'cdc-places-health', 'disclaimer']),
+    sections: new Set(['sdwis', 'ph-contaminants', 'ph-health-coord', 'ph-lab-capacity', 'ph-mortality-context', 'ph-healthcare-access', 'ph-outbreak-tracker', 'ph-env-health-corr', 'pfas-analytics-panel', 'cdc-places-health', 'correlation-breakthroughs', 'disclaimer']),
   },
   habitat: {
     label: 'Habitat & Ecology',
@@ -214,13 +215,13 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Monitoring',
     description: 'State monitoring network, data management, and optimization',
     defaultOverlay: 'coverage',
-    sections: new Set(['groundwater', 'mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'mon-air-quality', 'mon-latency', 'mon-report-card', 'mon-source-health', 'flood-status', 'flood-risk-summary', 'weather-alerts', 'usgs-ogc-stations', 'ngwmn-groundwater', 'nws-forecast-panel', 'water-availability', 'wqx-modern-results', 'hab-forecast-panel', 'nexrad-precip-panel', 'severe-weather-panel', 'disclaimer']),
+    sections: new Set(['groundwater', 'mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'mon-air-quality', 'mon-latency', 'mon-report-card', 'mon-source-health', 'flood-status', 'flood-risk-summary', 'weather-alerts', 'usgs-ogc-stations', 'ngwmn-groundwater', 'nws-forecast-panel', 'water-availability', 'wqx-modern-results', 'hab-forecast-panel', 'nexrad-precip-panel', 'severe-weather-panel', 'correlation-breakthroughs', 'disclaimer']),
   },
   disaster: {
     label: 'Disaster & Emergency Response',
     description: 'Active incidents, spill reporting, and preparedness — redirects to merged planner view',
     defaultOverlay: 'risk',
-    sections: new Set(['alertfeed', 'disaster-active', 'disaster-response', 'disaster-spill', 'disaster-prep', 'disaster-cascade', 'flood-forecast', 'flood-risk-overview', 'resolution-planner', 'flood-impact-analysis', 'nws-forecast-panel', 'flood-event-viewer', 'severe-weather-panel', 'disclaimer']),
+    sections: new Set(['alertfeed', 'disaster-active', 'disaster-response', 'disaster-spill', 'disaster-prep', 'disaster-cascade', 'flood-forecast', 'flood-risk-overview', 'resolution-planner', 'flood-impact-analysis', 'nws-forecast-panel', 'flood-event-viewer', 'severe-weather-panel', 'correlation-breakthroughs', 'disclaimer']),
   },
   tmdl: {
     label: 'TMDL & Restoration',
@@ -232,7 +233,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Scorecard',
     description: 'Self-assessment, watershed scorecards, and peer comparison',
     defaultOverlay: 'risk',
-    sections: new Set(['sc-self-assessment', 'sc-watershed', 'sc-peer', 'sc-epa-ppa', 'disclaimer']),
+    sections: new Set(['sc-self-assessment', 'sc-watershed', 'sc-peer', 'sc-epa-ppa', 'correlation-breakthroughs', 'disclaimer']),
   },
   reports: {
     label: 'Reports',
@@ -6855,6 +6856,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                 </div>
               );
             }
+
+            case 'correlation-breakthroughs': return DS(
+              <CorrelationBreakthroughsPanel state={stateAbbr} />
+            );
 
             default: return null;
           }

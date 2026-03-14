@@ -120,7 +120,14 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const findings = discoverFloodWaterContamination(nfipAll, sdwisAll.violations, ejFlat2);
+    // Map violations to include state (derived from PWSID prefix or system lookup)
+    const systemStateMap = new Map(sdwisAll.systems.map(s => [s.pwsid, s.state]));
+    const violsWithState = sdwisAll.violations.map(v => ({
+      ...v,
+      state: systemStateMap.get(v.pwsid) || v.pwsid.slice(0, 2),
+    }));
+
+    const findings = discoverFloodWaterContamination(nfipAll, violsWithState, ejFlat2);
     allFindings.push(...(stateFilter ? findings.filter(f => f.state === stateFilter) : findings));
   } catch (e: any) {
     errors.push(`flood-water-contamination: ${e.message}`);

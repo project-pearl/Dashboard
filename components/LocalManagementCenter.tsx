@@ -70,6 +70,7 @@ import { ecoScoreStyle } from '@/lib/scoringUtils';
 import { NUTRIENT_TRADING_STATES } from '@/lib/constants';
 import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
 import { TriageQueueSection } from './TriageQueueSection';
+import CorrelationBreakthroughsPanel from '@/components/CorrelationBreakthroughsPanel';
 
 // --- Types -------------------------------------------------------------------
 
@@ -112,14 +113,14 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Overview',
     description: 'Jurisdiction dashboard - morning check for elected officials',
     sections: new Set([
-      'local-identity', 'map-grid', 'local-kpi-strip', 'local-situation', 'local-quick-actions', 'ask-pin-universal', 'disclaimer',
+      'local-identity', 'map-grid', 'local-kpi-strip', 'local-situation', 'local-quick-actions', 'ask-pin-universal', 'correlation-breakthroughs', 'disclaimer',
     ]),
   },
   briefing: {
     label: 'AI Briefing',
     description: 'AI-generated overnight summary and action items',
     sections: new Set([
-      'briefing-actions', 'triage-queue', 'local-constituent-tldr', 'ask-pin-universal', 'disclaimer',
+      'briefing-actions', 'triage-queue', 'local-constituent-tldr', 'ask-pin-universal', 'correlation-breakthroughs', 'disclaimer',
     ]),
   },
   'political-briefing': {
@@ -136,7 +137,7 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'Local water quality grades, impairments, and trends',
     sections: new Set([
       'local-wq-grade', 'detail', 'local-impairment-summary',
-      'local-wq-trends', 'groundwater', 'contaminants-tracker', 'disclaimer',
+      'local-wq-trends', 'groundwater', 'contaminants-tracker', 'correlation-breakthroughs', 'disclaimer',
     ]),
   },
   infrastructure: {
@@ -152,7 +153,7 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'Permits, violations, and enforcement actions',
     sections: new Set([
       'icis', 'sdwis', 'local-permit-status', 'local-violation-timeline',
-      'local-enforcement-actions', 'fineavoidance', 'disclaimer',
+      'local-enforcement-actions', 'fineavoidance', 'correlation-breakthroughs', 'disclaimer',
     ]),
   },
   stormwater: {
@@ -169,7 +170,7 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'Drinking water systems, contaminants, and advisories',
     sections: new Set([
       'sdwis', 'ph-contaminants', 'local-dw-systems', 'local-pfas-proximity',
-      'ph-advisories', 'disclaimer',
+      'ph-advisories', 'correlation-breakthroughs', 'disclaimer',
     ]),
   },
   funding: {
@@ -185,7 +186,7 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'Environmental justice demographics, disparities, and Justice40',
     sections: new Set([
       'local-ej-summary', 'local-ej-demographics', 'local-ej-burden-map',
-      'local-ej-water-disparities', 'local-j40-tracker', 'local-ej-recommendations', 'disclaimer',
+      'local-ej-water-disparities', 'local-j40-tracker', 'local-ej-recommendations', 'correlation-breakthroughs', 'disclaimer',
     ]),
   },
   emergency: {
@@ -193,7 +194,7 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'Active incidents, weather alerts, and response planning',
     sections: new Set([
       'disaster-active', 'local-nws-alerts', 'local-sentinel-events',
-      'disaster-response', 'disaster-prep', 'resolution-planner', 'disclaimer',
+      'disaster-response', 'disaster-prep', 'resolution-planner', 'correlation-breakthroughs', 'disclaimer',
     ]),
   },
   scorecard: {
@@ -2339,6 +2340,10 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             }} />
           );
         }
+
+        case 'correlation-breakthroughs': return DS(
+          <CorrelationBreakthroughsPanel state={effectiveState} />
+        );
 
           default: return DS(
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">

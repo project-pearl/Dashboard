@@ -224,6 +224,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'severe-weather-panel', label: 'NOAA Severe Weather Events',  order: 87.96, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'nexrad-precip-panel', label: 'Real-Time Radar Precipitation', order: 87.97, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'congress-legislation', label: 'Water Legislation Tracker',   order: 87.98, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'correlation-breakthroughs', label: 'Cross-Agency Correlation Engine', order: 87.99, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'location-report',     label: 'Location Water Quality Report', order: 88, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',          label: 'Platform Disclaimer',          order: 89, visible: true, defaultExpanded: true,  lensControlled: true },
@@ -736,6 +737,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'severe-weather-panel', label: 'NOAA Severe Weather Events',  order: 39.96, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'nexrad-precip-panel', label: 'Real-Time Radar Precipitation', order: 39.97, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'congress-legislation', label: 'Water Legislation Tracker',   order: 39.98, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'correlation-breakthroughs', label: 'Cross-Agency Correlation Engine', order: 39.99, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'location-report',    label: 'Location Water Quality Report', order: 40, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'disclaimer',         label: 'Platform Disclaimer',         order: 41, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'users-panel',        label: 'User Management',             order: 998, visible: true, defaultExpanded: true, lensControlled: true },
@@ -1019,6 +1021,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'local-rpt-public-disclosure', label: 'Public Disclosure Report',      order: 78,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'local-rpt-annual',            label: 'Annual Report',                 order: 79,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'ask-pin-universal',          label: 'Ask PIN',                       order: 79.5, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'correlation-breakthroughs', label: 'Cross-Agency Correlation Engine', order: 79.9, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',  label: 'Platform Disclaimer',  order: 80,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'users-panel', label: 'User Management',      order: 998, visible: true, defaultExpanded: true, lensControlled: true },
