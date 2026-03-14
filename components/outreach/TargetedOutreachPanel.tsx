@@ -123,7 +123,7 @@ export default function TargetedOutreachPanel() {
     try {
       const res = await fetch('/api/outreach/segments', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({
           name: `${target.orgName} — Targeted`,
           description: target.aiResearch.summary,
