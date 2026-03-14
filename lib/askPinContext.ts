@@ -793,7 +793,7 @@ async function retrieveWaterQualityContext(state: string | null): Promise<string
       if (report) {
         parts.push(`Water quality report for ${state}:`);
         parts.push(`  Water quality score: ${report.aiReadinessScore}/100 (grade: ${report.aiReadinessGrade}).`);
-        parts.push(`  ${report.totalWaterbodies} TOTAL waterbodies assessed, ${report.impairedCount} IMPAIRED.`);
+        parts.push(`  ${report.assessedCount} waterbodies assessed (ATTAINS), ${report.impairedCount} impaired (${report.assessedCount ? Math.round((report.impairedCount / report.assessedCount) * 100) : '?'}%).`);
         if (report.topCauses && report.topCauses.length > 0) {
           parts.push(`  Top impairment causes: ${report.topCauses.slice(0, 5).join(', ')}.`);
         }
@@ -818,7 +818,7 @@ async function retrieveWaterQualityContext(state: string | null): Promise<string
           if (worst.length > 0) {
             parts.push(`States with lowest water quality scores:`);
             for (const [st, r] of worst) {
-              parts.push(`  ${st}: score ${r.aiReadinessScore}/100, ${r.impairedCount} impaired waterbodies.`);
+              parts.push(`  ${st}: score ${r.aiReadinessScore}/100, ${r.impairedCount}/${r.assessedCount} waterbodies impaired.`);
             }
           }
           const best = [...entries]
@@ -1023,9 +1023,9 @@ async function buildBaseContext(state: string | null, role: string): Promise<str
       const reps = Object.values(allReports.reports);
       const stateCount = reps.length;
       const totalImpaired = reps.reduce((sum, r) => sum + (r.impairedCount || 0), 0);
-      const totalWaterbodies = reps.reduce((sum, r) => sum + (r.totalWaterbodies || 0), 0);
+      const totalAssessed = reps.reduce((sum, r) => sum + (r.assessedCount || 0), 0);
       const avgScore = reps.reduce((sum, r) => sum + (r.aiReadinessScore || 0), 0) / (stateCount || 1);
-      parts.push(`National overview (${stateCount} states): ${totalWaterbodies.toLocaleString()} TOTAL waterbodies assessed, of which ${totalImpaired.toLocaleString()} are IMPAIRED (${totalWaterbodies ? Math.round((totalImpaired / totalWaterbodies) * 100) : '?'}%). Avg water quality score ${avgScore.toFixed(0)}/100.`);
+      parts.push(`National overview (${stateCount} states): ${totalAssessed.toLocaleString()} waterbodies assessed (ATTAINS), ${totalImpaired.toLocaleString()} impaired (${totalAssessed ? Math.round((totalImpaired / totalAssessed) * 100) : '?'}%). Avg water quality score ${avgScore.toFixed(0)}/100.`);
     }
   } catch { /* cache not available */ }
 
