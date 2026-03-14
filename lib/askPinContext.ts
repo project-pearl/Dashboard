@@ -215,6 +215,25 @@ async function retrievePfasContext(state: string | null): Promise<string> {
         parts.push(`PFAS in ${state}: ${stateResults.length} detections, ${stateAboveMcl.length} above MCL threshold.`);
       }
       parts.push(`PFAS nationally: ${allPfas.length} total detections, ${aboveMcl.length} above MCL (${allPfas.length > 0 ? Math.round(aboveMcl.length / allPfas.length * 100) : 0}%).`);
+
+      // State breakdown for national view
+      if (!state) {
+        const byState = new Map<string, { total: number; aboveMcl: number }>();
+        for (const r of allPfas as any[]) {
+          const st = r.state || r.stateCode || '';
+          if (!st) continue;
+          const entry = byState.get(st) || { total: 0, aboveMcl: 0 };
+          entry.total++;
+          if (r.exceedsMcl || r.aboveMCL) entry.aboveMcl++;
+          byState.set(st, entry);
+        }
+        const topStates = [...byState.entries()]
+          .sort((a, b) => b[1].total - a[1].total)
+          .slice(0, 8);
+        if (topStates.length > 0) {
+          parts.push(`Top states by PFAS detections: ${topStates.map(([st, d]) => `${st} (${d.total} detections, ${d.aboveMcl} above MCL)`).join(', ')}.`);
+        }
+      }
     }
 
     // DoD PFAS assessment data
@@ -307,8 +326,28 @@ async function retrieveComplianceContext(state: string | null): Promise<string> 
         if (healthBased.length > 0) parts.push(`  ${healthBased.length} health-based violations.`);
       }
     } else {
-      const sdwisStatus = getSdwisCacheStatus();
-      if ('systemCount' in sdwisStatus && sdwisStatus.systemCount) parts.push(`SDWIS nationally: ${sdwisStatus.systemCount} drinking water systems tracked.`);
+      const sdwisAll = getSdwisAllData();
+      const systems = sdwisAll.systems || [];
+      const violations = sdwisAll.violations || [];
+      const enforcement = sdwisAll.enforcement || [];
+      if (systems.length > 0) {
+        const healthBased = violations.filter((v: any) => v.isHealthBased || v.violationCategory === 'Health-Based');
+        parts.push(`SDWIS nationally: ${systems.length.toLocaleString()} drinking water systems, ${violations.length.toLocaleString()} violations, ${enforcement.length.toLocaleString()} enforcement actions.`);
+        if (healthBased.length > 0) parts.push(`  ${healthBased.length.toLocaleString()} health-based violations.`);
+        // Top states by violations
+        const byState = new Map<string, number>();
+        for (const v of violations as any[]) {
+          const st = v.state || v.stateCode || '';
+          if (st) byState.set(st, (byState.get(st) || 0) + 1);
+        }
+        const topViolStates = [...byState.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+        if (topViolStates.length > 0) {
+          parts.push(`  Top states by violations: ${topViolStates.map(([st, n]) => `${st} (${n})`).join(', ')}.`);
+        }
+      } else {
+        const sdwisStatus = getSdwisCacheStatus();
+        if ('systemCount' in sdwisStatus && sdwisStatus.systemCount) parts.push(`SDWIS nationally: ${sdwisStatus.systemCount} drinking water systems tracked.`);
+      }
     }
 
     // ICIS (NPDES permits)
@@ -335,7 +374,8 @@ async function retrieveComplianceContext(state: string | null): Promise<string> 
         parts.push(`ECHO in ${state}: ${stateFac.length} facilities, ${nonCompliant.length} in significant non-compliance.`);
       } else {
         const nonCompliant = facilities.filter((f: any) => f.inSignificantNoncompliance || f.snc || f.qncr === 'Yes');
-        parts.push(`ECHO nationally: ${facilities.length} facilities tracked, ${nonCompliant.length} in significant non-compliance.`);
+        const echoViolations = echoAll.violations || [];
+        parts.push(`ECHO nationally: ${facilities.length.toLocaleString()} facilities tracked, ${nonCompliant.length.toLocaleString()} in significant non-compliance, ${echoViolations.length.toLocaleString()} violation records.`);
       }
     }
 
@@ -1033,7 +1073,7 @@ async function buildBaseContext(state: string | null, role: string): Promise<str
     }
   } catch { /* cache not available */ }
 
-  if (state) parts.push(`User is focused on: ${state}.`);
+  if (state) parts.push(`User is asking about: ${state}.`);
   parts.push(`User role: ${role}.`);
 
   return parts.join('\n');
@@ -1055,54 +1095,95 @@ const STATE_ABBREVS: Record<string, string> = {
 
 const ABBREV_SET = new Set(Object.values(STATE_ABBREVS));
 
-function extractStateFromQuestion(question: string, providedState: string | null): string | null {
-  if (providedState) return providedState.toUpperCase();
+function extractStatesFromQuestion(question: string, providedState: string | null): string[] {
+  const states: string[] = [];
+  if (providedState) states.push(providedState.toUpperCase());
 
   const q = question.toLowerCase();
 
   // Check full state names
   for (const [name, abbr] of Object.entries(STATE_ABBREVS)) {
-    if (q.includes(name)) return abbr;
+    if (q.includes(name) && !states.includes(abbr)) states.push(abbr);
   }
 
   // Check 2-letter abbreviations (with word boundary simulation)
   const words = question.toUpperCase().split(/\s+/);
   for (const w of words) {
-    if (ABBREV_SET.has(w)) return w;
+    if (ABBREV_SET.has(w) && !states.includes(w)) states.push(w);
   }
 
-  return null;
+  return states;
 }
 
 // ── Main export ────────────────────────────────────────────────────────────────
 
 export async function buildAskPinContext(params: AskPinContextParams): Promise<AskPinContextResult> {
   const { question, role, isMilitary } = params;
-  const state = extractStateFromQuestion(question, params.state);
+  const allStates = extractStatesFromQuestion(question, params.state);
+  const state = allStates.length > 0 ? allStates[0] : null;
+  const comparisonStates = allStates.length >= 2 ? allStates.slice(0, 3) : []; // max 3 states for comparison
   const sources: string[] = [];
 
   // Detect relevant domains
   const domains = detectDomains(question, role, isMilitary);
 
   // Always build base context
-  const baseContext = await buildBaseContext(state, role);
+  let baseContext = await buildBaseContext(comparisonStates.length > 0 ? null : state, role);
+  if (comparisonStates.length >= 2) {
+    baseContext += `\nUser is comparing states: ${comparisonStates.join(' vs ')}. Provide data for EACH state side by side.`;
+  }
   sources.push('state-reports');
 
-  // Retrieve domain-specific context in parallel
-  const domainResults = await Promise.all(
-    domains.map(async (d) => {
-      try {
-        const text = await d.retriever(state);
-        if (text.trim()) {
-          sources.push(d.domain);
-          return `[${d.domain.toUpperCase()}]\n${text}`;
-        }
-      } catch { /* skip failed domain */ }
-      return '';
-    })
-  );
+  // For comparison questions, retrieve each state's data separately
+  const emptyDomains: string[] = [];
+  let domainContext = '';
 
-  const domainContext = domainResults.filter(Boolean).join('\n\n');
+  if (comparisonStates.length >= 2) {
+    // Multi-state comparison: run retrievers for each state
+    const stateResults: string[] = [];
+    for (const st of comparisonStates) {
+      const stateSection = await Promise.all(
+        domains.map(async (d) => {
+          try {
+            const text = await d.retriever(st);
+            if (text.trim()) {
+              sources.push(d.domain);
+              return text;
+            }
+          } catch { /* skip */ }
+          return '';
+        })
+      );
+      const combined = stateSection.filter(Boolean).join('\n');
+      if (combined.trim()) {
+        stateResults.push(`[${st} DATA]\n${combined}`);
+      }
+    }
+    domainContext = stateResults.join('\n\n');
+    // Track empty domains from the first state's perspective
+    for (const d of domains) {
+      if (!sources.includes(d.domain)) emptyDomains.push(d.domain);
+    }
+  } else {
+    // Single-state or national: original behavior
+    const domainResults = await Promise.all(
+      domains.map(async (d) => {
+        try {
+          const text = await d.retriever(state);
+          if (text.trim()) {
+            sources.push(d.domain);
+            return `[${d.domain.toUpperCase()}]\n${text}`;
+          } else {
+            emptyDomains.push(d.domain);
+          }
+        } catch {
+          emptyDomains.push(d.domain);
+        }
+        return '';
+      })
+    );
+    domainContext = domainResults.filter(Boolean).join('\n\n');
+  }
 
   // If no domains matched (generic question), provide a broader overview
   let fallbackContext = '';
@@ -1126,7 +1207,29 @@ export async function buildAskPinContext(params: AskPinContextParams): Promise<A
     } catch { /* skip */ }
   }
 
-  const context = [baseContext, domainContext, fallbackContext, militaryExtra].filter(Boolean).join('\n\n');
+  // Tell the AI which data sources were queried but had no data
+  let availabilityNote = '';
+  if (emptyDomains.length > 0) {
+    const domainLabels: Record<string, string> = {
+      pfas: 'PFAS contamination data',
+      military: 'DoD military installation data',
+      health: 'hospital/healthcare shortage/mortality data',
+      groundwater: 'USGS groundwater monitoring data',
+      compliance: 'SDWIS/NPDES/ECHO compliance data',
+      climate: 'drought/flood/climate data',
+      realtime: 'real-time stream gauge/air quality data',
+      superfund: 'Superfund/CERCLA site data',
+      infrastructure: 'dam/reservoir/USACE infrastructure data',
+      ej: 'environmental justice/EJScreen data',
+      'water-quality': 'ATTAINS water quality assessment data',
+      stormwater: 'SSO/CSO/stormwater data',
+      correlations: 'cross-agency correlation analysis',
+    };
+    const labels = emptyDomains.map(d => domainLabels[d] || d);
+    availabilityNote = `[DATA AVAILABILITY NOTE]\nThe following data sources were queried for this question but are not currently loaded: ${labels.join('; ')}. Answers are based only on the data shown above. Do not speculate about data you do not have — instead state what is available and note what additional data would strengthen the analysis.`;
+  }
+
+  const context = [baseContext, domainContext, fallbackContext, militaryExtra, availabilityNote].filter(Boolean).join('\n\n');
 
   return { context, sources: [...new Set(sources)] };
 }
