@@ -17,13 +17,12 @@ export default function OutreachLayout({ children }: { children: React.ReactNode
 
   return (
     <div className="space-y-6">
-      {/* Hero Banner */}
-      <HeroBanner role="outreach" />
-
       {/* Content Container with consistent width */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Hero Banner */}
+        <HeroBanner role="outreach" />
         {/* Tab Navigation */}
-        <nav className="flex gap-1 border-b border-gray-200 dark:border-gray-700 mb-6">
+        <nav className="flex gap-1 border-b border-gray-200 dark:border-gray-700 mb-6 mt-6">
           {TABS.map(tab => {
             const isActive = tab.href === '/dashboard/outreach'
               ? pathname === '/dashboard/outreach'

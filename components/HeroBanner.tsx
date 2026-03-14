@@ -138,7 +138,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   outreach: {
     image: '/images/heroes/Aerial.png',
     subtitle: 'PIN — PEARL Intelligence Network',
-    headline: 'Federal Outreach Intelligence',
+    headline: 'Outreach',
     description:
       'AI-powered audience discovery and targeted outreach for federal water quality initiatives and regulatory engagement.',
     accentColor: 'text-blue-400',
