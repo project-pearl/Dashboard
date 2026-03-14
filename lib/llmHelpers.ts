@@ -86,7 +86,7 @@ ${ROLE_TONE[role]} Format your response as a JSON array of exactly 4 objects, ea
 
 // ── LLM Callers ──────────────────────────────────────────────────────────────
 
-export async function callOpenAI(apiKey: string, systemPrompt: string, userMessage: string, model = 'gpt-4o-mini', maxTokens = 1500): Promise<string> {
+export async function callOpenAI(apiKey: string, systemPrompt: string, userMessage: string, model = 'gpt-4o-mini', maxTokens = 1500, temperature = 0.3): Promise<string> {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -96,6 +96,7 @@ export async function callOpenAI(apiKey: string, systemPrompt: string, userMessa
     body: JSON.stringify({
       model,
       max_tokens: maxTokens,
+      temperature,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },

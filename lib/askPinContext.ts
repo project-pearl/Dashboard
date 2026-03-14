@@ -425,7 +425,7 @@ async function retrieveHealthContext(state: string | null): Promise<string> {
       const hpsa = getHpsaByState(state);
       if (hpsa.length > 0) {
         const stats = getHpsaStatistics(state);
-        parts.push(`Health professional shortage areas in ${state}: ${hpsa.length} designations, avg severity ${stats.avgScore?.toFixed(1) ?? '?'}/26.`);
+        parts.push(`Health professional shortage areas in ${state}: ${hpsa.length} HPSA designations, avg shortage severity score ${stats.avgScore?.toFixed(1) ?? '?'}/26 (higher = more severe shortage).`);
       }
     } else {
       const stats = getHpsaStatistics();
@@ -457,7 +457,7 @@ async function retrieveHealthContext(state: string | null): Promise<string> {
       const envHealth = getEnvironmentalHealthByState(state);
       if (envHealth && envHealth.length > 0) {
         const highRisk = envHealth.filter((m: any) => m.riskLevel === 'high' || m.riskScore > 70);
-        parts.push(`Environmental health in ${state}: ${envHealth.length} metrics, ${highRisk.length} high-risk areas.`);
+        parts.push(`Environmental health in ${state}: ${envHealth.length} environmental metrics tracked, ${highRisk.length} classified as high-risk.`);
       }
     }
 

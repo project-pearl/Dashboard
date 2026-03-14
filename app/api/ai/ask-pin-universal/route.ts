@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         model: 'gpt-4o',
         max_tokens: 1500,
+        temperature: 0.3,  // Low temperature for factual, data-grounded answers (reduces hallucination)
         messages,
       }),
     });
