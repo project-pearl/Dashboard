@@ -40,6 +40,7 @@ export const BLOB_PATHS = {
   campaigns: 'outreach/campaigns.json',
   contacts:  'outreach/contacts.json',
   sendLog:   'outreach/send-log.json',
+  targets:   'outreach/targets.json',
 };
 
 export const DISK_PATHS = {
@@ -48,4 +49,5 @@ export const DISK_PATHS = {
   campaigns: 'outreach-campaigns.json',
   contacts:  'outreach-contacts.json',
   sendLog:   'outreach-send-log.json',
+  targets:   'outreach-targets.json',
 };

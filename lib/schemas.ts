@@ -348,3 +348,15 @@ export const outreachContactSchema = z.object({
   state: z.string().optional(),
   segmentId: z.string().optional(),
 });
+
+/** Schema for creating a targeted outreach organization. */
+export const outreachTargetSchema = z.object({
+  orgName: z.string().min(1, 'orgName is required'),
+  orgType: z.enum(['federal', 'state', 'municipal', 'utility', 'university', 'corporate', 'military', 'other']),
+  whyTarget: z.string().min(1, 'whyTarget is required'),
+});
+
+/** Schema for triggering AI research on a target. */
+export const outreachTargetResearchSchema = z.object({
+  targetId: z.string().min(1, 'targetId is required'),
+});

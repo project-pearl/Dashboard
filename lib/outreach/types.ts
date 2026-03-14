@@ -68,6 +68,31 @@ export interface OutreachContact {
   createdAt: string;
 }
 
+/** A targeted outreach organization to research and contact. */
+export interface OutreachTarget {
+  id: string;
+  orgName: string;
+  orgType: 'federal' | 'state' | 'municipal' | 'utility' | 'university' | 'corporate' | 'military' | 'other';
+  whyTarget: string;
+  aiResearch?: TargetResearch;
+  segmentId?: string;
+  status: 'pending' | 'researched' | 'contacted';
+  createdAt: string;
+}
+
+/** AI-generated research about a targeted organization. */
+export interface TargetResearch {
+  summary: string;
+  relevance: string;
+  keyRoles: string[];
+  painPoints: string[];
+  talkingPoints: string[];
+  budgetCycle?: string;
+  recentNews?: string[];
+  approachStrategy: string;
+  generatedAt: string;
+}
+
 /** Append-only send log entry. */
 export interface SendLogEntry {
   id: string;

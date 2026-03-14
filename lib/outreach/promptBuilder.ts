@@ -3,7 +3,7 @@
 /*  Builds system/user prompts for audience discovery & email gen     */
 /* ------------------------------------------------------------------ */
 
-import type { BusinessProfile, AudienceSegment } from './types';
+import type { BusinessProfile, AudienceSegment, OutreachTarget } from './types';
 import { UNIVERSAL_QA_TONE } from '../llmHelpers';
 
 /* ------------------------------------------------------------------ */
@@ -189,7 +189,62 @@ Respond as JSON:
 }
 
 /* ------------------------------------------------------------------ */
-/*  4. Contact Discovery (future — placeholder)                       */
+/*  4. Target Research                                                */
+/* ------------------------------------------------------------------ */
+
+export function buildTargetResearchPrompt(
+  profile: BusinessProfile,
+  target: Pick<OutreachTarget, 'orgName' | 'orgType' | 'whyTarget'>,
+): {
+  system: string;
+  user: string;
+} {
+  return {
+    system: `You are a GovTech business development strategist specializing in water quality and environmental technology. You research specific organizations to create tailored outreach intelligence.
+
+You have deep knowledge of US government agencies (EPA, HHS, DARPA, DoD, state agencies), utilities, universities, and corporate sustainability programs. You understand procurement cycles, organizational pain points, and how to identify the right contacts.
+
+Respond with valid JSON only — no markdown fences, no explanation.`,
+    user: `Research this organization and generate targeted outreach intelligence for our product.
+
+OUR PRODUCT:
+Name: ${profile.name}
+Tagline: ${profile.tagline}
+Value Props: ${profile.valueProps.join('; ')}
+Key Stats: ${profile.stats.map(s => `${s.label}: ${s.value}`).join('; ')}
+Differentiators: ${profile.differentiators.join('; ')}
+
+TARGET ORGANIZATION:
+Name: ${target.orgName}
+Type: ${target.orgType}
+Why we're targeting them: ${target.whyTarget}
+
+Generate comprehensive research:
+- summary: 2-3 sentence overview of the org's role in water/environmental space
+- relevance: Why our product specifically matters to them
+- keyRoles: 5-8 specific job titles to target (e.g., "Program Manager, Environmental Sciences Division")
+- painPoints: 4-6 pain points specific to THIS organization (not generic)
+- talkingPoints: 4-6 tailored value propositions for this org
+- budgetCycle: When they plan/allocate budget (e.g., "Federal FY starts Oct 1, proposals due by June")
+- recentNews: 2-4 recent initiatives, mandates, or announcements relevant to water/environment
+- approachStrategy: 2-3 sentences on how to get in the door with this specific org
+
+Respond as JSON:
+{
+  "summary": "...",
+  "relevance": "...",
+  "keyRoles": ["..."],
+  "painPoints": ["..."],
+  "talkingPoints": ["..."],
+  "budgetCycle": "...",
+  "recentNews": ["..."],
+  "approachStrategy": "..."
+}`,
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/*  5. Contact Discovery (future — placeholder)                       */
 /* ------------------------------------------------------------------ */
 
 export function buildContactDiscoveryPrompt(

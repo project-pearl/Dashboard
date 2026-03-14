@@ -135,6 +135,14 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
       'Full-spectrum laboratory information management — sample intake, QA/QC, methods, and chain of custody.',
     accentColor: 'text-teal-400',
   },
+  outreach: {
+    image: '/images/heroes/Aerial.png',
+    subtitle: 'PIN — PEARL Intelligence Network',
+    headline: 'Federal Outreach Intelligence',
+    description:
+      'AI-powered audience discovery and targeted outreach for federal water quality initiatives and regulatory engagement.',
+    accentColor: 'text-blue-400',
+  },
 };
 
 // ─── Component ─────────────────────────────────────────────────────
