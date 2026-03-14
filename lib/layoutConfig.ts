@@ -239,6 +239,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'alertfeed',           label: 'Alert Feed',                       order: 2,  visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'map-grid',            label: 'Map & Waterbody List',             order: 3,  visible: true, defaultExpanded: true,  lensControlled: true, compound: true },
     { id: 'detail',              label: 'Waterbody Detail',                 order: 4,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'compliance-calendar', label: 'Compliance Calendar',              order: 5,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'icis',                label: 'NPDES Compliance & Enforcement',   order: 6,  visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'sdwis',               label: 'Drinking Water (SDWIS)',           order: 7,  visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'exporthub',           label: 'Data Export Hub',                  order: 8,  visible: true, defaultExpanded: true,  lensControlled: true },

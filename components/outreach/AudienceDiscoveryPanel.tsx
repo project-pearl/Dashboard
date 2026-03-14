@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { csrfHeaders } from '@/lib/csrf';
-import type { AudienceSegment } from '@/lib/outreach/types';
+import type { AudienceSegment, EmailDraft } from '@/lib/outreach/types';
 import SegmentCard from './SegmentCard';
 
 export default function AudienceDiscoveryPanel() {
@@ -11,7 +11,7 @@ export default function AudienceDiscoveryPanel() {
   const [discovering, setDiscovering] = useState(false);
   const [error, setError] = useState('');
   const [generatingFor, setGeneratingFor] = useState<string | null>(null);
-  const [genResult, setGenResult] = useState<{ segmentId: string; message: string } | null>(null);
+  const [genResult, setGenResult] = useState<{ segmentId: string; draft?: EmailDraft; error?: string } | null>(null);
 
   useEffect(() => {
     fetch('/api/outreach/segments')
@@ -55,13 +55,13 @@ export default function AudienceDiscoveryPanel() {
         body: JSON.stringify({ segmentId, campaignGoal: 'Introduce platform and schedule demo' }),
       });
       const data = await res.json();
-      if (data.success) {
-        setGenResult({ segmentId, message: `Generated ${data.draft.subjectLines.length} subject lines` });
+      if (data.success && data.draft) {
+        setGenResult({ segmentId, draft: data.draft });
       } else {
-        setGenResult({ segmentId, message: data.error || 'Generation failed' });
+        setGenResult({ segmentId, error: data.error || 'Generation failed' });
       }
     } catch {
-      setGenResult({ segmentId, message: 'Network error' });
+      setGenResult({ segmentId, error: 'Network error' });
     } finally {
       setGeneratingFor(null);
     }
@@ -119,8 +119,53 @@ export default function AudienceDiscoveryPanel() {
                   <span className="text-sm text-gray-600 dark:text-gray-300 animate-pulse">Generating email...</span>
                 </div>
               )}
-              {genResult?.segmentId === seg.id && (
-                <div className="mt-1 text-xs text-green-600 dark:text-green-400">{genResult.message}</div>
+              {genResult?.segmentId === seg.id && genResult.error && (
+                <div className="mt-2 p-3 text-sm text-red-700 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded-md">
+                  {genResult.error}
+                </div>
+              )}
+              {genResult?.segmentId === seg.id && genResult.draft && (
+                <div className="mt-2 border border-green-200 dark:border-green-800 rounded-lg bg-green-50/50 dark:bg-green-900/20 overflow-hidden">
+                  <div className="flex items-center justify-between px-3 py-2 bg-green-100/60 dark:bg-green-900/40 border-b border-green-200 dark:border-green-800">
+                    <span className="text-sm font-semibold text-green-800 dark:text-green-300">
+                      Email Draft Generated
+                    </span>
+                    <button
+                      onClick={() => setGenResult(null)}
+                      className="text-xs text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                  <div className="p-3 space-y-3">
+                    <div>
+                      <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                        Subject Lines ({genResult.draft.subjectLines.length})
+                      </div>
+                      <div className="space-y-1">
+                        {genResult.draft.subjectLines.map((subj, i) => (
+                          <div key={i} className="flex items-start gap-2 text-sm text-gray-800 dark:text-gray-200">
+                            <span className="text-green-500 mt-0.5">{i === genResult.draft!.selectedSubject ? '\u25C9' : '\u25CB'}</span>
+                            <span>{subj}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Body Preview</div>
+                      <div
+                        className="text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 p-3 max-h-48 overflow-y-auto prose prose-sm dark:prose-invert max-w-none"
+                        dangerouslySetInnerHTML={{ __html: genResult.draft.htmlBody }}
+                      />
+                    </div>
+                    {genResult.draft.personalizationTokens.length > 0 && (
+                      <div className="text-xs text-gray-400 dark:text-gray-500">
+                        <span className="font-medium">Tokens:</span>{' '}
+                        {genResult.draft.personalizationTokens.join(', ')}
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           ))}

@@ -103,6 +103,7 @@ import { UserManagementPanel } from './UserManagementPanel';
 import { WeatherAlertsSection } from './WeatherAlertsSection';
 import { getInvitableRoles } from '@/lib/adminHierarchy';
 import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
+import { ComplianceCalendar } from './ComplianceCalendar';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -141,7 +142,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Overview',
     description: 'Municipal Utility operational dashboard — morning check before the day starts',
     defaultOverlay: 'impairment',
-    sections: new Set(['operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'quickactions', 'ask-pin-universal', 'disclaimer']),
+    sections: new Set(['operational-health', 'alertfeed', 'map-grid', 'detail', 'compliance-calendar', 'top10', 'quick-access', 'quickactions', 'ask-pin-universal', 'disclaimer']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -175,7 +176,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Compliance',
     description: 'Permit conditions, enforcement, and drinking water compliance',
     defaultOverlay: 'impairment',
-    sections: new Set(['identity', 'detail', 'icis', 'sdwis', 'compliance-permits', 'compliance-assessment', 'compliance-ms4', 'compliance-analytics', 'fineavoidance', 'economics', 'disclaimer']),
+    sections: new Set(['identity', 'detail', 'compliance-calendar', 'icis', 'sdwis', 'compliance-permits', 'compliance-assessment', 'compliance-ms4', 'compliance-analytics', 'fineavoidance', 'economics', 'disclaimer']),
   },
   'water-quality': {
     label: 'Water Quality',
@@ -2436,6 +2437,10 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
             })()}
           </div>
         );
+
+            case 'compliance-calendar': return DS(
+              <ComplianceCalendar stateAbbr={stateAbbr} orgId={resolvedJurisdiction || undefined} user={user} />
+            );
 
             case 'icis': return DS(
         <div id="section-icis">
