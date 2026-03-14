@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { csrfHeaders } from '@/lib/csrf';
 import type { OutreachTarget } from '@/lib/outreach/types';
 
 const ORG_TYPES = [
@@ -62,7 +63,7 @@ export default function TargetedOutreachPanel() {
     try {
       const res = await fetch('/api/outreach/targets', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({ orgName: orgName.trim(), orgType, whyTarget: whyTarget.trim() }),
       });
       if (!res.ok) {
@@ -85,7 +86,7 @@ export default function TargetedOutreachPanel() {
     try {
       const res = await fetch('/api/outreach/targets/research', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({ targetId }),
       });
       if (!res.ok) {
@@ -104,7 +105,10 @@ export default function TargetedOutreachPanel() {
   async function handleDelete(targetId: string) {
     setError(null);
     try {
-      const res = await fetch(`/api/outreach/targets?id=${targetId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/outreach/targets?id=${targetId}`, {
+        method: 'DELETE',
+        headers: csrfHeaders()
+      });
       if (!res.ok) throw new Error('Failed to delete target');
       await fetchTargets();
     } catch (err: any) {
