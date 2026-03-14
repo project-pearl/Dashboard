@@ -45,9 +45,16 @@ describe('scoringUtils', () => {
       expect(result.color).toContain('red');
     });
 
-    it('always returns textColor white', () => {
-      for (const score of [98, 85, 75, 65, 50]) {
-        expect(scoreToGrade(score).textColor).toBe('text-white');
+    it('always returns a dark textColor matching the grade color family', () => {
+      const expected: Record<number, string> = {
+        98: 'text-green-800',   // A+
+        85: 'text-emerald-700', // B
+        75: 'text-yellow-800',  // C
+        65: 'text-orange-700',  // D
+        50: 'text-red-800',     // F
+      };
+      for (const [score, color] of Object.entries(expected)) {
+        expect(scoreToGrade(Number(score)).textColor).toBe(color);
       }
     });
   });
