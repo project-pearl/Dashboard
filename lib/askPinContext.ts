@@ -4,20 +4,21 @@
  * Analyzes user questions via keyword matching to detect relevant domains,
  * then pulls data directly from server-side caches instead of fetching HTTP endpoints.
  * This gives Ask PIN access to all 80+ cache modules with facility-level granularity.
+ * Includes the cross-agency correlation engine for compound risk insights.
  */
 
-// ── Cache imports ──────────────────────────────────────────────────────────────
+// ── Cache imports (original 25) ────────────────────────────────────────────────
 import { ensureWarmed as warmPfas, getPfasAllResults, getPfasCacheStatus } from './pfasCache';
 import { ensureWarmed as warmDodPfas, getDoDPFASForState, getDoDPFASAllSummaries } from './dodPfasCache';
 import { ensureWarmed as warmGw, getNwisGwAllSites, getNwisGwCacheStatus } from './nwisGwCache';
 import { ensureWarmed as warmSdwis, getSdwisForState, getSdwisCacheStatus, getSdwisAllData } from './sdwisCache';
-import { ensureWarmed as warmIcis, getIcisAllData, getIcisCacheStatus } from './icisCache';
-import { ensureWarmed as warmEcho, getEchoAllData, getEchoCacheStatus } from './echoCache';
-import { ensureWarmed as warmHospital, getHospitalsByState, getHospitalCacheStatus, getHospitalStatistics } from './hospitalCache';
-import { ensureWarmed as warmOutbreaks, getOutbreaksByState, getWaterborneOutbreakCacheStatus, getOutbreakStatistics } from './waterborneIllnessCache';
-import { ensureWarmed as warmCdcWonder, getCdcWonderRecords, getTopCauses, getCDCWonderCacheStatus } from './cdcWonderCache';
-import { ensureWarmed as warmEnvHealth, getEnvironmentalHealthByState, getEnvironmentalHealthCacheStatus, getEnvironmentalHealthStatistics } from './environmentalHealthCache';
-import { ensureWarmed as warmClimate, getClimateNormals, getClimateNormalsCacheStatus } from './climateNormalsCache';
+import { ensureWarmed as warmIcis, getIcisAllData } from './icisCache';
+import { ensureWarmed as warmEcho, getEchoAllData } from './echoCache';
+import { ensureWarmed as warmHospital, getHospitalsByState, getHospitalStatistics } from './hospitalCache';
+import { ensureWarmed as warmOutbreaks, getOutbreaksByState, getOutbreakStatistics } from './waterborneIllnessCache';
+import { ensureWarmed as warmCdcWonder, getTopCauses } from './cdcWonderCache';
+import { ensureWarmed as warmEnvHealth, getEnvironmentalHealthByState, getEnvironmentalHealthStatistics } from './environmentalHealthCache';
+import { ensureWarmed as warmClimate, getClimateNormals } from './climateNormalsCache';
 import { ensureWarmed as warmUsdm, getUsdmByState, getUsdmAll } from './usdmCache';
 import { ensureWarmed as warmFema, getFemaDeclarations, getFemaRiskIndex } from './femaCache';
 import { ensureWarmed as warmIv, getUsgsIvByState, getUsgsIvCacheStatus } from './nwisIvCache';
@@ -32,6 +33,34 @@ import { ensureWarmed as warmEffluent, getEchoEffluent } from './echoEffluentCac
 import { ensureWarmed as warmForecast, getNwsForecast, getHighRiskForecasts } from './nwsForecastCache';
 import { ensureWarmed as warmNws, getNwsAlerts, getSevereWeatherAlerts } from './nwsAlertCache';
 import { ensureWarmed as warmNwps, getNwpsAllGauges } from './nwpsCache';
+
+// ── Additional cache imports ───────────────────────────────────────────────────
+import { ensureWarmed as warmDodPfasSites, getDodPfasSites, getDodPfasAllSites, getActivePfasInvestigations } from './dodPfasSitesCache';
+import { ensureWarmed as warmEpaPfas, getEpaPfasAnalytics, getEpaPfasAllStates, getEpaPfasExceedances } from './epaPfasAnalyticsCache';
+import { ensureWarmed as warmTri, getTriAllFacilities } from './triCache';
+import { ensureWarmed as warmRcra, getRcraFacilities, getRcraFacilitiesAll } from './rcraCache';
+import { ensureWarmed as warmSsoCso, getSsoCsoByState, getSsoCsoAll } from './ssoCsoCache';
+import { ensureWarmed as warmMs4, getMs4PermitsByState } from './ms4PermitCache';
+import { ensureWarmed as warmDam, getDamAll, getDamsByState } from './damCache';
+import { ensureWarmed as warmHpsa, getHpsaByState, getHpsaStatistics } from './hrsaHpsaCache';
+import { ensureWarmed as warmEnvTracking, getSignificantFindings, getDrinkingWaterIndicators } from './environmentalTrackingCache';
+import { ensureWarmed as warmHealthGov, getHospitalCapacityData } from './healthDataGovCache';
+import { ensureWarmed as warmPlaces, getCdcPlacesByState } from './cdcPlacesCache';
+import { ensureWarmed as warmCyber, getCyberRisk, getCyberRiskAll, getHighRiskSystems, getCriticalNearMilitary } from './cyberRiskCache';
+import { ensureWarmed as warmFloodImpact, getFloodImpactByState, getHighRiskZones } from './floodImpactCache';
+import { ensureWarmed as warmNfip, getNfipClaims, getNfipClaimsAll } from './nfipClaimsCache';
+import { ensureWarmed as warmEjscreen, getEJScreenCache } from './ejscreenCache';
+
+// ── Correlation engine ─────────────────────────────────────────────────────────
+import {
+  discoverPfasHealthDeserts,
+  discoverFloodWaterContamination,
+  discoverDischargeImpairmentLinks,
+  discoverDamCascadeRisk,
+  discoverDroughtWaterStress,
+  type CorrelationFinding,
+} from './correlationDiscovery';
+import { PRIORITY_STATES } from './constants';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -73,22 +102,22 @@ const DOMAINS: Record<string, DomainDef> = {
     retriever: retrieveGroundwaterContext,
   },
   compliance: {
-    keywords: ['violation', 'permit', 'enforcement', 'npdes', 'sdwis', 'compliance', 'inspection', 'penalty', 'fine'],
+    keywords: ['violation', 'permit', 'enforcement', 'npdes', 'sdwis', 'compliance', 'inspection', 'penalty', 'fine', 'toxic', 'hazardous waste', 'rcra', 'tri'],
     roleBoosts: ['Federal', 'State', 'MS4', 'Utility'],
     retriever: retrieveComplianceContext,
   },
   health: {
-    keywords: ['health', 'hospital', 'disease', 'illness', 'mortality', 'cancer', 'outbreak', 'death', 'waterborne'],
+    keywords: ['health', 'hospital', 'disease', 'illness', 'mortality', 'cancer', 'outbreak', 'death', 'waterborne', 'shortage', 'hpsa', 'chronic', 'diabetes', 'asthma'],
     roleBoosts: ['Federal', 'K-12'],
     retriever: retrieveHealthContext,
   },
   military: {
-    keywords: ['military', 'base', 'installation', 'dod', 'army', 'navy', 'air force', 'marine', 'defense'],
+    keywords: ['military', 'base', 'installation', 'dod', 'army', 'navy', 'air force', 'marine', 'defense', 'cyber'],
     roleBoosts: ['Federal'],
     retriever: retrieveMilitaryContext,
   },
   climate: {
-    keywords: ['climate', 'weather', 'drought', 'flood', 'temperature', 'precipitation', 'forecast', 'storm'],
+    keywords: ['climate', 'weather', 'drought', 'flood', 'temperature', 'precipitation', 'forecast', 'storm', 'fema', 'nfip', 'insurance claim'],
     roleBoosts: ['Federal', 'State'],
     retriever: retrieveClimateContext,
   },
@@ -103,7 +132,7 @@ const DOMAINS: Record<string, DomainDef> = {
     retriever: retrieveSuperfundContext,
   },
   infrastructure: {
-    keywords: ['dam', 'reservoir', 'infrastructure', 'levee', 'pipe', 'utility', 'corps of engineers', 'usace', 'reclamation'],
+    keywords: ['dam', 'reservoir', 'infrastructure', 'levee', 'pipe', 'utility', 'corps of engineers', 'usace', 'reclamation', 'dam failure', 'dam safety'],
     roleBoosts: ['Federal', 'State', 'Utility'],
     retriever: retrieveInfrastructureContext,
   },
@@ -118,9 +147,14 @@ const DOMAINS: Record<string, DomainDef> = {
     retriever: retrieveWaterQualityContext,
   },
   stormwater: {
-    keywords: ['stormwater', 'ms4', 'cso', 'sso', 'runoff', 'overflow', 'combined sewer', 'effluent', 'discharge'],
+    keywords: ['stormwater', 'ms4', 'cso', 'sso', 'runoff', 'overflow', 'combined sewer', 'effluent', 'discharge', 'sanitary sewer'],
     roleBoosts: ['MS4', 'Utility', 'State'],
     retriever: retrieveStormwaterContext,
+  },
+  correlations: {
+    keywords: ['correlation', 'cross-agency', 'breakthrough', 'compound risk', 'cascade', 'connected', 'pattern', 'converge', 'health desert', 'downstream'],
+    roleBoosts: ['Federal'],
+    retriever: retrieveCorrelationsContext,
   },
 };
 
@@ -153,8 +187,16 @@ function detectDomains(question: string, role: string, isMilitary: boolean): Dom
   // Sort by score descending
   matches.sort((a, b) => b.score - a.score);
 
-  // Cap at 4 domains to stay within token budget
-  return matches.slice(0, 4);
+  // If 2+ non-correlation domains matched, auto-boost correlations (compound question)
+  const nonCorrelation = matches.filter(m => m.domain !== 'correlations');
+  const hasCorrelations = matches.some(m => m.domain === 'correlations');
+  if (nonCorrelation.length >= 2 && !hasCorrelations) {
+    matches.push({ domain: 'correlations', score: 3, retriever: retrieveCorrelationsContext });
+    matches.sort((a, b) => b.score - a.score);
+  }
+
+  // Cap at 5 domains to stay within token budget
+  return matches.slice(0, 5);
 }
 
 // ── Retriever functions ────────────────────────────────────────────────────────
@@ -162,7 +204,7 @@ function detectDomains(question: string, role: string, isMilitary: boolean): Dom
 async function retrievePfasContext(state: string | null): Promise<string> {
   const parts: string[] = [];
   try {
-    await Promise.all([warmPfas(), warmDodPfas()]);
+    await Promise.all([warmPfas(), warmDodPfas(), warmDodPfasSites(), warmEpaPfas()]);
 
     const allPfas = getPfasAllResults();
     if (allPfas.length > 0) {
@@ -175,7 +217,7 @@ async function retrievePfasContext(state: string | null): Promise<string> {
       parts.push(`PFAS nationally: ${allPfas.length} total detections, ${aboveMcl.length} above MCL (${allPfas.length > 0 ? Math.round(aboveMcl.length / allPfas.length * 100) : 0}%).`);
     }
 
-    // DoD PFAS data
+    // DoD PFAS assessment data
     if (state) {
       const dodState = getDoDPFASForState(state);
       if (dodState.length > 0) {
@@ -188,6 +230,33 @@ async function retrievePfasContext(state: string | null): Promise<string> {
       const totalSites = Object.values(allSummaries).reduce((sum: number, s: any) => sum + (s.totalSites || s.siteCount || 0), 0);
       if (statesWithPfas > 0) {
         parts.push(`DoD PFAS: ${totalSites} military sites across ${statesWithPfas} states with PFAS assessments.`);
+      }
+    }
+
+    // DoD PFAS investigation sites (more detailed)
+    if (state) {
+      const sites = getDodPfasSites(state);
+      if (sites.length > 0) {
+        const active = sites.filter(s => s.investigationStatus !== 'complete');
+        parts.push(`DoD PFAS investigation sites in ${state}: ${sites.length} sites, ${active.length} active investigations.`);
+      }
+    } else {
+      const activeInvestigations = getActivePfasInvestigations();
+      if (activeInvestigations.length > 0) {
+        parts.push(`Active DoD PFAS investigations: ${activeInvestigations.length} sites nationally.`);
+      }
+    }
+
+    // EPA PFAS analytics (ECHO-derived)
+    if (state) {
+      const epaPfas = getEpaPfasAnalytics(state);
+      if (epaPfas) {
+        parts.push(`EPA PFAS analytics in ${state}: ${epaPfas.facilities?.length || 0} facilities tracked.`);
+      }
+    } else {
+      const exceedances = getEpaPfasExceedances();
+      if (exceedances.length > 0) {
+        parts.push(`EPA PFAS exceedances: ${exceedances.length} facilities with PFAS limit exceedances.`);
       }
     }
 
@@ -224,7 +293,7 @@ async function retrieveGroundwaterContext(state: string | null): Promise<string>
 async function retrieveComplianceContext(state: string | null): Promise<string> {
   const parts: string[] = [];
   try {
-    await Promise.all([warmSdwis(), warmIcis(), warmEcho()]);
+    await Promise.all([warmSdwis(), warmIcis(), warmEcho(), warmTri(), warmRcra()]);
 
     // SDWIS (drinking water violations)
     if (state) {
@@ -269,6 +338,30 @@ async function retrieveComplianceContext(state: string | null): Promise<string> 
         parts.push(`ECHO nationally: ${facilities.length} facilities tracked, ${nonCompliant.length} in significant non-compliance.`);
       }
     }
+
+    // TRI (Toxic Release Inventory)
+    const triAll = getTriAllFacilities();
+    if (triAll.length > 0) {
+      if (state) {
+        const stateTri = triAll.filter((f: any) => f.state === state || f.stateCode === state);
+        parts.push(`TRI in ${state}: ${stateTri.length} toxic release facilities.`);
+      } else {
+        parts.push(`TRI nationally: ${triAll.length} toxic release facilities tracked.`);
+      }
+    }
+
+    // RCRA (hazardous waste)
+    if (state) {
+      const rcraState = getRcraFacilities(state);
+      if (rcraState && rcraState.length > 0) {
+        parts.push(`RCRA in ${state}: ${rcraState.length} hazardous waste facilities.`);
+      }
+    } else {
+      const rcraAll = getRcraFacilitiesAll();
+      if (rcraAll.length > 0) {
+        parts.push(`RCRA nationally: ${rcraAll.length} hazardous waste facilities.`);
+      }
+    }
   } catch { /* cache not available */ }
   return parts.join('\n');
 }
@@ -276,7 +369,7 @@ async function retrieveComplianceContext(state: string | null): Promise<string> 
 async function retrieveHealthContext(state: string | null): Promise<string> {
   const parts: string[] = [];
   try {
-    await Promise.all([warmHospital(), warmOutbreaks(), warmCdcWonder(), warmEnvHealth()]);
+    await Promise.all([warmHospital(), warmOutbreaks(), warmCdcWonder(), warmEnvHealth(), warmHpsa(), warmEnvTracking(), warmHealthGov(), warmPlaces()]);
 
     // Hospitals
     if (state) {
@@ -287,6 +380,20 @@ async function retrieveHealthContext(state: string | null): Promise<string> {
     } else {
       const stats = getHospitalStatistics();
       if (stats?.total) parts.push(`National hospital network: ${stats.total} facilities.`);
+    }
+
+    // HRSA Health Professional Shortage Areas
+    if (state) {
+      const hpsa = getHpsaByState(state);
+      if (hpsa.length > 0) {
+        const stats = getHpsaStatistics(state);
+        parts.push(`Health professional shortage areas in ${state}: ${hpsa.length} designations, avg severity ${stats.avgScore?.toFixed(1) ?? '?'}/26.`);
+      }
+    } else {
+      const stats = getHpsaStatistics();
+      if (stats.totalDesignations > 0) {
+        parts.push(`HRSA: ${stats.totalDesignations} health professional shortage area designations nationally.`);
+      }
     }
 
     // Waterborne illness outbreaks
@@ -315,6 +422,39 @@ async function retrieveHealthContext(state: string | null): Promise<string> {
         parts.push(`Environmental health in ${state}: ${envHealth.length} metrics, ${highRisk.length} high-risk areas.`);
       }
     }
+
+    // Environmental Tracking Network
+    const findings = getSignificantFindings();
+    if (findings && findings.length > 0) {
+      if (state) {
+        const stateFindings = findings.filter((f: any) => f.state === state || f.stateCode === state);
+        if (stateFindings.length > 0) parts.push(`Environmental tracking significant findings in ${state}: ${stateFindings.length}.`);
+      } else {
+        parts.push(`Environmental tracking: ${findings.length} significant findings nationally.`);
+      }
+    }
+
+    // Drinking water health indicators
+    const dwIndicators = getDrinkingWaterIndicators();
+    if (dwIndicators && dwIndicators.length > 0) {
+      parts.push(`Drinking water health indicators: ${dwIndicators.length} tracked metrics.`);
+    }
+
+    // HealthData.gov hospital capacity
+    if (state) {
+      const capacity = getHospitalCapacityData(state);
+      if (capacity && capacity.length > 0) {
+        parts.push(`HealthData.gov: ${capacity.length} hospital capacity records for ${state}.`);
+      }
+    }
+
+    // CDC PLACES (chronic disease prevalence)
+    if (state) {
+      const places = getCdcPlacesByState(state);
+      if (places && places.length > 0) {
+        parts.push(`CDC PLACES in ${state}: ${places.length} community health profiles.`);
+      }
+    }
   } catch { /* cache not available */ }
   return parts.join('\n');
 }
@@ -322,7 +462,7 @@ async function retrieveHealthContext(state: string | null): Promise<string> {
 async function retrieveMilitaryContext(state: string | null): Promise<string> {
   const parts: string[] = [];
   try {
-    await warmDodPfas();
+    await Promise.all([warmDodPfas(), warmDodPfasSites(), warmCyber()]);
 
     if (state) {
       const dodState = getDoDPFASForState(state);
@@ -337,6 +477,13 @@ async function retrieveMilitaryContext(state: string | null): Promise<string> {
         }
         if (parts.length > 0) parts.unshift(`Military installations in ${state} with PFAS data (${dodState.length} total):`);
       }
+
+      // DoD PFAS investigation sites
+      const sites = getDodPfasSites(state);
+      if (sites.length > 0) {
+        const active = sites.filter(s => s.investigationStatus !== 'complete');
+        if (active.length > 0) parts.push(`Active DoD PFAS investigations in ${state}: ${active.length} sites.`);
+      }
     } else {
       const summaries = getDoDPFASAllSummaries();
       const entries = Object.entries(summaries);
@@ -346,7 +493,6 @@ async function retrieveMilitaryContext(state: string | null): Promise<string> {
         parts.push(`DoD PFAS program: ${totalSites} installations across ${entries.length} states assessed.`);
         if (withExceedance > 0) parts.push(`${withExceedance} installations with drinking water PFAS exceedances.`);
 
-        // Top 5 states by site count
         const topStates = entries
           .map(([st, s]: [string, any]) => ({ state: st, count: s.totalSites || s.siteCount || 0 }))
           .sort((a, b) => b.count - a.count)
@@ -356,6 +502,20 @@ async function retrieveMilitaryContext(state: string | null): Promise<string> {
         }
       }
     }
+
+    // Cyber risk for water utilities
+    if (state) {
+      const cyberState = getCyberRisk(state);
+      if (cyberState.length > 0) {
+        const high = cyberState.filter((c: any) => c.riskLevel === 'high' || c.riskLevel === 'critical');
+        parts.push(`Water utility cyber risk in ${state}: ${cyberState.length} systems assessed, ${high.length} high/critical risk.`);
+      }
+    } else {
+      const highRisk = getHighRiskSystems();
+      const nearMil = getCriticalNearMilitary();
+      if (highRisk.length > 0) parts.push(`Cyber risk: ${highRisk.length} high-risk water systems nationally.`);
+      if (nearMil.length > 0) parts.push(`${nearMil.length} critical-risk water systems near military installations.`);
+    }
   } catch { /* cache not available */ }
   return parts.join('\n');
 }
@@ -363,7 +523,7 @@ async function retrieveMilitaryContext(state: string | null): Promise<string> {
 async function retrieveClimateContext(state: string | null): Promise<string> {
   const parts: string[] = [];
   try {
-    await Promise.all([warmClimate(), warmUsdm(), warmFema(), warmForecast(), warmNws()]);
+    await Promise.all([warmClimate(), warmUsdm(), warmFema(), warmForecast(), warmNws(), warmFloodImpact(), warmNfip()]);
 
     // Climate normals
     if (state) {
@@ -401,6 +561,26 @@ async function retrieveClimateContext(state: string | null): Promise<string> {
       if (declarations && declarations.length > 0) {
         const recent = declarations.slice(0, 3).map((d: any) => `${d.declarationType || d.type} - ${d.title || d.incidentType || 'unknown'} (${d.declarationDate || d.date || '?'})`);
         parts.push(`Recent FEMA declarations in ${state}: ${recent.join('; ')}.`);
+      }
+    }
+
+    // Flood impact zones
+    if (state) {
+      const floodZones = getFloodImpactByState(state);
+      if (floodZones.length > 0) {
+        parts.push(`Flood impact zones in ${state}: ${floodZones.length} areas at risk.`);
+      }
+    } else {
+      const highRiskFlood = getHighRiskZones();
+      if (highRiskFlood.length > 0) parts.push(`High-risk flood zones nationally: ${highRiskFlood.length}.`);
+    }
+
+    // NFIP flood claims
+    if (state) {
+      const claims = getNfipClaims(state);
+      if (claims && claims.length > 0) {
+        const totalPaid = claims.reduce((s: number, c: any) => s + (c.amountPaidOnBuildingClaim || 0) + (c.amountPaidOnContentsClaim || 0), 0);
+        parts.push(`NFIP flood claims in ${state}: ${claims.length} claims, $${(totalPaid / 1_000_000).toFixed(1)}M in damages.`);
       }
     }
 
@@ -498,7 +678,6 @@ async function retrieveSuperfundContext(state: string | null): Promise<string> {
         parts.push(`Superfund sites in ${state}: ${sites.length} total, ${npl.length} on NPL.`);
         const active = sites.filter((s: any) => s.status === 'active' || s.constructionComplete !== true);
         if (active.length > 0) parts.push(`${active.length} with active cleanup.`);
-        // List top 3 by name
         const topSites = sites.slice(0, 3).map((s: any) => s.siteName || s.name).filter(Boolean);
         if (topSites.length > 0) parts.push(`Notable sites: ${topSites.join(', ')}.`);
       }
@@ -511,7 +690,6 @@ async function retrieveSuperfundContext(state: string | null): Promise<string> {
       const allSites = getSuperfundSitesAll();
       if (allSites.length > 0) {
         parts.push(`Superfund nationally: ${allSites.length} sites tracked.`);
-        // States with most sites
         const bySt: Record<string, number> = {};
         for (const s of allSites) { const st = (s as any).state || (s as any).stateCode; if (st) bySt[st] = (bySt[st] || 0) + 1; }
         const topStates = Object.entries(bySt).sort(([, a], [, b]) => b - a).slice(0, 5);
@@ -527,7 +705,22 @@ async function retrieveSuperfundContext(state: string | null): Promise<string> {
 async function retrieveInfrastructureContext(state: string | null): Promise<string> {
   const parts: string[] = [];
   try {
-    await Promise.all([warmUsace(), warmUsbr()]);
+    await Promise.all([warmUsace(), warmUsbr(), warmDam()]);
+
+    // Dams
+    if (state) {
+      const dams = getDamsByState(state);
+      if (dams.length > 0) {
+        const highHazard = dams.filter((d: any) => d.hazard?.toLowerCase().includes('high'));
+        parts.push(`Dams in ${state}: ${dams.length} total, ${highHazard.length} high-hazard.`);
+      }
+    } else {
+      const allDams = getDamAll();
+      if (allDams.length > 0) {
+        const highHazard = allDams.filter((d: any) => d.hazard?.toLowerCase().includes('high'));
+        parts.push(`National dam inventory: ${allDams.length} dams, ${highHazard.length} high-hazard.`);
+      }
+    }
 
     // USACE
     const usaceLocations = getUsaceAllLocations();
@@ -535,12 +728,6 @@ async function retrieveInfrastructureContext(state: string | null): Promise<stri
       if (state) {
         const stateLocs = usaceLocations.filter((l: any) => l.state === state || l.stateCode === state);
         parts.push(`USACE infrastructure in ${state}: ${stateLocs.length} projects/locations.`);
-        if (stateLocs.length > 0) {
-          const types: Record<string, number> = {};
-          for (const l of stateLocs) { const t = (l as any).type || 'other'; types[t] = (types[t] || 0) + 1; }
-          const typeList = Object.entries(types).map(([t, c]) => `${t}: ${c}`).join(', ');
-          if (typeList) parts.push(`Types: ${typeList}.`);
-        }
       } else {
         parts.push(`USACE: ${usaceLocations.length} infrastructure locations nationwide.`);
       }
@@ -567,7 +754,7 @@ async function retrieveInfrastructureContext(state: string | null): Promise<stri
 async function retrieveEjContext(state: string | null): Promise<string> {
   const parts: string[] = [];
   try {
-    await warmEnvHealth();
+    await Promise.all([warmEnvHealth(), warmHpsa()]);
 
     if (state) {
       const envHealth = getEnvironmentalHealthByState(state);
@@ -578,11 +765,18 @@ async function retrieveEjContext(state: string | null): Promise<string> {
         );
         parts.push(`Environmental justice in ${state}: ${envHealth.length} areas assessed, ${ejPriority.length} high EJ-priority communities.`);
       }
+
+      // HPSA (healthcare shortage in EJ context)
+      const hpsa = getHpsaByState(state);
+      if (hpsa.length > 0) {
+        parts.push(`Healthcare shortage areas in ${state}: ${hpsa.length} HPSA designations (health desert indicator).`);
+      }
     } else {
       const stats = getEnvironmentalHealthStatistics();
       if (stats?.total) {
         parts.push(`Environmental health nationally: ${stats.total} areas tracked.`);
         if (stats.highRiskAreas) parts.push(`${stats.highRiskAreas} high-risk environmental areas identified.`);
+        if (stats.environmentalJusticeAreas) parts.push(`${stats.environmentalJusticeAreas} environmental justice priority areas.`);
       }
     }
   } catch { /* cache not available */ }
@@ -595,7 +789,6 @@ async function retrieveWaterQualityContext(state: string | null): Promise<string
     await Promise.all([warmAttains(), warmStateReport()]);
 
     if (state) {
-      // Use state report for aggregated data
       const report = getStateReport(state);
       if (report) {
         parts.push(`Water quality report for ${state}:`);
@@ -607,7 +800,6 @@ async function retrieveWaterQualityContext(state: string | null): Promise<string
         parts.push(`  Coverage: ${report.coverageGrade}, Freshness: ${report.freshnessGrade}.`);
       }
 
-      // ATTAINS data
       const attains = await getAttainsStateData(state);
       if (attains) {
         const impPct = attains.total > 0 ? Math.round((attains.high + attains.medium) / attains.total * 100) : 0;
@@ -616,7 +808,6 @@ async function retrieveWaterQualityContext(state: string | null): Promise<string
         if (attains.topCauses?.length) parts.push(`  ATTAINS top causes: ${attains.topCauses.slice(0, 5).join(', ')}.`);
       }
     } else {
-      // National overview from all state reports
       const allReports = getAllStateReports();
       if (allReports?.reports) {
         const entries = Object.entries(allReports.reports);
@@ -649,8 +840,9 @@ async function retrieveWaterQualityContext(state: string | null): Promise<string
 async function retrieveStormwaterContext(state: string | null): Promise<string> {
   const parts: string[] = [];
   try {
-    await warmEffluent();
+    await Promise.all([warmEffluent(), warmSsoCso(), warmMs4()]);
 
+    // Effluent (DMR)
     if (state) {
       const effluent = getEchoEffluent(state);
       if (effluent && effluent.length > 0) {
@@ -658,14 +850,165 @@ async function retrieveStormwaterContext(state: string | null): Promise<string> 
         parts.push(`Discharge monitoring in ${state}: ${effluent.length} effluent records, ${violations.length} with violations.`);
       }
     } else {
-      // Get overall stats from ECHO
       const echoAll = getEchoAllData();
       if (echoAll?.facilities) {
         const cwaPerm = echoAll.facilities.filter((f: any) => f.programAcronym === 'CWA' || f.cwaPermit);
         parts.push(`CWA discharge facilities nationally: ${cwaPerm.length} tracked.`);
       }
     }
+
+    // SSO/CSO (sanitary/combined sewer overflows)
+    if (state) {
+      const ssoEvents = getSsoCsoByState(state);
+      if (ssoEvents.length > 0) {
+        parts.push(`SSO/CSO events in ${state}: ${ssoEvents.length} overflow events.`);
+      }
+    } else {
+      const allSso = getSsoCsoAll();
+      if (allSso.length > 0) {
+        parts.push(`SSO/CSO nationally: ${allSso.length} overflow events tracked.`);
+      }
+    }
+
+    // MS4 stormwater permits
+    if (state) {
+      const ms4 = getMs4PermitsByState(state);
+      if (ms4.length > 0) {
+        parts.push(`MS4 permits in ${state}: ${ms4.length} stormwater permits.`);
+      }
+    }
   } catch { /* cache not available */ }
+  return parts.join('\n');
+}
+
+// ── Correlation Engine Retriever ───────────────────────────────────────────────
+
+async function retrieveCorrelationsContext(state: string | null): Promise<string> {
+  const parts: string[] = [];
+  try {
+    // Warm all caches needed by the 5 breakthrough discoveries
+    await Promise.allSettled([
+      warmDodPfasSites(), warmHpsa(), warmEjscreen(),
+      warmNfip(), warmSdwis(), warmEcho(),
+      warmDam(), warmUsdm(), warmUsbr(),
+    ]);
+
+    const allFindings: CorrelationFinding[] = [];
+
+    // ── Breakthrough 1: PFAS × Healthcare Deserts
+    try {
+      const allPfasSites = getDodPfasAllSites();
+      const pfasSitesFlat = Object.values(allPfasSites).flat();
+      const pfasStates = [...new Set(pfasSitesFlat.map(s => s.state))];
+      const hpsaFlat = pfasStates.flatMap(st => getHpsaByState(st));
+      const ejSeen = new Set<string>();
+      const ejFlat: { state: string; lat: number; lng: number; ejIndex: number; minorityPct: number; lowIncomePct: number }[] = [];
+      for (const site of pfasSitesFlat.slice(0, 200)) {
+        const nearby = getEJScreenCache(site.lat, site.lng);
+        if (nearby) {
+          for (const r of nearby) {
+            if (!ejSeen.has(r.blockGroupId)) {
+              ejSeen.add(r.blockGroupId);
+              ejFlat.push({ state: r.state, lat: r.lat, lng: r.lng, ejIndex: r.ejIndex, minorityPct: r.minorityPct, lowIncomePct: r.lowIncomePct });
+            }
+          }
+        }
+      }
+      allFindings.push(...discoverPfasHealthDeserts(pfasSitesFlat, hpsaFlat, ejFlat));
+    } catch { /* skip */ }
+
+    // ── Breakthrough 2: Flood → DW Contamination
+    try {
+      const nfipAll = getNfipClaimsAll();
+      const sdwisAll = getSdwisAllData();
+      const ejSeen2 = new Set<string>();
+      const ejFlat2: { state: string; lat: number; lng: number; ejIndex: number; lowIncomePct: number }[] = [];
+      for (const claim of nfipAll.slice(0, 300)) {
+        if (claim.lat != null && claim.lng != null) {
+          const nearby = getEJScreenCache(claim.lat, claim.lng);
+          if (nearby) {
+            for (const r of nearby) {
+              if (!ejSeen2.has(r.blockGroupId)) {
+                ejSeen2.add(r.blockGroupId);
+                ejFlat2.push({ state: r.state, lat: r.lat, lng: r.lng, ejIndex: r.ejIndex, lowIncomePct: r.lowIncomePct });
+              }
+            }
+          }
+        }
+      }
+      const systemStateMap = new Map(sdwisAll.systems.map(s => [s.pwsid, s.state]));
+      const violsWithState = sdwisAll.violations.map(v => ({
+        ...v,
+        state: systemStateMap.get(v.pwsid) || v.pwsid.slice(0, 2),
+      }));
+      allFindings.push(...discoverFloodWaterContamination(nfipAll, violsWithState, ejFlat2));
+    } catch { /* skip */ }
+
+    // ── Breakthrough 3: Discharge → Impairment
+    try {
+      const echoAll = getEchoAllData();
+      const sncFacilities = echoAll.facilities
+        .filter(f => f.snc)
+        .map(f => ({ registryId: f.registryId, name: f.name, state: f.state, lat: f.lat, lng: f.lng, permitId: f.permitId, pollutant: undefined }));
+      const impairedProxy = echoAll.violations.map(v => ({
+        id: v.registryId, name: v.name, lat: v.lat, lng: v.lng, causes: [v.pollutant].filter(Boolean), state: v.state,
+      }));
+      allFindings.push(...discoverDischargeImpairmentLinks(sncFacilities, impairedProxy));
+    } catch { /* skip */ }
+
+    // ── Breakthrough 4: Dam Cascade Risk
+    try {
+      const dams = getDamAll();
+      const echoAll = getEchoAllData();
+      const hazmatSites = echoAll.facilities
+        .filter(f => f.snc || f.qtrsInViolation >= 4)
+        .map(f => ({ facilityName: f.name, state: f.state, lat: f.lat, lng: f.lng, sncFlag: f.snc }));
+      const sdwisAll = getSdwisAllData();
+      const dwSystems = sdwisAll.systems.map(s => ({
+        pwsid: s.pwsid, state: s.state, lat: s.lat, lng: s.lng, populationServed: s.population,
+      }));
+      allFindings.push(...discoverDamCascadeRisk(dams, hazmatSites, dwSystems));
+    } catch { /* skip */ }
+
+    // ── Breakthrough 5: Drought × Reservoir × Violations
+    try {
+      const usdmAll = getUsdmAll();
+      const reservoirs = getUsbrAll();
+      const violsByState = new Map<string, { total: number; healthBased: number }>();
+      const statesToCheck = state ? [state] : PRIORITY_STATES;
+      for (const st of statesToCheck) {
+        const stateData = getSdwisForState(st);
+        if (stateData) {
+          violsByState.set(st, {
+            total: stateData.violations.length,
+            healthBased: stateData.violations.filter(v => v.isHealthBased).length,
+          });
+        }
+      }
+      const droughtStates = Object.values(usdmAll);
+      allFindings.push(...discoverDroughtWaterStress(droughtStates, reservoirs, violsByState));
+    } catch { /* skip */ }
+
+    // Filter by state if provided
+    const filtered = state ? allFindings.filter(f => f.state === state) : allFindings;
+
+    // Sort by severity
+    const severityOrder = { critical: 0, high: 1, moderate: 2, informational: 3 };
+    filtered.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
+
+    if (filtered.length > 0) {
+      const critical = filtered.filter(f => f.severity === 'critical').length;
+      const high = filtered.filter(f => f.severity === 'high').length;
+      parts.push(`Cross-agency correlations: ${filtered.length} findings (${critical} critical, ${high} high).`);
+
+      // Top 5 findings with narratives
+      for (const f of filtered.slice(0, 5)) {
+        parts.push(`[${f.severity.toUpperCase()}] ${f.title}`);
+        parts.push(`  ${f.narrative}`);
+        parts.push(`  Agencies: ${f.agencies.join(', ')} | Datasets: ${f.datasets.join(', ')}`);
+      }
+    }
+  } catch { /* correlation engine failed */ }
   return parts.join('\n');
 }
 
@@ -761,7 +1104,6 @@ export async function buildAskPinContext(params: AskPinContextParams): Promise<A
   let fallbackContext = '';
   if (domains.length === 0) {
     try {
-      // Provide water quality + compliance overview for generic questions
       const [wqText, compText] = await Promise.all([
         retrieveWaterQualityContext(state),
         retrieveComplianceContext(state),
