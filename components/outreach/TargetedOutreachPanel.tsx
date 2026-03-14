@@ -80,20 +80,25 @@ export default function TargetedOutreachPanel() {
     }
   }
 
-  async function handleResearch(targetId: string) {
-    setResearchingId(targetId);
+  async function handleResearch(target: OutreachTarget) {
+    setResearchingId(target.id);
     setError(null);
     try {
       const res = await fetch('/api/outreach/targets/research', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
-        body: JSON.stringify({ targetId }),
+        body: JSON.stringify({
+          targetId: target.id,
+          orgName: target.orgName,
+          orgType: target.orgType,
+          whyTarget: target.whyTarget,
+        }),
       });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || 'Research failed');
       }
-      setExpandedId(targetId);
+      setExpandedId(target.id);
       await fetchTargets();
     } catch (err: any) {
       setError(err.message);
@@ -270,7 +275,7 @@ export default function TargetedOutreachPanel() {
                   <div className="flex items-center gap-2 shrink-0">
                     {target.status === 'pending' && (
                       <button
-                        onClick={() => handleResearch(target.id)}
+                        onClick={() => handleResearch(target)}
                         disabled={isResearching}
                         className="px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 border border-blue-300 dark:border-blue-700 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors disabled:opacity-50"
                       >

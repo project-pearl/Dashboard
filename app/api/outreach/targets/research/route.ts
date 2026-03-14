@@ -12,6 +12,7 @@ import { loadProfile } from '@/lib/outreach/profileCache';
 import { loadTargets, saveTargets } from '@/lib/outreach/targetCache';
 import { buildTargetResearchPrompt } from '@/lib/outreach/promptBuilder';
 import { callOpenAI } from '@/lib/llmHelpers';
+import type { TargetResearch } from '@/lib/outreach/types';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -40,13 +41,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'OPENAI_API_KEY not configured' }, { status: 500 });
   }
 
-  const targets = await loadTargets();
-  const target = targets.find(t => t.id === parsed.data.targetId);
-  if (!target) {
-    return NextResponse.json({ error: 'Target not found' }, { status: 404 });
-  }
-
-  const { system, user } = buildTargetResearchPrompt(profile, target);
+  // Use target data from the request body directly (avoids cross-function
+  // cache miss on Vercel where each route is a separate serverless function).
+  const { system, user } = buildTargetResearchPrompt(profile, {
+    orgName: parsed.data.orgName,
+    orgType: parsed.data.orgType,
+    whyTarget: parsed.data.whyTarget,
+  });
 
   try {
     const raw = await callOpenAI(apiKey, system, user, 'gpt-4o', 4000, 0.7);
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
     const jsonStr = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     const research = JSON.parse(jsonStr);
 
-    target.aiResearch = {
+    const aiResearch: TargetResearch = {
       summary: research.summary || '',
       relevance: research.relevance || '',
       keyRoles: research.keyRoles || [],
@@ -65,11 +66,27 @@ export async function POST(request: NextRequest) {
       approachStrategy: research.approachStrategy || '',
       generatedAt: new Date().toISOString(),
     };
-    target.status = 'researched';
 
-    await saveTargets(targets);
+    // Best-effort: update the target in cache if found
+    const targets = await loadTargets();
+    const target = targets.find(t => t.id === parsed.data.targetId);
+    if (target) {
+      target.aiResearch = aiResearch;
+      target.status = 'researched';
+      await saveTargets(targets);
+    }
 
-    return NextResponse.json({ success: true, target });
+    return NextResponse.json({
+      success: true,
+      target: target || {
+        id: parsed.data.targetId,
+        orgName: parsed.data.orgName,
+        orgType: parsed.data.orgType,
+        whyTarget: parsed.data.whyTarget,
+        aiResearch,
+        status: 'researched',
+      },
+    });
   } catch (err: any) {
     console.error('[Outreach] Target research failed:', err.message);
     return NextResponse.json(

@@ -359,4 +359,7 @@ export const outreachTargetSchema = z.object({
 /** Schema for triggering AI research on a target. */
 export const outreachTargetResearchSchema = z.object({
   targetId: z.string().min(1, 'targetId is required'),
+  orgName: z.string().min(1, 'orgName is required'),
+  orgType: z.enum(['federal', 'state', 'municipal', 'utility', 'university', 'corporate', 'military', 'other']),
+  whyTarget: z.string().min(1, 'whyTarget is required'),
 });
