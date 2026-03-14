@@ -7,6 +7,43 @@ import type { BusinessProfile, AudienceSegment } from './types';
 import { UNIVERSAL_QA_TONE } from '../llmHelpers';
 
 /* ------------------------------------------------------------------ */
+/*  0. Profile Generation from Freeform Text                          */
+/* ------------------------------------------------------------------ */
+
+export function buildProfileFromDescriptionPrompt(description: string): {
+  system: string;
+  user: string;
+} {
+  return {
+    system: `You are a GovTech marketing strategist specializing in water quality and environmental technology products. You extract structured business profiles from freeform descriptions.
+
+Respond with valid JSON only — no markdown fences, no explanation.`,
+    user: `A user has described their business/product below. Extract a complete business profile from this description.
+
+DESCRIPTION:
+${description}
+
+Generate a structured profile with:
+- name: The company/product name (extract from description or use a sensible name)
+- tagline: A concise one-line value proposition (under 15 words)
+- valueProps: 5-8 specific value propositions based on what they described
+- stats: 5-10 key statistics with label and value (extract real numbers from the description, or create realistic ones based on the capabilities described)
+- differentiators: 5-10 competitive differentiators that set this product apart
+
+Be specific and concrete. Pull actual details from the description rather than generating generic marketing language.
+
+Respond as JSON:
+{
+  "name": "...",
+  "tagline": "...",
+  "valueProps": ["..."],
+  "stats": [{ "label": "...", "value": "..." }],
+  "differentiators": ["..."]
+}`,
+  };
+}
+
+/* ------------------------------------------------------------------ */
 /*  1. Profile Enhancement                                            */
 /* ------------------------------------------------------------------ */
 

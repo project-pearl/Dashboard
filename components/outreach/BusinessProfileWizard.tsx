@@ -7,11 +7,18 @@ import type { BusinessProfile } from '@/lib/outreach/types';
 const STEPS = ['Basics', 'Value Props', 'Stats', 'Differentiators', 'Review'] as const;
 
 export default function BusinessProfileWizard() {
+  const [mode, setMode] = useState<'choose' | 'ai' | 'manual'>('choose');
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [hasExistingProfile, setHasExistingProfile] = useState(false);
 
+  // AI mode state
+  const [description, setDescription] = useState('');
+  const [generating, setGenerating] = useState(false);
+
+  // Profile fields
   const [name, setName] = useState('');
   const [tagline, setTagline] = useState('');
   const [website, setWebsite] = useState('');
@@ -31,11 +38,46 @@ export default function BusinessProfileWizard() {
           setValueProps(p.valueProps.length ? p.valueProps : ['']);
           setStats(p.stats.length ? p.stats : [{ label: '', value: '' }]);
           setDifferentiators(p.differentiators.length ? p.differentiators : ['']);
+          setHasExistingProfile(true);
+          setMode('manual'); // Go straight to editor if profile exists
         }
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  const applyAiProfile = (profile: any) => {
+    setName(profile.name || '');
+    setTagline(profile.tagline || '');
+    setValueProps(profile.valueProps?.length ? profile.valueProps : ['']);
+    setStats(profile.stats?.length ? profile.stats : [{ label: '', value: '' }]);
+    setDifferentiators(profile.differentiators?.length ? profile.differentiators : ['']);
+    setStep(4); // Jump to review
+    setMode('manual');
+  };
+
+  const generateFromDescription = async () => {
+    setGenerating(true);
+    setMessage('');
+    try {
+      const res = await fetch('/api/outreach/generate-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
+        body: JSON.stringify({ description }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        applyAiProfile(data.profile);
+        setMessage('Profile generated! Review and edit below, then save.');
+      } else {
+        setMessage(data.error || 'Generation failed');
+      }
+    } catch {
+      setMessage('Network error');
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const save = useCallback(async () => {
     setSaving(true);
@@ -56,6 +98,7 @@ export default function BusinessProfileWizard() {
       const data = await res.json();
       if (data.success) {
         setMessage('Profile saved!');
+        setHasExistingProfile(true);
       } else {
         setMessage(data.error || 'Failed to save');
       }
@@ -70,25 +113,137 @@ export default function BusinessProfileWizard() {
     return <div className="text-gray-500 dark:text-gray-400">Loading profile...</div>;
   }
 
+  /* ── Mode Chooser ─────────────────────────────────────────────── */
+  if (mode === 'choose') {
+    return (
+      <div className="max-w-2xl space-y-6">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Set Up Your Business Profile</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Choose how you want to create your profile. You can always edit the results afterward.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* AI option */}
+          <button
+            onClick={() => setMode('ai')}
+            className="text-left border-2 border-gray-200 dark:border-gray-700 rounded-lg p-5 hover:border-blue-400 dark:hover:border-blue-500 transition-colors group"
+          >
+            <div className="text-2xl mb-2">&#x2728;</div>
+            <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">
+              Quick Start (AI)
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Paste a description of your product and AI will generate value props, stats, and differentiators automatically.
+            </p>
+          </button>
+
+          {/* Manual option */}
+          <button
+            onClick={() => setMode('manual')}
+            className="text-left border-2 border-gray-200 dark:border-gray-700 rounded-lg p-5 hover:border-green-400 dark:hover:border-green-500 transition-colors group"
+          >
+            <div className="text-2xl mb-2">&#x270F;&#xFE0F;</div>
+            <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400">
+              Manual Wizard
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Step through each section and fill in your profile details by hand.
+            </p>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── AI Paste Mode ────────────────────────────────────────────── */
+  if (mode === 'ai') {
+    return (
+      <div className="max-w-2xl space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Quick Start — Describe Your Product</h2>
+          <button
+            onClick={() => setMode('choose')}
+            className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          >
+            Back
+          </button>
+        </div>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Paste a description of your business, product pitch, website copy, or any text that describes what you do.
+          AI will extract a structured profile with value propositions, statistics, and differentiators.
+        </p>
+
+        <textarea
+          value={description}
+          onChange={e => setDescription(e.target.value)}
+          rows={12}
+          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm leading-relaxed"
+          placeholder={`Example: PIN (PEARL Intelligence Network) is a water quality intelligence dashboard that integrates 90+ federal data sources including EPA ECHO, SDWIS, WQP, ATTAINS, USGS, CDC, and NOAA into a single real-time view. It serves 17 different user roles from federal EPA analysts to K-12 teachers, each with AI-generated briefings tailored to their specific needs...
+
+Paste your description here — the more detail, the better the profile.`}
+        />
+
+        {message && (
+          <div className={`text-sm ${message.includes('generated') || message.includes('saved') ? 'text-green-600' : 'text-red-600'}`}>
+            {message}
+          </div>
+        )}
+
+        <div className="flex gap-3">
+          <button
+            onClick={generateFromDescription}
+            disabled={generating || description.trim().length < 20}
+            className="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
+          >
+            {generating ? 'Generating profile...' : 'Generate Profile'}
+          </button>
+          <button
+            onClick={() => setMode('manual')}
+            className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+          >
+            or fill in manually
+          </button>
+        </div>
+
+        {generating && (
+          <div className="text-sm text-blue-600 dark:text-blue-400 animate-pulse">
+            AI is analyzing your description and building a structured profile...
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ── Manual Wizard Mode ───────────────────────────────────────── */
   return (
     <div className="max-w-2xl space-y-6">
-      {/* Step indicators */}
-      <div className="flex gap-2">
-        {STEPS.map((label, i) => (
+      {/* Mode switch + step indicators */}
+      <div className="flex items-center justify-between">
+        <div className="flex gap-2">
+          {STEPS.map((label, i) => (
+            <button
+              key={label}
+              onClick={() => setStep(i)}
+              className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                i === step
+                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                  : i < step
+                    ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                    : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {!hasExistingProfile && (
           <button
-            key={label}
-            onClick={() => setStep(i)}
-            className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
-              i === step
-                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-                : i < step
-                  ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                  : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
-            }`}
+            onClick={() => setMode('choose')}
+            className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
           >
-            {label}
+            Switch to AI
           </button>
-        ))}
+        )}
       </div>
 
       {/* Step 0: Basics */}
@@ -252,14 +407,14 @@ export default function BusinessProfileWizard() {
             <div><span className="font-medium text-gray-700 dark:text-gray-300">Tagline:</span> {tagline}</div>
             {website && <div><span className="font-medium text-gray-700 dark:text-gray-300">Website:</span> {website}</div>}
             <div>
-              <span className="font-medium text-gray-700 dark:text-gray-300">Value Props:</span>
+              <span className="font-medium text-gray-700 dark:text-gray-300">Value Props ({valueProps.filter(v => v.trim()).length}):</span>
               <ul className="list-disc list-inside mt-1 text-gray-600 dark:text-gray-400">
                 {valueProps.filter(v => v.trim()).map((v, i) => <li key={i}>{v}</li>)}
               </ul>
             </div>
             {stats.filter(s => s.label.trim()).length > 0 && (
               <div>
-                <span className="font-medium text-gray-700 dark:text-gray-300">Stats:</span>
+                <span className="font-medium text-gray-700 dark:text-gray-300">Stats ({stats.filter(s => s.label.trim()).length}):</span>
                 <ul className="list-disc list-inside mt-1 text-gray-600 dark:text-gray-400">
                   {stats.filter(s => s.label.trim()).map((s, i) => <li key={i}>{s.label}: {s.value}</li>)}
                 </ul>
@@ -267,7 +422,7 @@ export default function BusinessProfileWizard() {
             )}
             {differentiators.filter(d => d.trim()).length > 0 && (
               <div>
-                <span className="font-medium text-gray-700 dark:text-gray-300">Differentiators:</span>
+                <span className="font-medium text-gray-700 dark:text-gray-300">Differentiators ({differentiators.filter(d => d.trim()).length}):</span>
                 <ul className="list-disc list-inside mt-1 text-gray-600 dark:text-gray-400">
                   {differentiators.filter(d => d.trim()).map((d, i) => <li key={i}>{d}</li>)}
                 </ul>
@@ -288,7 +443,7 @@ export default function BusinessProfileWizard() {
         </button>
         <div className="flex gap-3 items-center">
           {message && (
-            <span className={`text-sm ${message.includes('saved') ? 'text-green-600' : 'text-red-600'}`}>
+            <span className={`text-sm ${message.includes('saved') || message.includes('generated') ? 'text-green-600' : 'text-red-600'}`}>
               {message}
             </span>
           )}

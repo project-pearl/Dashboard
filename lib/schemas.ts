@@ -287,6 +287,11 @@ export const outreachProfileSchema = z.object({
   differentiators: z.array(z.string()).optional().default([]),
 });
 
+/** Schema for AI profile generation from freeform text. */
+export const outreachGenerateProfileSchema = z.object({
+  description: z.string().min(20, 'description must be at least 20 characters'),
+});
+
 /** Schema for triggering audience discovery. */
 export const outreachDiscoverSchema = z.object({
   profileOverrides: z.record(z.unknown()).optional(),
