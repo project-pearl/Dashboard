@@ -48,6 +48,7 @@ import { DraggableSection } from './DraggableSection';
 import dynamic from 'next/dynamic';
 import { useAdminState } from '@/lib/adminStateContext';
 import RoleTrainingGuide from '@/components/RoleTrainingGuide';
+import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
 
 
 const GrantOpportunityMatcher = dynamic(
@@ -103,9 +104,9 @@ const LENS_CONFIG: Record<ViewLens, {
   sections: Set<string> | null;
 }> = {
   overview:    { label: 'Overview',    description: 'NGO watershed management overview',
-    sections: new Set(['regprofile', 'map-grid', 'top10', 'partners', 'disclaimer']) },
+    sections: new Set(['regprofile', 'map-grid', 'top10', 'partners', 'ask-pin-universal', 'disclaimer']) },
   briefing:    { label: 'AI Briefing', description: 'AI-generated conservation intelligence briefing',
-    sections: new Set(['insights', 'alertfeed', 'disclaimer']) },
+    sections: new Set(['insights', 'alertfeed', 'ask-pin-universal', 'disclaimer']) },
   'political-briefing': {
     label: 'Political Briefing',
     description: 'Talking points, funding optics, EJ exposure, and council agenda suggestions',
@@ -2270,6 +2271,10 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
             case 'initiatives-panel': return DS(<InitiativesTrackerPanel stateAbbr={stateAbbr} />);
 
             case 'location-report': return DS(<LocationReportCard />);
+
+            case 'ask-pin-universal': return DS(
+              <AskPinUniversalCard role="NGO" state={stateAbbr} />
+            );
 
             // ── Habitat & Ecology ──
             case 'hab-ecoscore': {

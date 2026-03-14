@@ -68,6 +68,7 @@ import { RoleBriefingActionsCard } from '@/components/RoleBriefingCards';
 import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
 import { ecoScoreStyle } from '@/lib/scoringUtils';
 import { NUTRIENT_TRADING_STATES } from '@/lib/constants';
+import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
 
 // --- Types -------------------------------------------------------------------
 
@@ -110,14 +111,14 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Overview',
     description: 'Jurisdiction dashboard - morning check for elected officials',
     sections: new Set([
-      'local-identity', 'map-grid', 'local-kpi-strip', 'local-situation', 'local-quick-actions', 'disclaimer',
+      'local-identity', 'map-grid', 'local-kpi-strip', 'local-situation', 'local-quick-actions', 'ask-pin-universal', 'disclaimer',
     ]),
   },
   briefing: {
     label: 'AI Briefing',
     description: 'AI-generated overnight summary and action items',
     sections: new Set([
-      'briefing-actions', 'local-constituent-tldr', 'disclaimer',
+      'briefing-actions', 'local-constituent-tldr', 'ask-pin-universal', 'disclaimer',
     ]),
   },
   'political-briefing': {
@@ -2008,6 +2009,10 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
               watersheds={jurisdictionScopedWbMarkers.slice(0, 4).map((w) => w.name)}
             />
           ) : null;
+
+          case 'ask-pin-universal': return DS(
+            <AskPinUniversalCard role="Local" state={effectiveState} />
+          );
 
           // -- Disclaimer --
           case 'disclaimer': return null;

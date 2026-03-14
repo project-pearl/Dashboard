@@ -42,6 +42,7 @@ import { getEpaRegionForState } from '@/lib/epa-regions';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
+import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
 
 import dynamic from 'next/dynamic';
 const MapboxMapShell = dynamic(
@@ -97,9 +98,9 @@ const LENS_CONFIG: Record<ViewLens, {
   sections: Set<string> | null;
 }> = {
   overview:    { label: 'Overview',    description: 'University water quality dashboard overview',
-    sections: new Set(['regprofile', 'map-grid', 'top10', 'disclaimer']) },
+    sections: new Set(['regprofile', 'map-grid', 'top10', 'ask-pin-universal', 'disclaimer']) },
   briefing:    { label: 'AI Briefing', description: 'AI-generated research intelligence briefing',
-    sections: new Set(['insights', 'alertfeed', 'disclaimer']) },
+    sections: new Set(['insights', 'alertfeed', 'ask-pin-universal', 'disclaimer']) },
   trends:      { label: 'Trends & Projections', description: 'Water quality trends, research metrics, and data projections',
     sections: new Set(['trends-dashboard', 'disclaimer']) },
   policy:      { label: 'Policy Tracker', description: 'Water policy tracking for research context',
@@ -2045,6 +2046,10 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
             case 'watershed-partnerships-panel': return DS(<WatershedPartnershipsPanel stateAbbr={stateAbbr} />);
 
             case 'location-report': return DS(<LocationReportCard />);
+
+            case 'ask-pin-universal': return DS(
+              <AskPinUniversalCard role="College" state={stateAbbr} />
+            );
 
             // ── Habitat & Ecology ──
             case 'hab-ecoscore': {

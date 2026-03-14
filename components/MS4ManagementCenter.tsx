@@ -101,6 +101,7 @@ import { getEpaRegionForState } from '@/lib/epa-regions';
 import { UserManagementPanel } from './UserManagementPanel';
 import { WeatherAlertsSection } from './WeatherAlertsSection';
 import { getInvitableRoles } from '@/lib/adminHierarchy';
+import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -139,13 +140,13 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Overview',
     description: 'Municipal Utility operational dashboard — morning check before the day starts',
     defaultOverlay: 'impairment',
-    sections: new Set(['operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'quickactions', 'disclaimer']),
+    sections: new Set(['operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'quickactions', 'ask-pin-universal', 'disclaimer']),
   },
   briefing: {
     label: 'AI Briefing',
     description: 'AI-generated overnight summary and action items',
     defaultOverlay: 'impairment',
-    sections: new Set(['insights', 'briefing-actions', 'briefing-qa', 'disclaimer']),
+    sections: new Set(['insights', 'briefing-actions', 'briefing-qa', 'ask-pin-universal', 'disclaimer']),
   },
   'political-briefing': {
     label: 'Political Briefing',
@@ -5494,6 +5495,10 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
             );
 
             case 'location-report': return DS(<LocationReportCard />);
+
+            case 'ask-pin-universal': return DS(
+              <AskPinUniversalCard role="MS4" state={stateAbbr} jurisdiction={resolvedJurisdiction || undefined} />
+            );
 
             // ── Habitat & Ecology ──
             case 'hab-ecoscore': {

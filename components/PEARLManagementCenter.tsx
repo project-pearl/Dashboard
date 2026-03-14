@@ -40,6 +40,7 @@ const PINQuiz = lazy(() => import('@/components/PINQuiz'));
 import { useLensParam } from '@/lib/useLensParam';
 import { usePearlFunding } from '@/lib/usePearlFunding';
 import { AlertDeepDive, type DeepDiveAlert } from './AlertDeepDive';
+import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -1667,6 +1668,9 @@ Doug and the PIN team`;
                 );
               })}
             </div>
+
+            {/* ── Ask PIN Universal ── */}
+            <AskPinUniversalCard role="Pearl" />
 
           </>
         )}

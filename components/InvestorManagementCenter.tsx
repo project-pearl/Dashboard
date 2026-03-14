@@ -55,6 +55,7 @@ import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { RoleBriefingActionsCard, RoleBriefingPulseCard } from '@/components/RoleBriefingCards';
 import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
 import { ecoScoreStyle } from '@/lib/scoringUtils';
+import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
   { ssr: false }
@@ -138,7 +139,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   overview: {
     label: 'Executive Overview', description: 'Portfolio-level water risk summary for investors',
     icon: Building2,
-    sections: new Set(['summary', 'kpis', 'map-grid', 'portfolio-snapshot', 'disclaimer']),
+    sections: new Set(['summary', 'kpis', 'map-grid', 'portfolio-snapshot', 'ask-pin-universal', 'disclaimer']),
   },
   'portfolio-risk': {
     label: 'Portfolio Risk', description: 'Water risk exposure across portfolio holdings',
@@ -1817,6 +1818,10 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                 <h3 className="text-sm font-semibold text-slate-800 mb-1">Financial Analytics</h3>
                 <p className="text-xs text-slate-500">Analytics on funding utilization and ROI.</p>
               </div>
+            );
+
+            case 'ask-pin-universal': return DS(
+              <AskPinUniversalCard role="Investor" state={focusedState !== 'US' ? focusedState : undefined} />
             );
 
             // ─── DISCLAIMER ─────────────────────────────────────────────────

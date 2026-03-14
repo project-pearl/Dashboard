@@ -561,6 +561,20 @@ export const SECTION_KB: Record<string, SectionKB> = {
     action: 'Complete all training modules and encourage team members to do the same. Provide feedback on modules that need improvement.',
     faq: [],
   },
+
+  'ask-pin-universal': {
+    explanation: 'Ask PIN anything about your dashboard. Questions are answered by AI grounded in live platform data including national water quality summaries, source health, sentinel alerts, and NWS weather alerts. Supports follow-up conversation with context.',
+    lookFor: 'Use this card whenever you have a question about what the data means, what has changed, or what actions to take. PIN adapts its tone to your role.',
+    action: 'Type a question or click a suggested prompt. Review the answer and source badges to understand where data came from. Ask follow-up questions for deeper analysis.',
+    faq: [
+      { q: 'What data does PIN use to answer?', keywords: ['data', 'source', 'where', 'how', 'context'],
+        a: 'PIN pulls live data from national water quality summaries, source health monitoring, sentinel anomaly detection, NWS weather alerts, and federal briefing metrics (when applicable to your role).' },
+      { q: 'Can I ask follow-up questions?', keywords: ['follow', 'followup', 'conversation', 'context', 'history'],
+        a: 'Yes! PIN remembers up to 5 previous question-answer pairs in the current session. Your follow-up questions will be answered with that context.' },
+      { q: 'Why do answers differ by role?', keywords: ['role', 'tone', 'different', 'vary'],
+        a: 'PIN adjusts its communication style and focus areas based on your role. Federal users get cross-state policy analysis, K-12 users get educational explanations, utilities get operational guidance, and so on.' },
+    ],
+  },
 };
 
 /**

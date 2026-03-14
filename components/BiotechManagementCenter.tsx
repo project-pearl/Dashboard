@@ -60,6 +60,7 @@ import { DraggableSection } from './DraggableSection';
 import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
 import { ecoScoreStyle } from '@/lib/scoringUtils';
+import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
   { ssr: false }
@@ -114,7 +115,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   overview: {
     label: 'Executive Overview', description: 'Portfolio-level Biotech/Pharma summary for leadership',
     icon: Building2,
-    sections: new Set(['summary', 'kpis', 'map-grid', 'gmp-status', 'disclaimer']),
+    sections: new Set(['summary', 'kpis', 'map-grid', 'gmp-status', 'ask-pin-universal', 'disclaimer']),
   },
   'process-water': {
     label: 'Process Water Quality', description: 'USP water grades, purification KPIs, and process water monitoring',
@@ -1967,6 +1968,10 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                   </div>
                 </CardContent>
               </Card>
+            );
+
+            case 'ask-pin-universal': return DS(
+              <AskPinUniversalCard role="Biotech" state={focusedState !== 'US' ? focusedState : undefined} />
             );
 
             // ─── DISCLAIMER ─────────────────────────────────────────────────

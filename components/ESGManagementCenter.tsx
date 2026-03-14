@@ -66,6 +66,7 @@ import { WhatChangedOvernight, StakeholderWatch } from './BriefingCards';
 import { RoleBriefingActionsCard } from '@/components/RoleBriefingCards';
 import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
 import { ecoScoreStyle } from '@/lib/scoringUtils';
+import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
   { ssr: false }
@@ -116,7 +117,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   overview: {
     label: 'Executive Overview', description: 'Portfolio-level Sustainability summary for leadership',
     icon: Building2,
-    sections: new Set(['summary', 'map-grid', 'sustainability', 'briefing-actions', 'briefing-changes', 'briefing-stakeholders', 'disclaimer']),
+    sections: new Set(['summary', 'map-grid', 'sustainability', 'briefing-actions', 'briefing-changes', 'briefing-stakeholders', 'ask-pin-universal', 'disclaimer']),
   },
   'esg-reporting': {
     label: 'Reporting and Disclosure', description: 'ESG framework reporting, scorecard, and disclosures',
@@ -2533,6 +2534,10 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             case 'grant-outcomes': return DS(<>
               <GrantOutcomesCard />
             </>);
+
+            case 'ask-pin-universal': return DS(
+              <AskPinUniversalCard role="Corporate" state={focusedState !== 'US' ? focusedState : undefined} />
+            );
 
             case 'disclaimer': return null;
             case 'training': return DS(

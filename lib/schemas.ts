@@ -206,6 +206,23 @@ export const briefingQaSchema = z.object({
   isMilitary: z.boolean().optional(),
 });
 
+/** Schema for the universal Ask PIN endpoint (all roles, live data context). */
+export const askPinUniversalSchema = z.object({
+  question: z.string().min(1, 'question is required'),
+  role: z.enum([
+    'Federal', 'State', 'MS4', 'Local', 'K12', 'College', 'Researcher',
+    'Corporate', 'NGO', 'Utility', 'Biotech', 'Investor', 'Agriculture',
+    'Lab', 'Pearl', 'Temp',
+  ]),
+  state: z.string().optional(),
+  jurisdiction: z.string().optional(),
+  isMilitary: z.boolean().optional(),
+  conversationHistory: z.array(z.object({
+    role: z.enum(['user', 'assistant']),
+    content: z.string(),
+  })).max(10).optional(),
+});
+
 /** Schema for AI resolution plan generation. */
 export const resolutionPlanSchema = z.object({
   prompt: z.string().min(1, 'prompt is required'),

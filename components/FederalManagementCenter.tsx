@@ -77,6 +77,7 @@ import { UserManagementPanel } from './UserManagementPanel';
 import { getInvitableRoles } from '@/lib/adminHierarchy';
 import type { AlertEvent as EngineAlertEvent } from '@/lib/alerts/types';
 import { BriefingQACard } from '@/components/BriefingQACard';
+import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
 import { FireDetectionCard } from '@/components/FireDetectionCard';
 import { FireAirQualityIntelPanel } from '@/components/FireAirQualityIntelPanel';
 import { AqiTrendChart } from '@/components/AqiTrendChart';
@@ -204,7 +205,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['usmap', 'pol-constituent-concerns']),
+    sections: new Set(['usmap', 'pol-constituent-concerns', 'ask-pin-universal', 'wqx-modern-results', 'flood-event-viewer', 'dmr-violations-panel', 'hab-forecast-panel', 'cdc-places-health', 'severe-weather-panel', 'nexrad-precip-panel', 'congress-legislation']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -214,7 +215,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: true,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['ai-water-intelligence', 'briefing-actions', 'briefing-qa']),
+    sections: new Set(['ai-water-intelligence', 'briefing-actions', 'briefing-qa', 'ask-pin-universal']),
   },
   'political-briefing': {
     label: 'Political Briefing',
@@ -239,7 +240,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: true, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'icis', 'sdwis', 'priorityqueue']),
+    sections: new Set(['networkhealth', 'icis', 'sdwis', 'priorityqueue', 'dmr-violations-panel']),
   },
   'water-quality': {
     label: 'Water Quality',
@@ -249,7 +250,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: true, showSituationSummary: true, showTimeRange: true,
     showSLA: false, showRestorationPlan: false, collapseStateTable: false,
-    sections: new Set(['wq-domain-tabs', 'networkhealth', 'impairmentprofile', 'coveragegaps', 'situation', 'statebystatesummary', 'usgs-ogc-stations', 'ngwmn-groundwater', 'water-availability']),
+    sections: new Set(['wq-domain-tabs', 'networkhealth', 'impairmentprofile', 'coveragegaps', 'situation', 'statebystatesummary', 'usgs-ogc-stations', 'ngwmn-groundwater', 'water-availability', 'wqx-modern-results', 'dmr-violations-panel']),
   },
   infrastructure: {
     label: 'Infrastructure',
@@ -259,7 +260,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: true, showNationalImpact: true, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'groundwater', 'waterfront-exposure', 'infra-green', 'infra-capital', 'infra-construction', 'flood-impact-analysis', 'cyber-risk-panel']),
+    sections: new Set(['networkhealth', 'groundwater', 'waterfront-exposure', 'infra-green', 'infra-capital', 'infra-construction', 'flood-impact-analysis', 'cyber-risk-panel', 'flood-event-viewer', 'severe-weather-panel']),
   },
   monitoring: {
     label: 'Monitoring',
@@ -269,7 +270,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: true, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: true, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'data-latency', 'sentinel-briefing', 'air-quality-briefing', 'fire-detection', 'flood-status', 'flood-risk-summary', 'weather-alerts', 'delta-changelog', 'usgs-ogc-stations', 'ngwmn-groundwater', 'nws-forecast-panel', 'water-availability']),
+    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'data-latency', 'sentinel-briefing', 'air-quality-briefing', 'fire-detection', 'flood-status', 'flood-risk-summary', 'weather-alerts', 'delta-changelog', 'usgs-ogc-stations', 'ngwmn-groundwater', 'nws-forecast-panel', 'water-availability', 'wqx-modern-results', 'hab-forecast-panel', 'nexrad-precip-panel', 'severe-weather-panel']),
   },
   'sentinel-monitoring': {
     label: 'Sentinel Monitoring',
@@ -369,7 +370,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['scorecard-kpis', 'scorecard-grades', 'scorecard-choropleth', 'scorecard-rankings', 'scorecard-trends', 'global-water-quality']),
+    sections: new Set(['scorecard-kpis', 'scorecard-grades', 'scorecard-choropleth', 'scorecard-rankings', 'scorecard-trends', 'global-water-quality', 'cdc-places-health']),
   },
   reports: {
     label: 'Reports',
@@ -379,7 +380,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['reports-hub', 'global-water-quality']),
+    sections: new Set(['reports-hub', 'global-water-quality', 'congress-legislation']),
   },
   interagency: {
     label: 'Cross-Agency',
@@ -5508,6 +5509,10 @@ export function FederalManagementCenter(props: Props) {
           <BriefingQACard role="Federal" isMilitary={viewLens === 'military-installations'} />
         );
 
+        case 'ask-pin-universal': return DS(
+          <AskPinUniversalCard role="Federal" isMilitary={viewLens === 'military-installations'} />
+        );
+
         case 'delta-changelog': return DS(<DeltaChangelog />);
 
         case 'pol-active-situations': return DS(
@@ -6124,6 +6129,246 @@ export function FederalManagementCenter(props: Props) {
               <div className="flex items-center gap-2 text-xs text-slate-500">
                 <span>⏳</span>
                 <span>Awaiting data — GEMStat Global Freshwater Quality Database</span>
+                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
+              </div>
+            </div>
+          );
+        }
+
+        case 'wqx-modern-results': {
+          return DS(
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Total Results</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-emerald-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Parameters</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-amber-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Stations</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-purple-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">States</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span>⏳</span>
+                <span>Awaiting data — EPA WQX 3.0 Water Quality API</span>
+                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
+              </div>
+            </div>
+          );
+        }
+
+        case 'flood-event-viewer': {
+          return DS(
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Active Events</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-emerald-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Peak Stages</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-amber-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">HWMs Collected</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-purple-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">States</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span>⏳</span>
+                <span>Awaiting data — USGS STN Flood Event Services</span>
+                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
+              </div>
+            </div>
+          );
+        }
+
+        case 'dmr-violations-panel': {
+          return DS(
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Violations</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-emerald-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Facilities</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-amber-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Exceedances</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-purple-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">States</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span>⏳</span>
+                <span>Awaiting data — EPA ECHO DMR Violations API</span>
+                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
+              </div>
+            </div>
+          );
+        }
+
+        case 'hab-forecast-panel': {
+          return DS(
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Active Forecasts</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-emerald-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">High Risk</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-amber-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Waterbodies</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-purple-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Regions</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span>⏳</span>
+                <span>Awaiting data — NOAA NCCOS HAB Forecast System</span>
+                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
+              </div>
+            </div>
+          );
+        }
+
+        case 'cdc-places-health': {
+          return DS(
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Census Tracts</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-emerald-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Conditions</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-amber-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">High Prevalence</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-purple-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">States</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span>⏳</span>
+                <span>Awaiting data — CDC PLACES Local Health Data</span>
+                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
+              </div>
+            </div>
+          );
+        }
+
+        case 'severe-weather-panel': {
+          return DS(
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Events (7d)</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-emerald-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Severe Events</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-amber-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Flash Floods</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-purple-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">States</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span>⏳</span>
+                <span>Awaiting data — NOAA SWDI Severe Weather Data</span>
+                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
+              </div>
+            </div>
+          );
+        }
+
+        case 'nexrad-precip-panel': {
+          return DS(
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Radar Cells</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-emerald-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Max Precip (mm)</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-amber-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Flash Flood Risk</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-purple-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Stations</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span>⏳</span>
+                <span>Awaiting data — IEM NEXRAD Radar QPE (15-min)</span>
+                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
+              </div>
+            </div>
+          );
+        }
+
+        case 'congress-legislation': {
+          return DS(
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Active Bills</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-emerald-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Committees</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-amber-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Enacted</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-purple-600">&mdash;</div>
+                  <div className="text-xs text-gray-500">Sponsors</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span>⏳</span>
+                <span>Awaiting data — Congress.gov Water Legislation API</span>
                 <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
               </div>
             </div>

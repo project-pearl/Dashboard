@@ -57,6 +57,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'debate-topics-panel',       label: 'Debate Topics',              order: 22.3, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'groundwater',                label: 'Groundwater Monitoring (WDFN)', order: 22.5, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'delta-changelog',            label: 'Data Change Log',              order: 22.65, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'ask-pin-universal',          label: 'Ask PIN',                      order: 22.7, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'location-report', label: 'Location Water Quality Report', order: 23, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 24, visible: true, defaultExpanded: true,  lensControlled: true },
@@ -86,6 +87,7 @@ export const DEFAULT_SECTIONS = {
     // ── AI Briefing (View 2) ──
     { id: 'briefing-actions',    label: 'Action Required',               order: 16, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-qa',         label: 'Ask Your Briefing',             order: 16.5, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'ask-pin-universal',   label: 'Ask PIN',                       order: 16.6, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'delta-changelog',     label: 'Data Change Log',               order: 17.1, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Political Briefing ──
     { id: 'pol-talking-points',       label: 'Talking Points',              order: 19.41, visible: true, defaultExpanded: true, lensControlled: true },
@@ -212,6 +214,15 @@ export const DEFAULT_SECTIONS = {
     { id: 'water-availability',   label: 'Water Availability Assessment', order: 87.86, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'cyber-risk-panel',     label: 'Water System Cyber Risk',       order: 87.87, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'global-water-quality', label: 'Global Water Quality Context',  order: 87.88, visible: true, defaultExpanded: true, lensControlled: true },
+    // ── Batch Data Sources (25 new integrations) ──
+    { id: 'wqx-modern-results',  label: 'WQX 3.0 Water Quality',        order: 87.91, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'flood-event-viewer',  label: 'USGS Flood Event Viewer',      order: 87.92, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'dmr-violations-panel', label: 'DMR Violation Analytics',     order: 87.93, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'hab-forecast-panel',  label: 'HAB Bloom Forecasts',          order: 87.94, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'cdc-places-health',   label: 'CDC PLACES Health Data',       order: 87.95, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'severe-weather-panel', label: 'NOAA Severe Weather Events',  order: 87.96, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'nexrad-precip-panel', label: 'Real-Time Radar Precipitation', order: 87.97, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'congress-legislation', label: 'Water Legislation Tracker',   order: 87.98, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'location-report',     label: 'Location Water Quality Report', order: 88, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',          label: 'Platform Disclaimer',          order: 89, visible: true, defaultExpanded: true,  lensControlled: true },
@@ -343,6 +354,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'mdeexport',           label: 'MDE Annual Reporting',             order: 84, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'provenance',          label: 'Data Provenance & Chain of Custody', order: 85, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'location-report',     label: 'Location Water Quality Report',    order: 86, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'ask-pin-universal',   label: 'Ask PIN',                          order: 86.5, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',          label: 'Platform Disclaimer',              order: 87, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'users-panel',         label: 'User Management',                 order: 998, visible: true, defaultExpanded: true, lensControlled: true },
@@ -398,6 +410,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'fund-srf',       label: 'SRF Program',                   order: 30.1, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'fund-pipeline',  label: 'Opportunity Pipeline',          order: 30.2, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'fund-analytics', label: 'Funding Analytics',             order: 30.3, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'ask-pin-universal', label: 'Ask PIN',                   order: 30.5, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 31, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'training',       label: 'Deployment Training',           order: 999, visible: true, defaultExpanded: true, lensControlled: true },
@@ -457,6 +470,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'fund-srf',            label: 'SRF Program',                      order: 34.1, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'fund-pipeline',       label: 'Opportunity Pipeline',             order: 35,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'fund-analytics',      label: 'Financial Analytics',              order: 36,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'ask-pin-universal',   label: 'Ask PIN',                          order: 36.5, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',           label: 'Platform Disclaimer',             order: 37,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'training',             label: 'Deployment Training',             order: 999, visible: true, defaultExpanded: true, lensControlled: true },
@@ -516,6 +530,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'fund-active',             label: 'My Active Grants',                order: 35.1, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'fund-pipeline',           label: 'Opportunity Pipeline',            order: 35.2, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'fund-analytics',          label: 'Financial Analytics',             order: 35.3, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'ask-pin-universal',       label: 'Ask PIN',                         order: 35.5, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',              label: 'Platform Disclaimer',             order: 36,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'training',                label: 'Deployment Training',             order: 999, visible: true, defaultExpanded: true, lensControlled: true },
@@ -571,6 +586,7 @@ export const DEFAULT_SECTIONS = {
     // ── Funding ──
     { id: 'fund-active',                label: 'My Active Grants',             order: 27.6, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'fund-pipeline',              label: 'Opportunity Pipeline',         order: 27.7, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'ask-pin-universal',          label: 'Ask PIN',                      order: 27.8, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 28, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'training',    label: 'Deployment Training',          order: 999, visible: true, defaultExpanded: true, lensControlled: true },
@@ -614,6 +630,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'fund-pipeline',               label: 'Opportunity Pipeline',         order: 25.2, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'delta-changelog',             label: 'Data Change Log',              order: 25.65, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'location-report',             label: 'Location Water Quality Report', order: 26, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'ask-pin-universal',          label: 'Ask PIN',                      order: 26.5, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 27, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'users-panel', label: 'User Management',              order: 998, visible: true, defaultExpanded: true, lensControlled: true },
@@ -639,6 +656,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'fire-health-advisory', label: 'Burn Pit & Smoke Advisory',    order: 5.09, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'briefing-actions',    label: 'Action Required',               order: 5.1, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'briefing-qa',         label: 'Ask Your Briefing',              order: 4.5, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'ask-pin-universal',  label: 'Ask PIN',                        order: 4.6, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'delta-changelog',     label: 'Data Change Log',               order: 5.25, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Political Briefing ──
     { id: 'pol-active-situations',    label: 'Active Situations',           order: 5.50, visible: true, defaultExpanded: true, lensControlled: true },
@@ -705,6 +723,15 @@ export const DEFAULT_SECTIONS = {
     { id: 'water-availability',   label: 'Water Availability Assessment', order: 39.82, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'cyber-risk-panel',     label: 'Water System Cyber Risk',       order: 39.83, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'global-water-quality', label: 'Global Water Quality Context',  order: 39.84, visible: true, defaultExpanded: true, lensControlled: true },
+    // ── Batch Data Sources (25 new integrations) ──
+    { id: 'wqx-modern-results',  label: 'WQX 3.0 Water Quality',        order: 39.91, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'flood-event-viewer',  label: 'USGS Flood Event Viewer',      order: 39.92, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'dmr-violations-panel', label: 'DMR Violation Analytics',     order: 39.93, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'hab-forecast-panel',  label: 'HAB Bloom Forecasts',          order: 39.94, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'cdc-places-health',   label: 'CDC PLACES Health Data',       order: 39.95, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'severe-weather-panel', label: 'NOAA Severe Weather Events',  order: 39.96, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'nexrad-precip-panel', label: 'Real-Time Radar Precipitation', order: 39.97, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'congress-legislation', label: 'Water Legislation Tracker',   order: 39.98, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'location-report',    label: 'Location Water Quality Report', order: 40, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'disclaimer',         label: 'Platform Disclaimer',         order: 41, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'users-panel',        label: 'User Management',             order: 998, visible: true, defaultExpanded: true, lensControlled: true },
@@ -846,6 +873,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'fund-debt',              label: 'Debt Management',                 order: 94, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'fund-capital-strategy',  label: 'Capital Funding Strategy',        order: 95, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'location-report',       label: 'Location Water Quality Report',  order: 96, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'ask-pin-universal',    label: 'Ask PIN',                         order: 96.5, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'disclaimer',            label: 'Platform Disclaimer',            order: 97, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'users-panel',           label: 'User Management',               order: 998, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'training',              label: 'Deployment Training',            order: 999, visible: true, defaultExpanded: true, lensControlled: true },
@@ -858,6 +886,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'spi-trends',       label: 'Trend Overlay',                 order: 3,  visible: true, defaultExpanded: true },
     { id: 'spi-permits',      label: 'Permit Constraint Snapshot',    order: 4,  visible: true, defaultExpanded: true },
     { id: 'location-report',  label: 'Location Water Quality Report', order: 5,  visible: true, defaultExpanded: false },
+    { id: 'ask-pin-universal', label: 'Ask PIN',                      order: 5.5, visible: true, defaultExpanded: true },
     { id: 'disclaimer',       label: 'Platform Disclaimer',           order: 6,  visible: true, defaultExpanded: true },
     { id: 'training',         label: 'Deployment Training',           order: 999, visible: true, defaultExpanded: true, lensControlled: true },
   ],
@@ -870,6 +899,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'rejection-summary',  label: 'Rejection Summary',       order: 3, visible: true, defaultExpanded: true },
     { id: 'pub-history',        label: 'Publication History',     order: 4, visible: true, defaultExpanded: true },
     { id: 'pin-network',        label: 'PIN Network Status',      order: 5, visible: true, defaultExpanded: true },
+    { id: 'ask-pin-universal',  label: 'Ask PIN',                  order: 5.5, visible: true, defaultExpanded: true },
     { id: 'disclaimer',         label: 'Platform Disclaimer',     order: 6, visible: true, defaultExpanded: true },
   ],
   SiteIntel: [
@@ -880,6 +910,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'regulatory',         label: 'Regulatory Context',          order: 4, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'water-score',        label: 'PIN Water Score',             order: 5,   visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'risk-forecast',      label: 'Risk Forecast',               order: 5.5, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'ask-pin-universal',  label: 'Ask PIN',                     order: 5.7, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'disclaimer',         label: 'Disclaimer',                  order: 6,   visible: true, defaultExpanded: true },
     { id: 'training',           label: 'Deployment Training',         order: 999, visible: true, defaultExpanded: true, lensControlled: true },
   ],
@@ -981,6 +1012,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'local-rpt-state-filing',      label: 'State Filing Report',           order: 77,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'local-rpt-public-disclosure', label: 'Public Disclosure Report',      order: 78,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'local-rpt-annual',            label: 'Annual Report',                 order: 79,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'ask-pin-universal',          label: 'Ask PIN',                       order: 79.5, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',  label: 'Platform Disclaimer',  order: 80,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'users-panel', label: 'User Management',      order: 998, visible: true, defaultExpanded: true, lensControlled: true },

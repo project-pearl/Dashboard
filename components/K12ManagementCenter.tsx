@@ -50,6 +50,7 @@ import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { UserManagementPanel } from './UserManagementPanel';
 import { getInvitableRoles } from '@/lib/adminHierarchy';
 import dynamic from 'next/dynamic';
+import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
 
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
@@ -105,9 +106,9 @@ const LENS_CONFIG: Record<ViewLens, {
   sections: Set<string> | null;
 }> = {
   overview:    { label: 'Overview',    description: 'Student water quality dashboard',
-    sections: new Set(['wildlife', 'regprofile', 'map-grid', 'top10', 'goodbye', 'disclaimer']) },
+    sections: new Set(['wildlife', 'regprofile', 'map-grid', 'top10', 'goodbye', 'ask-pin-universal', 'disclaimer']) },
   briefing:    { label: 'AI Briefing', description: 'AI-generated water quality briefing for students',
-    sections: new Set(['insights', 'alertfeed', 'disclaimer']) },
+    sections: new Set(['insights', 'alertfeed', 'ask-pin-universal', 'disclaimer']) },
   planner:     { label: 'Resolution Planner', description: 'Student-friendly resolution planning',
     sections: new Set(['resolution-planner', 'disclaimer']) },
   trends:      { label: 'Trends & Projections', description: 'Water quality trends students can explore',
@@ -2371,6 +2372,10 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
             );
 
             case 'location-report': return DS(<LocationReportCard />);
+
+            case 'ask-pin-universal': return DS(
+              <AskPinUniversalCard role="K12" state={stateAbbr} />
+            );
 
             // ── Habitat & Ecology ──
             case 'hab-ecoscore': {
