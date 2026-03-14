@@ -274,3 +274,72 @@ export const cacheRefreshSchema = z.object({
   source: z.string().min(1, 'source is required'),
   scopeKey: z.string().min(1, 'scopeKey is required'),
 });
+
+// ─── Outreach Schemas ─────────────────────────────────────────────────────────
+
+/** Schema for creating/updating a business profile. */
+export const outreachProfileSchema = z.object({
+  name: z.string().min(1, 'name is required'),
+  tagline: z.string().min(1, 'tagline is required'),
+  website: z.string().optional(),
+  valueProps: z.array(z.string()).min(1, 'at least one value prop is required'),
+  stats: z.array(z.object({ label: z.string(), value: z.string() })).optional().default([]),
+  differentiators: z.array(z.string()).optional().default([]),
+});
+
+/** Schema for triggering audience discovery. */
+export const outreachDiscoverSchema = z.object({
+  profileOverrides: z.record(z.unknown()).optional(),
+});
+
+/** Schema for creating/updating an audience segment. */
+export const outreachSegmentSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1, 'name is required'),
+  description: z.string().min(1, 'description is required'),
+  roleMapping: z.string().min(1, 'roleMapping is required'),
+  painPoints: z.array(z.string()).optional().default([]),
+  buyingMotivations: z.array(z.string()).optional().default([]),
+  objections: z.array(z.string()).optional().default([]),
+  decisionMakers: z.array(z.string()).optional().default([]),
+  toneGuidance: z.string().optional().default(''),
+  priority: z.enum(['high', 'medium', 'low']).optional().default('medium'),
+});
+
+/** Schema for generating an email for a segment. */
+export const outreachEmailGenerateSchema = z.object({
+  segmentId: z.string().min(1, 'segmentId is required'),
+  campaignGoal: z.string().min(1, 'campaignGoal is required'),
+});
+
+/** Schema for creating a campaign. */
+export const outreachCampaignCreateSchema = z.object({
+  name: z.string().min(1, 'name is required'),
+  goal: z.string().min(1, 'goal is required'),
+  segmentIds: z.array(z.string()).min(1, 'at least one segment is required'),
+});
+
+/** Schema for updating a campaign. */
+export const outreachCampaignUpdateSchema = z.object({
+  name: z.string().optional(),
+  goal: z.string().optional(),
+  segmentIds: z.array(z.string()).optional(),
+  status: z.enum(['draft', 'ready', 'sent', 'partial']).optional(),
+  emails: z.record(z.unknown()).optional(),
+});
+
+/** Schema for sending a campaign. */
+export const outreachSendSchema = z.object({
+  contactIds: z.array(z.string()).min(1, 'at least one contact is required'),
+  segmentId: z.string().min(1, 'segmentId is required'),
+});
+
+/** Schema for creating/importing an outreach contact. */
+export const outreachContactSchema = z.object({
+  name: z.string().min(1, 'name is required'),
+  email: z.string().email('valid email is required'),
+  title: z.string().optional(),
+  organization: z.string().optional(),
+  state: z.string().optional(),
+  segmentId: z.string().optional(),
+});

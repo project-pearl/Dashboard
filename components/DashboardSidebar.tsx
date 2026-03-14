@@ -35,6 +35,7 @@ import {
   Home,
   Zap,
   Settings,
+  Mail,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { LazyIcon, preloadIconBundle } from '@/lib/iconLoader';
@@ -598,6 +599,19 @@ export function DashboardSidebar() {
           >
             <Zap className={`w-4 h-4 flex-shrink-0 ${pathname === '/dashboard/breakpoint' ? 'text-orange-700' : 'text-slate-400'}`} />
             {!collapsed && <span className="truncate">Breakpoint</span>}
+          </Link>
+          <Link
+            href="/dashboard/outreach"
+            onClick={() => setMobileOpen(false)}
+            title={collapsed ? 'Outreach' : undefined}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
+              pathname.startsWith('/dashboard/outreach')
+                ? 'bg-blue-50 border-blue-200 text-blue-700 font-semibold border shadow-sm dark:bg-blue-950 dark:border-blue-800 dark:text-blue-300'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            <Mail className={`w-4 h-4 flex-shrink-0 ${pathname.startsWith('/dashboard/outreach') ? 'text-blue-700 dark:text-blue-300' : 'text-slate-400'}`} />
+            {!collapsed && <span className="truncate">Outreach</span>}
           </Link>
         </div>
       )}
