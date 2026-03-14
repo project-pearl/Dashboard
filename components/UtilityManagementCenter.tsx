@@ -36,6 +36,7 @@ import { UserManagementPanel } from './UserManagementPanel';
 import { getInvitableRoles } from '@/lib/adminHierarchy';
 import { useAuth } from '@/lib/authContext';
 import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
+import { TriageQueueSection } from './TriageQueueSection';
 
 // ─── View Lens ──────────────────────────────────────────────────────────────
 
@@ -52,7 +53,7 @@ const LENS_CONFIG: Record<ViewLens, {
   overview: {
     label: 'Overview',
     description: 'Utility control room dashboard — real-time plant status, compliance, and alerts',
-    sections: new Set(['system-status', 'operational-stats', 'compliance-calendar', 'weather-source', 'alerts-notifications', 'quick-access', 'insights', 'alertfeed', 'icis', 'sdwis', 'groundwater', 'grants', 'contaminants-tracker', 'ask-pin-universal', 'disclaimer']),
+    sections: new Set(['system-status', 'operational-stats', 'compliance-calendar', 'weather-source', 'alerts-notifications', 'quick-access', 'triage-queue', 'insights', 'alertfeed', 'icis', 'sdwis', 'groundwater', 'grants', 'contaminants-tracker', 'ask-pin-universal', 'disclaimer']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -1698,6 +1699,10 @@ export default function UtilityManagementCenter({ systemId }: Props) {
             // ══════════════════════════════════════════════════════════════
 
             case 'location-report': return DS(<LocationReportCard />);
+
+            case 'triage-queue': return DS(
+              <TriageQueueSection scope="state" stateFilter={systemId} user={user} />
+            );
 
             case 'ask-pin-universal': return DS(
               <AskPinUniversalCard role="Utility" state={systemId} />

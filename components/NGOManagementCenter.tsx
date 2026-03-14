@@ -49,6 +49,7 @@ import dynamic from 'next/dynamic';
 import { useAdminState } from '@/lib/adminStateContext';
 import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
+import { TriageQueueSection } from './TriageQueueSection';
 
 
 const GrantOpportunityMatcher = dynamic(
@@ -106,7 +107,7 @@ const LENS_CONFIG: Record<ViewLens, {
   overview:    { label: 'Overview',    description: 'NGO watershed management overview',
     sections: new Set(['regprofile', 'map-grid', 'top10', 'partners', 'ask-pin-universal', 'disclaimer']) },
   briefing:    { label: 'AI Briefing', description: 'AI-generated conservation intelligence briefing',
-    sections: new Set(['insights', 'alertfeed', 'ask-pin-universal', 'disclaimer']) },
+    sections: new Set(['insights', 'alertfeed', 'triage-queue', 'ask-pin-universal', 'disclaimer']) },
   'political-briefing': {
     label: 'Political Briefing',
     description: 'Talking points, funding optics, EJ exposure, and council agenda suggestions',
@@ -2269,6 +2270,9 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
             case 'volunteer-program-panel': return DS(<VolunteerProgramPanel stateAbbr={stateAbbr} />);
             case 'citizen-reporting-panel': return DS(<CitizenReportingPanel stateAbbr={stateAbbr} />);
             case 'initiatives-panel': return DS(<InitiativesTrackerPanel stateAbbr={stateAbbr} />);
+            case 'triage-queue': return DS(
+              <TriageQueueSection scope="state" stateFilter={stateAbbr} user={user} />
+            );
 
             case 'location-report': return DS(<LocationReportCard />);
 
