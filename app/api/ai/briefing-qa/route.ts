@@ -67,11 +67,11 @@ export async function POST(request: NextRequest) {
 
     contextParts.push([
       `National water quality overview:`,
-      `- ${(ns.totalWaterbodies ?? 0).toLocaleString()} total waterbodies assessed`,
-      `- ${(ns.totalImpaired ?? 0).toLocaleString()} impaired (${ns.totalWaterbodies ? Math.round((ns.totalImpaired / ns.totalWaterbodies) * 100) : '?'}%)`,
+      `- TOTAL waterbodies assessed: ${(ns.totalWaterbodies ?? 0).toLocaleString()}`,
+      `- IMPAIRED + THREATENED waterbodies (subset of total): ${(ns.totalImpaired ?? 0).toLocaleString()} (${ns.totalWaterbodies ? Math.round((ns.totalImpaired / ns.totalWaterbodies) * 100) : '?'}% of assessed). This count includes EPA Category 3 "threatened" waterbodies alongside Category 4-5 impaired ones.`,
       `- ${(ns.tmdlGap ?? 0).toLocaleString()} pending TMDLs (needed but not completed)`,
       `- ${(ns.tmdlCompleted ?? 0).toLocaleString()} TMDLs completed`,
-      `- National average score: ${ns.averageScore ?? '?'}/100`,
+      `- National avg composite water quality score: ${ns.averageScore ?? '?'}/100 (14-layer index combining impairment severity, flow vulnerability, and ATTAINS data)`,
       `- ${ns.highAlertStates ?? '?'} states with high-alert waterbodies`,
     ].join('\n'));
 
@@ -81,23 +81,24 @@ export async function POST(request: NextRequest) {
       contextParts.push(`Top impairment causes nationwide:\n${causeList}`);
     }
 
-    // Worst states
+    // Worst states by impairment
     if (ns.worstStates?.length) {
       const worstList = ns.worstStates.slice(0, 10).map((s: any) =>
-        `  ${s.abbr}: score ${s.score}/100, ${s.impaired.toLocaleString()} impaired`
+        `  ${s.abbr}: composite quality score ${s.score}/100, ${s.impaired.toLocaleString()} impaired waterbodies`
       ).join('\n');
-      contextParts.push(`States with lowest water quality scores:\n${worstList}`);
+      contextParts.push(`States with lowest composite water quality scores:\n${worstList}`);
     }
 
     // State breakdown (if user asks about a specific state or Federal wants full picture)
     if (ns.stateBreakdown) {
       if (state && ns.stateBreakdown[state]) {
         const sb = ns.stateBreakdown[state];
+        const stImpPct = sb.total ? Math.round((sb.impaired / sb.total) * 100) : null;
         contextParts.push([
           `${state} state detail:`,
-          `- Total waterbodies: ${sb.total?.toLocaleString() ?? '?'}`,
-          `- Impaired: ${sb.impaired?.toLocaleString() ?? '?'}`,
-          `- Score: ${sb.score ?? '?'}/100, Grade: ${sb.grade ?? '?'}`,
+          `- TOTAL waterbodies assessed: ${sb.total?.toLocaleString() ?? '?'}`,
+          `- IMPAIRED (subset of total): ${sb.impaired?.toLocaleString() ?? '?'}${stImpPct !== null ? ` (${stImpPct}%)` : ''}`,
+          `- Composite quality score: ${sb.score ?? '?'}/100, Grade: ${sb.grade ?? '?'}`,
           `- TMDL needed: ${sb.tmdlNeeded?.toLocaleString() ?? '?'}`,
           sb.topCauses?.length ? `- Top causes: ${sb.topCauses.join(', ')}` : '',
         ].filter(Boolean).join('\n'));
@@ -221,6 +222,12 @@ export async function POST(request: NextRequest) {
     tone,
     'Answer the user\'s situational awareness question using the live data context below.',
     'Be direct and substantive — cite specific states, numbers, and trends.',
+    'STRICT RULES:',
+    '1. IMPAIRED is always a SUBSET of ASSESSED — impaired count must be ≤ total assessed. Double-check before stating.',
+    '2. The "composite water quality score" is a 14-layer index (0-100) combining impairment severity, flow vulnerability, and ATTAINS data. Higher = better water quality.',
+    '3. Never invent metrics, scores, or rankings not present in the data.',
+    '4. For national questions, cite 4-6 diverse states from different regions — do not over-index on one state.',
+    '5. Do not claim trends (increasing, decreasing) unless the data shows time-series comparisons.',
     'When the user asks about national posture, lead with the most critical findings (worst states, TMDL gaps, top impairment causes) before giving general context.',
     'If data is insufficient to answer fully, say what you can and note what data would be needed.',
     contextParts.length ? `\n--- LIVE DATA CONTEXT ---\n${contextParts.join('\n\n')}` : '',

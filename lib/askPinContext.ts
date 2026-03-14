@@ -8,9 +8,9 @@
  */
 
 // ── Cache imports (original 25) ────────────────────────────────────────────────
-import { ensureWarmed as warmPfas, getPfasAllResults, getPfasCacheStatus } from './pfasCache';
+import { ensureWarmed as warmPfas, getPfasAllResults } from './pfasCache';
 import { ensureWarmed as warmDodPfas, getDoDPFASForState, getDoDPFASAllSummaries } from './dodPfasCache';
-import { ensureWarmed as warmGw, getNwisGwAllSites, getNwisGwCacheStatus } from './nwisGwCache';
+import { ensureWarmed as warmGw, getNwisGwAllSites } from './nwisGwCache';
 import { ensureWarmed as warmSdwis, getSdwisForState, getSdwisCacheStatus, getSdwisAllData } from './sdwisCache';
 import { ensureWarmed as warmIcis, getIcisAllData } from './icisCache';
 import { ensureWarmed as warmEcho, getEchoAllData } from './echoCache';
@@ -279,8 +279,7 @@ async function retrievePfasContext(state: string | null): Promise<string> {
       }
     }
 
-    const status = getPfasCacheStatus();
-    if ('resultCount' in status && status.resultCount) parts.push(`(${status.resultCount} PFAS records in cache)`);
+    // Omit cache metadata — the counts above are sufficient and cache status would confuse the LLM
   } catch { /* cache not available */ }
   return parts.join('\n');
 }
@@ -303,8 +302,7 @@ async function retrieveGroundwaterContext(state: string | null): Promise<string>
       parts.push(`National groundwater network: ${allSites.length} USGS monitoring wells.`);
     }
 
-    const status = getNwisGwCacheStatus();
-    if ('built' in status && status.built) parts.push(`(Last updated: ${new Date(status.built).toLocaleDateString()})`);
+    // Omit cache metadata timestamp — would confuse LLM about data freshness
   } catch { /* cache not available */ }
   return parts.join('\n');
 }
@@ -321,7 +319,7 @@ async function retrieveComplianceContext(state: string | null): Promise<string> 
         const systems = sdwisState.systems || [];
         const violations = sdwisState.violations || [];
         const enforcement = sdwisState.enforcement || [];
-        parts.push(`SDWIS in ${state}: ${systems.length} drinking water systems, ${violations.length} violations, ${enforcement.length} enforcement actions.`);
+        parts.push(`SDWIS (Safe Drinking Water) in ${state}: ${systems.length} public drinking water systems, ${violations.length} violations on record, ${enforcement.length} enforcement actions.`);
         const healthBased = violations.filter((v: any) => v.isHealthBased || v.violationCategory === 'Health-Based');
         if (healthBased.length > 0) parts.push(`  ${healthBased.length} health-based violations.`);
       }
@@ -332,8 +330,8 @@ async function retrieveComplianceContext(state: string | null): Promise<string> 
       const enforcement = sdwisAll.enforcement || [];
       if (systems.length > 0) {
         const healthBased = violations.filter((v: any) => v.isHealthBased || v.violationCategory === 'Health-Based');
-        parts.push(`SDWIS nationally: ${systems.length.toLocaleString()} drinking water systems, ${violations.length.toLocaleString()} violations, ${enforcement.length.toLocaleString()} enforcement actions.`);
-        if (healthBased.length > 0) parts.push(`  ${healthBased.length.toLocaleString()} health-based violations.`);
+        parts.push(`SDWIS (Safe Drinking Water) nationally: ${systems.length.toLocaleString()} public drinking water systems, ${violations.length.toLocaleString()} violations on record, ${enforcement.length.toLocaleString()} enforcement actions.`);
+        if (healthBased.length > 0) parts.push(`  ${healthBased.length.toLocaleString()} are health-based violations (affect public health, vs. monitoring/reporting violations).`);
         // Top states by violations
         const byState = new Map<string, number>();
         for (const v of violations as any[]) {
@@ -346,7 +344,7 @@ async function retrieveComplianceContext(state: string | null): Promise<string> 
         }
       } else {
         const sdwisStatus = getSdwisCacheStatus();
-        if ('systemCount' in sdwisStatus && sdwisStatus.systemCount) parts.push(`SDWIS nationally: ${sdwisStatus.systemCount} drinking water systems tracked.`);
+        if ('systemCount' in sdwisStatus && sdwisStatus.systemCount) parts.push(`SDWIS: ${sdwisStatus.systemCount} public drinking water systems in database.`);
       }
     }
 
@@ -358,9 +356,9 @@ async function retrieveComplianceContext(state: string | null): Promise<string> 
       if (state) {
         const statePermits = permits.filter((p: any) => p.state === state || p.stateCode === state);
         const stateViolations = violations.filter((v: any) => v.state === state || v.stateCode === state);
-        parts.push(`NPDES in ${state}: ${statePermits.length} permits, ${stateViolations.length} violations.`);
+        parts.push(`NPDES (Clean Water Act discharge permits) in ${state}: ${statePermits.length} permits, ${stateViolations.length} violation records.`);
       } else {
-        parts.push(`NPDES nationally: ${permits.length} permits, ${violations.length} violations tracked.`);
+        parts.push(`NPDES (Clean Water Act discharge permits) nationally: ${permits.length} permits, ${violations.length} violation records.`);
       }
     }
 
@@ -371,11 +369,11 @@ async function retrieveComplianceContext(state: string | null): Promise<string> 
       if (state) {
         const stateFac = facilities.filter((f: any) => f.state === state || f.stateCode === state);
         const nonCompliant = stateFac.filter((f: any) => f.inSignificantNoncompliance || f.snc || f.qncr === 'Yes');
-        parts.push(`ECHO in ${state}: ${stateFac.length} facilities, ${nonCompliant.length} in significant non-compliance.`);
+        parts.push(`ECHO (EPA compliance) in ${state}: ${stateFac.length} regulated facilities, ${nonCompliant.length} currently in Significant Non-Compliance (SNC).`);
       } else {
         const nonCompliant = facilities.filter((f: any) => f.inSignificantNoncompliance || f.snc || f.qncr === 'Yes');
         const echoViolations = echoAll.violations || [];
-        parts.push(`ECHO nationally: ${facilities.length.toLocaleString()} facilities tracked, ${nonCompliant.length.toLocaleString()} in significant non-compliance, ${echoViolations.length.toLocaleString()} violation records.`);
+        parts.push(`ECHO (EPA compliance) nationally: ${facilities.length.toLocaleString()} regulated facilities, ${nonCompliant.length.toLocaleString()} currently in Significant Non-Compliance (SNC), ${echoViolations.length.toLocaleString()} violation records.`);
       }
     }
 
@@ -384,9 +382,9 @@ async function retrieveComplianceContext(state: string | null): Promise<string> 
     if (triAll.length > 0) {
       if (state) {
         const stateTri = triAll.filter((f: any) => f.state === state || f.stateCode === state);
-        parts.push(`TRI in ${state}: ${stateTri.length} toxic release facilities.`);
+        parts.push(`TRI (Toxic Release Inventory) in ${state}: ${stateTri.length} facilities reporting toxic releases.`);
       } else {
-        parts.push(`TRI nationally: ${triAll.length} toxic release facilities tracked.`);
+        parts.push(`TRI (Toxic Release Inventory) nationally: ${triAll.length} facilities reporting toxic releases.`);
       }
     }
 
@@ -394,12 +392,12 @@ async function retrieveComplianceContext(state: string | null): Promise<string> 
     if (state) {
       const rcraState = getRcraFacilities(state);
       if (rcraState && rcraState.length > 0) {
-        parts.push(`RCRA in ${state}: ${rcraState.length} hazardous waste facilities.`);
+        parts.push(`RCRA (Resource Conservation and Recovery Act) in ${state}: ${rcraState.length} hazardous waste handler facilities.`);
       }
     } else {
       const rcraAll = getRcraFacilitiesAll();
       if (rcraAll.length > 0) {
-        parts.push(`RCRA nationally: ${rcraAll.length} hazardous waste facilities.`);
+        parts.push(`RCRA (Resource Conservation and Recovery Act) nationally: ${rcraAll.length} hazardous waste handler facilities.`);
       }
     }
   } catch { /* cache not available */ }
@@ -447,11 +445,11 @@ async function retrieveHealthContext(state: string | null): Promise<string> {
       if (stats?.total) parts.push(`Waterborne illness nationally: ${stats.total} outbreak records.`);
     }
 
-    // CDC WONDER mortality
+    // CDC WONDER mortality (national-level environmental cause death data)
     const topCauses = getTopCauses(5);
     if (topCauses && topCauses.length > 0) {
-      const causeList = topCauses.map((c: any) => `${c.cause || c.category}: ${c.deaths?.toLocaleString() || c.count?.toLocaleString() || '?'}`).join('; ');
-      parts.push(`CDC WONDER top environmental mortality causes: ${causeList}.`);
+      const causeList = topCauses.map((c: any) => `${c.cause || c.category}: ${c.deaths?.toLocaleString() || c.count?.toLocaleString() || '?'} deaths`).join('; ');
+      parts.push(`CDC WONDER environmental mortality (cumulative data, not current year only): ${causeList}.`);
     }
 
     // Environmental health
@@ -661,19 +659,26 @@ async function retrieveRealtimeContext(state: string | null): Promise<string> {
     if (state) {
       const ivData = getUsgsIvByState(state);
       if (ivData && ivData.length > 0) {
-        parts.push(`USGS real-time gauges in ${state}: ${ivData.length} stations reporting.`);
-        const withFlow = ivData.filter((r: any) => r.streamflow != null || r.discharge != null || r.value != null);
-        if (withFlow.length > 0) {
-          const flowValues = withFlow.map((r: any) => r.streamflow ?? r.discharge ?? r.value).filter(Boolean);
+        // Filter to discharge readings only (parameterCd 00060) — other params (temp, pH, etc.) must NOT be averaged as streamflow
+        const dischargeReadings = ivData.filter((r: any) => r.parameterCd === '00060' || r.parameterName === 'discharge');
+        const totalStations = new Set(ivData.map((r: any) => r.siteNumber)).size;
+        parts.push(`USGS real-time monitoring in ${state}: ${totalStations} stations reporting across ${ivData.length} readings.`);
+        if (dischargeReadings.length > 0) {
+          const flowValues = dischargeReadings.map((r: any) => r.value).filter((v: any) => v != null && v > 0);
           if (flowValues.length > 0) {
             const avg = flowValues.reduce((s: number, v: number) => s + v, 0) / flowValues.length;
-            parts.push(`Average streamflow: ${avg.toFixed(1)} cfs across ${flowValues.length} gauges.`);
+            parts.push(`Average streamflow (discharge only): ${avg.toFixed(1)} cfs across ${flowValues.length} gauges.`);
           }
+        }
+        // Summarize other parameters available
+        const paramTypes = new Set(ivData.map((r: any) => r.parameterName).filter(Boolean));
+        if (paramTypes.size > 1) {
+          parts.push(`Parameters monitored: ${[...paramTypes].join(', ')}.`);
         }
       }
     } else {
       const status = getUsgsIvCacheStatus();
-      if ('readingCount' in status && status.readingCount) parts.push(`USGS real-time network: ${status.readingCount} instantaneous value readings.`);
+      if ('readingCount' in status && status.readingCount) parts.push(`USGS real-time streamflow network: ${status.readingCount} gauge readings from recent data collection.`);
     }
 
     // Air quality
@@ -832,45 +837,51 @@ async function retrieveWaterQualityContext(state: string | null): Promise<string
       const report = getStateReport(state);
       if (report) {
         parts.push(`Water quality report for ${state}:`);
-        parts.push(`  Water quality score: ${report.aiReadinessScore}/100 (grade: ${report.aiReadinessGrade}).`);
         const assessed = report.assessedCount || ((report.impairedCount || 0) + (report.healthyCount || 0));
         const impPctSt = assessed ? Math.round(((report.impairedCount || 0) / assessed) * 100) : null;
-        parts.push(`  ${assessed} waterbodies assessed, ${report.impairedCount} impaired${impPctSt !== null ? ` (${impPctSt}%)` : ''}.`);
+        parts.push(`  TOTAL assessed waterbodies: ${assessed}. IMPAIRED waterbodies: ${report.impairedCount}${impPctSt !== null ? ` (${impPctSt}% of assessed)` : ''}.`);
         if (report.topCauses && report.topCauses.length > 0) {
           parts.push(`  Top impairment causes: ${report.topCauses.slice(0, 5).join(', ')}.`);
         }
-        parts.push(`  Coverage: ${report.coverageGrade}, Freshness: ${report.freshnessGrade}.`);
+        parts.push(`  Data monitoring score: ${report.aiReadinessScore}/100 (measures data availability and freshness, NOT actual water quality). Coverage grade: ${report.coverageGrade}, Freshness grade: ${report.freshnessGrade}.`);
       }
 
       const attains = await getAttainsStateData(state);
       if (attains) {
-        const impPct = attains.total > 0 ? Math.round((attains.high + attains.medium) / attains.total * 100) : 0;
-        parts.push(`ATTAINS: ${attains.total} waterbodies, ${attains.high + attains.medium} impaired (${impPct}%).`);
+        const totalImpaired = attains.high + attains.medium;
+        const impPct = attains.total > 0 ? Math.round(totalImpaired / attains.total * 100) : 0;
+        parts.push(`ATTAINS (EPA assessment database): ${attains.total} TOTAL waterbodies assessed. ${totalImpaired} IMPAIRED (${impPct}% of total) — ${attains.high} Category 5 (need TMDL), ${attains.medium} Category 4 (have TMDL or alternative). ${attains.low + attains.none} not impaired.`);
         if (attains.tmdlNeeded) parts.push(`  TMDLs needed: ${attains.tmdlNeeded}.`);
-        if (attains.topCauses?.length) parts.push(`  ATTAINS top causes: ${attains.topCauses.slice(0, 5).join(', ')}.`);
+        if (attains.topCauses?.length) parts.push(`  Top impairment causes: ${attains.topCauses.slice(0, 5).join(', ')}.`);
       }
     } else {
       const allReports = getAllStateReports();
       if (allReports?.reports) {
         const entries = Object.entries(allReports.reports);
         if (entries.length > 0) {
-          const worst = [...entries]
-            .sort(([, a], [, b]) => a.aiReadinessScore - b.aiReadinessScore)
-            .slice(0, 5);
-          if (worst.length > 0) {
-            parts.push(`States with lowest water quality scores:`);
-            for (const [st, r] of worst) {
-              const assessed = r.assessedCount || ((r.impairedCount || 0) + (r.healthyCount || 0));
-              parts.push(`  ${st}: score ${r.aiReadinessScore}/100, ${r.impairedCount}/${assessed} waterbodies impaired.`);
+          // Show states with highest impairment rates
+          const withAssessed = entries.filter(([, r]) => {
+            const a = r.assessedCount || ((r.impairedCount || 0) + (r.healthyCount || 0));
+            return a > 0;
+          });
+          const byImpairmentRate = withAssessed
+            .map(([st, r]) => {
+              const a = r.assessedCount || ((r.impairedCount || 0) + (r.healthyCount || 0));
+              return { st, assessed: a, impaired: r.impairedCount || 0, pct: Math.round(((r.impairedCount || 0) / a) * 100) };
+            })
+            .sort((a, b) => b.pct - a.pct);
+          const worstImpairment = byImpairmentRate.slice(0, 5);
+          if (worstImpairment.length > 0) {
+            parts.push(`States with highest impairment rates (IMPAIRED / TOTAL ASSESSED):`);
+            for (const s of worstImpairment) {
+              parts.push(`  ${s.st}: ${s.impaired} impaired out of ${s.assessed} assessed (${s.pct}%).`);
             }
           }
-          const best = [...entries]
-            .sort(([, a], [, b]) => b.aiReadinessScore - a.aiReadinessScore)
-            .slice(0, 5);
-          if (best.length > 0) {
-            parts.push(`States with highest water quality scores:`);
-            for (const [st, r] of best) {
-              parts.push(`  ${st}: score ${r.aiReadinessScore}/100.`);
+          const bestImpairment = byImpairmentRate.slice(-5).reverse();
+          if (bestImpairment.length > 0) {
+            parts.push(`States with lowest impairment rates:`);
+            for (const s of bestImpairment) {
+              parts.push(`  ${s.st}: ${s.impaired} impaired out of ${s.assessed} assessed (${s.pct}%).`);
             }
           }
         }
@@ -904,12 +915,12 @@ async function retrieveStormwaterContext(state: string | null): Promise<string> 
     if (state) {
       const ssoEvents = getSsoCsoByState(state);
       if (ssoEvents.length > 0) {
-        parts.push(`SSO/CSO events in ${state}: ${ssoEvents.length} overflow events.`);
+        parts.push(`SSO/CSO (sanitary/combined sewer overflow) events in ${state}: ${ssoEvents.length} overflow events on record.`);
       }
     } else {
       const allSso = getSsoCsoAll();
       if (allSso.length > 0) {
-        parts.push(`SSO/CSO nationally: ${allSso.length} overflow events tracked.`);
+        parts.push(`SSO/CSO (sanitary/combined sewer overflow) nationally: ${allSso.length} overflow events on record.`);
       }
     }
 
@@ -1043,6 +1054,7 @@ async function retrieveCorrelationsContext(state: string | null): Promise<string
       const critical = filtered.filter(f => f.severity === 'critical').length;
       const high = filtered.filter(f => f.severity === 'high').length;
       parts.push(`Cross-agency correlations: ${filtered.length} findings (${critical} critical, ${high} high).`);
+      parts.push(`NOTE: These correlations are based on spatial proximity analysis. They indicate co-located risks, NOT proven causal links. Present them as "co-located" or "spatially correlated" risks.`);
 
       // Top 5 findings with narratives
       for (const f of filtered.slice(0, 5)) {
@@ -1069,7 +1081,7 @@ async function buildBaseContext(state: string | null, role: string): Promise<str
       const totalAssessed = reps.reduce((sum, r) => sum + (r.assessedCount || ((r.impairedCount || 0) + (r.healthyCount || 0)) || 0), 0);
       const avgScore = reps.reduce((sum, r) => sum + (r.aiReadinessScore || 0), 0) / (stateCount || 1);
       const impPct = totalAssessed ? Math.round((totalImpaired / totalAssessed) * 100) : null;
-      parts.push(`National overview (${stateCount} states): ${totalAssessed.toLocaleString()} waterbodies assessed, ${totalImpaired.toLocaleString()} impaired${impPct !== null ? ` (${impPct}%)` : ''}. Avg water quality score ${avgScore.toFixed(0)}/100.`);
+      parts.push(`National overview (${stateCount} states): TOTAL assessed waterbodies: ${totalAssessed.toLocaleString()}. IMPAIRED waterbodies: ${totalImpaired.toLocaleString()}${impPct !== null ? ` (${impPct}% of assessed)` : ''}. Note: impaired count is always a SUBSET of assessed count. Avg data monitoring score: ${avgScore.toFixed(0)}/100 (measures data availability, NOT water quality).`);
     }
   } catch { /* cache not available */ }
 
@@ -1226,7 +1238,7 @@ export async function buildAskPinContext(params: AskPinContextParams): Promise<A
       correlations: 'cross-agency correlation analysis',
     };
     const labels = emptyDomains.map(d => domainLabels[d] || d);
-    availabilityNote = `[DATA AVAILABILITY NOTE]\nThe following data sources were queried for this question but are not currently loaded: ${labels.join('; ')}. Answers are based only on the data shown above. Do not speculate about data you do not have — instead state what is available and note what additional data would strengthen the analysis.`;
+    availabilityNote = `[DATA AVAILABILITY NOTE]\nThe following data sources were queried but returned no data: ${labels.join('; ')}. Your answer MUST be based ONLY on the data shown above. Do NOT guess, estimate, or speculate about data you do not have. If the user asks about something not covered by available data, explicitly say "I don't have [X] data loaded right now" rather than making up numbers.`;
   }
 
   const context = [baseContext, domainContext, fallbackContext, militaryExtra, availabilityNote].filter(Boolean).join('\n\n');
