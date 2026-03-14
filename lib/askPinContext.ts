@@ -792,8 +792,8 @@ async function retrieveWaterQualityContext(state: string | null): Promise<string
       const report = getStateReport(state);
       if (report) {
         parts.push(`Water quality report for ${state}:`);
-        parts.push(`  AI readiness score: ${report.aiReadinessScore}/100 (${report.aiReadinessGrade}).`);
-        parts.push(`  ${report.totalWaterbodies} waterbodies assessed, ${report.impairedCount} impaired.`);
+        parts.push(`  Water quality score: ${report.aiReadinessScore}/100 (grade: ${report.aiReadinessGrade}).`);
+        parts.push(`  ${report.totalWaterbodies} TOTAL waterbodies assessed, ${report.impairedCount} IMPAIRED.`);
         if (report.topCauses && report.topCauses.length > 0) {
           parts.push(`  Top impairment causes: ${report.topCauses.slice(0, 5).join(', ')}.`);
         }
@@ -816,18 +816,18 @@ async function retrieveWaterQualityContext(state: string | null): Promise<string
             .sort(([, a], [, b]) => a.aiReadinessScore - b.aiReadinessScore)
             .slice(0, 5);
           if (worst.length > 0) {
-            parts.push(`States with lowest data readiness scores:`);
+            parts.push(`States with lowest water quality scores:`);
             for (const [st, r] of worst) {
-              parts.push(`  ${st}: ${r.aiReadinessScore}/100, ${r.impairedCount} impaired waterbodies.`);
+              parts.push(`  ${st}: score ${r.aiReadinessScore}/100, ${r.impairedCount} impaired waterbodies.`);
             }
           }
           const best = [...entries]
             .sort(([, a], [, b]) => b.aiReadinessScore - a.aiReadinessScore)
             .slice(0, 5);
           if (best.length > 0) {
-            parts.push(`States with highest data readiness scores:`);
+            parts.push(`States with highest water quality scores:`);
             for (const [st, r] of best) {
-              parts.push(`  ${st}: ${r.aiReadinessScore}/100.`);
+              parts.push(`  ${st}: score ${r.aiReadinessScore}/100.`);
             }
           }
         }
@@ -1025,7 +1025,7 @@ async function buildBaseContext(state: string | null, role: string): Promise<str
       const totalImpaired = reps.reduce((sum, r) => sum + (r.impairedCount || 0), 0);
       const totalWaterbodies = reps.reduce((sum, r) => sum + (r.totalWaterbodies || 0), 0);
       const avgScore = reps.reduce((sum, r) => sum + (r.aiReadinessScore || 0), 0) / (stateCount || 1);
-      parts.push(`National overview (${stateCount} states): ${totalWaterbodies.toLocaleString()} waterbodies, ${totalImpaired.toLocaleString()} impaired, avg readiness score ${avgScore.toFixed(0)}/100.`);
+      parts.push(`National overview (${stateCount} states): ${totalWaterbodies.toLocaleString()} TOTAL waterbodies assessed, of which ${totalImpaired.toLocaleString()} are IMPAIRED (${totalWaterbodies ? Math.round((totalImpaired / totalWaterbodies) * 100) : '?'}%). Avg water quality score ${avgScore.toFixed(0)}/100.`);
     }
   } catch { /* cache not available */ }
 

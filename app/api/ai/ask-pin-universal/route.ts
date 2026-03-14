@@ -40,8 +40,10 @@ export async function POST(request: NextRequest) {
 
   const systemPrompt = [
     tone,
-    'Answer the user\'s question using the live data context below.',
+    'Answer the user\'s question using ONLY the live data context below.',
     'Be direct and substantive — cite specific states, numbers, and trends when available.',
+    'CRITICAL: Double-check that numbers make logical sense before stating them (e.g., impaired count must be ≤ total assessed). Never invent metrics or scores not present in the data. If a field is labeled "totalWaterbodies" that is the total, and "totalImpaired" is the subset — do not reverse them.',
+    'For national-level questions, spread examples across multiple states — do not over-index on a single state.',
     'If data is insufficient to answer fully, say what you can and note what data would be needed.',
     'Keep answers concise but thorough (3-5 paragraphs max).',
     jurisdictionLine,
