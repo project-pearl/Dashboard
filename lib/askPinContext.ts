@@ -793,7 +793,9 @@ async function retrieveWaterQualityContext(state: string | null): Promise<string
       if (report) {
         parts.push(`Water quality report for ${state}:`);
         parts.push(`  Water quality score: ${report.aiReadinessScore}/100 (grade: ${report.aiReadinessGrade}).`);
-        parts.push(`  ${report.assessedCount} waterbodies assessed (ATTAINS), ${report.impairedCount} impaired (${report.assessedCount ? Math.round((report.impairedCount / report.assessedCount) * 100) : '?'}%).`);
+        const assessed = report.assessedCount || ((report.impairedCount || 0) + (report.healthyCount || 0));
+        const impPctSt = assessed ? Math.round(((report.impairedCount || 0) / assessed) * 100) : null;
+        parts.push(`  ${assessed} waterbodies assessed, ${report.impairedCount} impaired${impPctSt !== null ? ` (${impPctSt}%)` : ''}.`);
         if (report.topCauses && report.topCauses.length > 0) {
           parts.push(`  Top impairment causes: ${report.topCauses.slice(0, 5).join(', ')}.`);
         }
@@ -818,7 +820,8 @@ async function retrieveWaterQualityContext(state: string | null): Promise<string
           if (worst.length > 0) {
             parts.push(`States with lowest water quality scores:`);
             for (const [st, r] of worst) {
-              parts.push(`  ${st}: score ${r.aiReadinessScore}/100, ${r.impairedCount}/${r.assessedCount} waterbodies impaired.`);
+              const assessed = r.assessedCount || ((r.impairedCount || 0) + (r.healthyCount || 0));
+              parts.push(`  ${st}: score ${r.aiReadinessScore}/100, ${r.impairedCount}/${assessed} waterbodies impaired.`);
             }
           }
           const best = [...entries]
@@ -1023,9 +1026,10 @@ async function buildBaseContext(state: string | null, role: string): Promise<str
       const reps = Object.values(allReports.reports);
       const stateCount = reps.length;
       const totalImpaired = reps.reduce((sum, r) => sum + (r.impairedCount || 0), 0);
-      const totalAssessed = reps.reduce((sum, r) => sum + (r.assessedCount || 0), 0);
+      const totalAssessed = reps.reduce((sum, r) => sum + (r.assessedCount || ((r.impairedCount || 0) + (r.healthyCount || 0)) || 0), 0);
       const avgScore = reps.reduce((sum, r) => sum + (r.aiReadinessScore || 0), 0) / (stateCount || 1);
-      parts.push(`National overview (${stateCount} states): ${totalAssessed.toLocaleString()} waterbodies assessed (ATTAINS), ${totalImpaired.toLocaleString()} impaired (${totalAssessed ? Math.round((totalImpaired / totalAssessed) * 100) : '?'}%). Avg water quality score ${avgScore.toFixed(0)}/100.`);
+      const impPct = totalAssessed ? Math.round((totalImpaired / totalAssessed) * 100) : null;
+      parts.push(`National overview (${stateCount} states): ${totalAssessed.toLocaleString()} waterbodies assessed, ${totalImpaired.toLocaleString()} impaired${impPct !== null ? ` (${impPct}%)` : ''}. Avg water quality score ${avgScore.toFixed(0)}/100.`);
     }
   } catch { /* cache not available */ }
 
