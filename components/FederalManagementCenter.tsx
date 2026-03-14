@@ -93,6 +93,7 @@ import ScorecardDashboard from '@/components/federal/ScorecardDashboard';
 import StateRollupTable from '@/components/federal/StateRollupTable';
 import NationalMapSection from '@/components/federal/NationalMapSection';
 import { SectionLoader, isSectionExtracted } from '@/components/federal/sections';
+import { TriageQueueSection } from './TriageQueueSection';
 
 
 import hucNamesData from '@/data/huc8-names.json';
@@ -205,7 +206,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['usmap', 'pol-constituent-concerns', 'ask-pin-universal', 'wqx-modern-results', 'flood-event-viewer', 'dmr-violations-panel', 'hab-forecast-panel', 'cdc-places-health', 'severe-weather-panel', 'nexrad-precip-panel', 'congress-legislation']),
+    sections: new Set(['usmap', 'pol-constituent-concerns', 'ask-pin-universal', 'triage-queue', 'wqx-modern-results', 'flood-event-viewer', 'dmr-violations-panel', 'hab-forecast-panel', 'cdc-places-health', 'severe-weather-panel', 'nexrad-precip-panel', 'congress-legislation']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -215,7 +216,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: true,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['ai-water-intelligence', 'briefing-actions', 'briefing-qa', 'ask-pin-universal']),
+    sections: new Set(['ai-water-intelligence', 'briefing-actions', 'triage-queue', 'briefing-qa', 'ask-pin-universal']),
   },
   'political-briefing': {
     label: 'Political Briefing',
@@ -5419,6 +5420,9 @@ export function FederalManagementCenter(props: Props) {
 
         case 'data-latency': return DS(
           <DataLatencyTracker />
+        );
+        case 'triage-queue': return DS(
+          <TriageQueueSection scope="national" user={user} />
         );
         case 'briefing-actions': return DS(
           <Card>

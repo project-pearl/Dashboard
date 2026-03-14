@@ -142,7 +142,7 @@
     },
     {
       "path": "/api/cron/rebuild-snotel",
-      "schedule": "0 12 * * *"
+      "schedule": "45 12 * * *"
     },
     {
       "path": "/api/cron/rebuild-tri",
@@ -182,7 +182,7 @@
     },
     {
       "path": "/api/cron/rebuild-usdm",
-      "schedule": "0 14 * * *"
+      "schedule": "15 14 * * *"
     },
     {
       "path": "/api/cron/rebuild-usgs-dv",
@@ -194,7 +194,7 @@
     },
     {
       "path": "/api/cron/rebuild-erddap-sat",
-      "schedule": "0 15 * * *"
+      "schedule": "15 15 * * *"
     },
     {
       "path": "/api/cron/rebuild-nasa-stream",
@@ -214,7 +214,7 @@
     },
     {
       "path": "/api/cron/rebuild-beacon",
-      "schedule": "0 16 * * *"
+      "schedule": "15 16 * * *"
     },
     {
       "path": "/api/cron/rebuild-ssocso",
@@ -254,7 +254,7 @@
     },
     {
       "path": "/api/cron/rebuild-dams",
-      "schedule": "30 5 * * *"
+      "schedule": "45 5 * * *"
     },
     {
       "path": "/api/cron/rebuild-dod-pfas",
@@ -345,32 +345,48 @@
       "schedule": "30 23 * * 0"
     },
     {
-      "path": "/api/cron/rebuild-myhealthfinder",
-      "schedule": "30 11 * * *"
-    },
-    {
-      "path": "/api/cron/rebuild-atsdr-toxicology",
-      "schedule": "45 11 * * *"
-    },
-    {
       "path": "/api/cron/rebuild-usgs-wqp",
       "schedule": "15 12 * * *"
     },
     {
-      "path": "/api/cron/rebuild-data-cdc-gov",
-      "schedule": "30 12 * * *"
+      "path": "/api/cron/rebuild-hhs-daily-batch",
+      "schedule": "0 1 * * *"
     },
     {
-      "path": "/api/cron/rebuild-census-acs",
+      "path": "/api/cron/rebuild-hhs-weekly-batch",
+      "schedule": "0 2 * * 0"
+    },
+    {
+      "path": "/api/cron/rebuild-demographics-batch",
       "schedule": "30 20 * * 0"
     },
     {
-      "path": "/api/cron/rebuild-cdc-svi",
-      "schedule": "30 21 * * 0"
+      "path": "/api/cron/rebuild-echo-batch",
+      "schedule": "45 10 * * *"
     },
     {
-      "path": "/api/cron/rebuild-cdc-eji",
-      "schedule": "0 22 * * 0"
+      "path": "/api/cron/rebuild-noaa-coastal-batch",
+      "schedule": "45 */6 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-usgs-hydro-batch",
+      "schedule": "45 8 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-epa-reporting-batch",
+      "schedule": "15 11 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-usda-cdc-batch",
+      "schedule": "30 19 * * 0"
+    },
+    {
+      "path": "/api/cron/rebuild-weekly-infra-batch",
+      "schedule": "0 21 * * 0"
+    },
+    {
+      "path": "/api/cron/rebuild-realtime-wx",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

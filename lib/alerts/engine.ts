@@ -19,6 +19,7 @@ import {
 } from './siteThrottle';
 import { sendAlertEmail } from './channels/email';
 import { enrichAlertPayload } from './enrichment';
+import { queueTriageItems } from './triageQueue';
 import { saveCacheToBlob, loadCacheFromBlob } from '../blobPersistence';
 import { loadCacheFromDisk, saveCacheToDisk } from '../cacheUtils';
 
@@ -207,6 +208,12 @@ export async function dispatchAlerts(candidateEvents: AlertEvent[]): Promise<Dis
       markSiteFired(siteKey, siteState);
     }
   }
+
+  // Queue critical/anomaly alerts into triage table
+  try {
+    const queued = await queueTriageItems(candidateEvents);
+    if (queued > 0) console.warn(`[dispatch-alerts] Triage: ${queued} items queued`);
+  } catch { /* triage is non-fatal */ }
 
   // Trim log to max size (FIFO)
   if (log.events.length > MAX_ALERT_LOG_SIZE) {

@@ -92,6 +92,31 @@ import { getHealthSummary, ensureWarmed as warmSentinelHealth } from '@/lib/sent
 import { getQueueStats, ensureWarmed as warmSentinelQueue } from '@/lib/sentinel/eventQueue';
 import { getScoredHucsSummary, ensureWarmed as warmSentinelScores } from '@/lib/sentinel/scoringEngine';
 import { SENTINEL_FLAGS } from '@/lib/sentinel/config';
+import { getWqxModernCacheStatus, ensureWarmed as warmWqxModern } from '@/lib/wqxModernCache';
+import { getStnFloodCacheStatus, ensureWarmed as warmStnFlood } from '@/lib/stnFloodCache';
+import { getDmrViolationsCacheStatus, ensureWarmed as warmDmrViolations } from '@/lib/echoDmrViolationsCache';
+import { getHabForecastCacheStatus, ensureWarmed as warmHabForecast } from '@/lib/habForecastCache';
+import { getStreamStatsCacheStatus, ensureWarmed as warmStreamStats } from '@/lib/streamStatsCache';
+import { getEReportingCacheStatus, ensureWarmed as warmEReporting } from '@/lib/eReportingCache';
+import { getCdcPlacesCacheStatus, ensureWarmed as warmCdcPlaces } from '@/lib/cdcPlacesCache';
+import { getCoastwatchCacheStatus, ensureWarmed as warmCoastwatch } from '@/lib/coastwatchCache';
+import { getIcisAirCacheStatus, ensureWarmed as warmIcisAir } from '@/lib/icisAirCache';
+import { getSsurgoCacheStatus, ensureWarmed as warmSsurgo } from '@/lib/ssurgoCache';
+import { getNadpPfasCacheStatus, ensureWarmed as warmNadpPfas } from '@/lib/nadpPfasCache';
+import { getMs4PermitCacheStatus, ensureWarmed as warmMs4Permit } from '@/lib/ms4PermitCache';
+import { getNlcdCacheStatus, ensureWarmed as warmNlcd } from '@/lib/nlcdCache';
+import { getEchoBiosolidsCacheStatus, ensureWarmed as warmEchoBiosolids } from '@/lib/echoBiosolidsCache';
+import { getCoopsPredictionsCacheStatus, ensureWarmed as warmCoopsPredictions } from '@/lib/coopsPredictionsCache';
+import { getVolcanoCacheStatus, ensureWarmed as warmVolcano } from '@/lib/volcanoCache';
+import { getOshaWaterCacheStatus, ensureWarmed as warmOshaWater } from '@/lib/oshaWaterCache';
+import { getSwdiCacheStatus, ensureWarmed as warmSwdi } from '@/lib/swdiCache';
+import { getNassLivestockCacheStatus, ensureWarmed as warmNassLivestock } from '@/lib/nassLivestockCache';
+import { getNassCropsCacheStatus, ensureWarmed as warmNassCrops } from '@/lib/nassCropsCache';
+import { getCongressCacheStatus, ensureWarmed as warmCongress } from '@/lib/congressCache';
+import { getPhmsaPipelineCacheStatus, ensureWarmed as warmPhmsaPipeline } from '@/lib/phmsaPipelineCache';
+import { getNexradQpeCacheStatus, ensureWarmed as warmNexradQpe } from '@/lib/nexradQpeCache';
+import { getEpaOppPesticideCacheStatus, ensureWarmed as warmEpaOppPesticide } from '@/lib/epaOppPesticideCache';
+import { getHypoxiaCacheStatus, ensureWarmed as warmHypoxia } from '@/lib/hypoxiaCache';
 
 function staleness(built: string | null | undefined): { stale: boolean; ageHours: number | null } {
   if (!built) return { stale: true, ageHours: null };
@@ -121,6 +146,10 @@ export async function GET(request: NextRequest) {
     [warmMyHealthfinder, warmATSDRToxicology, warmUSGSWQP, warmDataCDCGov, warmDoDPFAS],
     [warmUsgsOgc, warmNgwmn, warmFloodImpact, warmEpaPfas, warmDodPfasSites],
     [warmNwsForecast, warmWaterAvail, warmCyberRisk, warmGemStat, warmCopernicusCds],
+    [warmWqxModern, warmStnFlood, warmDmrViolations, warmHabForecast, warmStreamStats, warmEReporting],
+    [warmCdcPlaces, warmCoastwatch, warmIcisAir, warmSsurgo, warmNadpPfas, warmMs4Permit],
+    [warmNlcd, warmEchoBiosolids, warmCoopsPredictions, warmVolcano, warmOshaWater, warmSwdi],
+    [warmNassLivestock, warmNassCrops, warmCongress, warmPhmsaPipeline, warmNexradQpe, warmEpaOppPesticide, warmHypoxia],
   ];
   for (const batch of warmBatches) {
     await Promise.allSettled(batch.map(fn => fn()));
@@ -207,6 +236,31 @@ export async function GET(request: NextRequest) {
   const cyberRisk = getCyberRiskCacheStatus();
   const gemstat = getGemsStatCacheStatus();
   const copernicusCds = getCopernicusCdsCacheStatus();
+  const wqxModern = getWqxModernCacheStatus();
+  const stnFlood = getStnFloodCacheStatus();
+  const dmrViolations = getDmrViolationsCacheStatus();
+  const habForecast = getHabForecastCacheStatus();
+  const streamStats = getStreamStatsCacheStatus();
+  const eReporting = getEReportingCacheStatus();
+  const cdcPlaces = getCdcPlacesCacheStatus();
+  const coastwatch = getCoastwatchCacheStatus();
+  const icisAir = getIcisAirCacheStatus();
+  const ssurgo = getSsurgoCacheStatus();
+  const nadpPfas = getNadpPfasCacheStatus();
+  const ms4Permit = getMs4PermitCacheStatus();
+  const nlcd = getNlcdCacheStatus();
+  const echoBiosolids = getEchoBiosolidsCacheStatus();
+  const coopsPredictions = getCoopsPredictionsCacheStatus();
+  const volcano = getVolcanoCacheStatus();
+  const oshaWater = getOshaWaterCacheStatus();
+  const swdi = getSwdiCacheStatus();
+  const nassLivestock = getNassLivestockCacheStatus();
+  const nassCrops = getNassCropsCacheStatus();
+  const congress = getCongressCacheStatus();
+  const phmsaPipeline = getPhmsaPipelineCacheStatus();
+  const nexradQpe = getNexradQpeCacheStatus();
+  const epaOppPesticide = getEpaOppPesticideCacheStatus();
+  const hypoxia = getHypoxiaCacheStatus();
 
   const caches = {
     wqp: {
@@ -537,6 +591,106 @@ export async function GET(request: NextRequest) {
     copernicusCds: {
       ...copernicusCds,
       ...staleness(copernicusCds.loaded ? (copernicusCds as any).built : null),
+    },
+    wqxModern: {
+      ...wqxModern,
+      ...staleness(wqxModern.loaded ? (wqxModern as any).built : null),
+    },
+    stnFlood: {
+      ...stnFlood,
+      ...staleness(stnFlood.loaded ? (stnFlood as any).built : null),
+    },
+    dmrViolations: {
+      ...dmrViolations,
+      ...staleness(dmrViolations.loaded ? (dmrViolations as any).built : null),
+    },
+    habForecast: {
+      ...habForecast,
+      ...staleness(habForecast.loaded ? (habForecast as any).built : null),
+    },
+    streamStats: {
+      ...streamStats,
+      ...staleness(streamStats.loaded ? (streamStats as any).built : null),
+    },
+    eReporting: {
+      ...eReporting,
+      ...staleness(eReporting.loaded ? (eReporting as any).built : null),
+    },
+    cdcPlaces: {
+      ...cdcPlaces,
+      ...staleness(cdcPlaces.loaded ? (cdcPlaces as any).built : null),
+    },
+    coastwatch: {
+      ...coastwatch,
+      ...staleness(coastwatch.loaded ? (coastwatch as any).built : null),
+    },
+    icisAir: {
+      ...icisAir,
+      ...staleness(icisAir.loaded ? (icisAir as any).built : null),
+    },
+    ssurgo: {
+      ...ssurgo,
+      ...staleness(ssurgo.loaded ? (ssurgo as any).built : null),
+    },
+    nadpPfas: {
+      ...nadpPfas,
+      ...staleness(nadpPfas.loaded ? (nadpPfas as any).built : null),
+    },
+    ms4Permit: {
+      ...ms4Permit,
+      ...staleness(ms4Permit.loaded ? (ms4Permit as any).built : null),
+    },
+    nlcd: {
+      ...nlcd,
+      ...staleness(nlcd.loaded ? (nlcd as any).built : null),
+    },
+    echoBiosolids: {
+      ...echoBiosolids,
+      ...staleness(echoBiosolids.loaded ? (echoBiosolids as any).built : null),
+    },
+    coopsPredictions: {
+      ...coopsPredictions,
+      ...staleness(coopsPredictions.loaded ? (coopsPredictions as any).built : null),
+    },
+    volcano: {
+      ...volcano,
+      ...staleness(volcano.loaded ? (volcano as any).built : null),
+    },
+    oshaWater: {
+      ...oshaWater,
+      ...staleness(oshaWater.loaded ? (oshaWater as any).built : null),
+    },
+    swdi: {
+      ...swdi,
+      ...staleness(swdi.loaded ? (swdi as any).built : null),
+    },
+    nassLivestock: {
+      ...nassLivestock,
+      ...staleness(nassLivestock.loaded ? (nassLivestock as any).built : null),
+    },
+    nassCrops: {
+      ...nassCrops,
+      ...staleness(nassCrops.loaded ? (nassCrops as any).built : null),
+    },
+    congress: {
+      ...congress,
+      ...staleness(congress.loaded ? (congress as any).built : null),
+    },
+    phmsaPipeline: {
+      ...phmsaPipeline,
+      ...staleness(phmsaPipeline.loaded ? (phmsaPipeline as any).built : null),
+    },
+    nexradQpe: {
+      ...nexradQpe,
+      ...staleness(nexradQpe.loaded ? (nexradQpe as any).built : null),
+    },
+    epaOppPesticide: {
+      ...epaOppPesticide,
+      ...staleness(epaOppPesticide.loaded ? (epaOppPesticide as any).built : null),
+    },
+    hypoxia: {
+      ...hypoxia,
+      ...staleness(hypoxia.loaded ? (hypoxia as any).built : null),
     },
   };
 

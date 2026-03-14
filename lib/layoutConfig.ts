@@ -86,6 +86,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'quick-access',        label: 'Quick Access Grid',             order: 15, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── AI Briefing (View 2) ──
     { id: 'briefing-actions',    label: 'Action Required',               order: 16, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'triage-queue',        label: 'Triage Queue',                  order: 16.1, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-qa',         label: 'Ask Your Briefing',             order: 16.5, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'ask-pin-universal',   label: 'Ask PIN',                       order: 16.6, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'delta-changelog',     label: 'Data Change Log',               order: 17.1, visible: true, defaultExpanded: false, lensControlled: true },
@@ -249,6 +250,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'quick-access',        label: 'Quick Access Grid',                order: 14, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── AI Briefing (View 2) ──
     { id: 'briefing-actions',    label: 'Action Required',                  order: 15, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'triage-queue',        label: 'Triage Queue',                    order: 15.1, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-qa',         label: 'Ask Your Briefing',                order: 15.5, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'delta-changelog',     label: 'Data Change Log',                  order: 16.1, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Political Briefing ──
@@ -498,6 +500,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'reports-hub',             label: 'Reports Hub',                     order: 15,  visible: true, defaultExpanded: true,  lensControlled: true },
     // ── AI Briefing ──
     { id: 'briefing-actions',        label: 'Action Required',                 order: 15.1, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'triage-queue',            label: 'Triage Queue',                    order: 15.15, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'delta-changelog',         label: 'Data Change Log',                 order: 15.25, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Habitat & Ecology ──
     { id: 'hab-ecoscore',            label: 'Ecological Sensitivity Score',    order: 15.5, visible: true, defaultExpanded: true,  lensControlled: true },
@@ -655,6 +658,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'weather-alerts',     label: 'Severe Weather Alerts',          order: 5.088, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'fire-health-advisory', label: 'Burn Pit & Smoke Advisory',    order: 5.09, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'briefing-actions',    label: 'Action Required',               order: 5.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'triage-queue',        label: 'Triage Queue',                  order: 5.15, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'briefing-qa',         label: 'Ask Your Briefing',              order: 4.5, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'ask-pin-universal',  label: 'Ask PIN',                        order: 4.6, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'delta-changelog',     label: 'Data Change Log',               order: 5.25, visible: true, defaultExpanded: false, lensControlled: true },
@@ -758,6 +762,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'briefing-compliance',    label: 'Compliance Status',               order: 8,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-system',        label: 'System Watch',                    order: 9,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-business',      label: 'Business & Planning',            order: 10, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'triage-queue',            label: 'Triage Queue',                  order: 10.05, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Political Briefing ──
     { id: 'pol-talking-points',       label: 'Talking Points',              order: 10.1, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'pol-constituent-concerns', label: 'Constituent Concerns',        order: 10.2, visible: true, defaultExpanded: true, lensControlled: true },
@@ -923,6 +928,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'local-quick-actions', label: 'Quick Actions',              order: 4,   visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Briefing (7) ──
     { id: 'briefing-actions',      label: 'Action Required',           order: 6,   visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'triage-queue',          label: 'Triage Queue',              order: 6.1, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'delta-changelog',       label: 'Data Change Log',           order: 7.1, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'local-constituent-tldr', label: 'Constituent TL;DR',       order: 10,  visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Political Briefing (10) ──

@@ -93,6 +93,7 @@ import { TrendsChart } from '@/components/TrendsChart';
 import { AIInsights } from '@/components/AIInsights';
 import { RemovalSummaryCard } from '@/components/RemovalSummaryCard';
 import { StormEventTable } from '@/components/StormEventTable';
+import { TriageQueueSection } from './TriageQueueSection';
 import { StormDetectionBanner } from '@/components/StormDetectionBanner';
 import { WaterQualityAlerts } from '@/components/WaterQualityAlerts';
 import { MDEExportTool } from '@/components/MDEExportTool';
@@ -146,7 +147,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'AI Briefing',
     description: 'AI-generated overnight summary and action items',
     defaultOverlay: 'impairment',
-    sections: new Set(['insights', 'briefing-actions', 'briefing-qa', 'ask-pin-universal', 'disclaimer']),
+    sections: new Set(['insights', 'briefing-actions', 'triage-queue', 'briefing-qa', 'ask-pin-universal', 'disclaimer']),
   },
   'political-briefing': {
     label: 'Political Briefing',
@@ -3586,6 +3587,10 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                 </CardContent>
               </Card>
             ); }
+
+            case 'triage-queue': return DS(
+              <TriageQueueSection scope="state" stateFilter={stateAbbr} user={user} />
+            );
 
             case 'briefing-qa': return DS(
               <BriefingQACard role="MS4" state={stateAbbr} jurisdiction={ms4Jurisdiction} />

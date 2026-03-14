@@ -34,6 +34,7 @@ import { useFloodRiskOverview } from '@/hooks/useFloodRiskOverview';
 import { FloodForecastCard, FloodStatusSummary } from './FloodForecastCard';
 import { FloodRiskOverviewCard, FloodRiskSummary } from './FloodRiskOverviewCard';
 import { WeatherAlertsSection } from './WeatherAlertsSection';
+import { TriageQueueSection } from './TriageQueueSection';
 import { WaterbodyDetailCard } from '@/components/WaterbodyDetailCard';
 import { scoreToGrade, alertLevelAvgScore, ALERT_LEVEL_SCORES, ecoScoreStyle, ejScoreStyle } from '@/lib/scoringUtils';
 import { getEcoScore, getEcoData, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
@@ -143,13 +144,13 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Overview',
     description: 'State operational dashboard — morning check before the day starts',
     defaultOverlay: 'risk',
-    sections: new Set(['regprofile', 'operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'briefing-actions', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'ask-pin-universal']),
+    sections: new Set(['regprofile', 'operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'briefing-actions', 'triage-queue', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'ask-pin-universal']),
   },
   briefing: {
     label: 'AI Briefing',
     description: 'AI-generated overnight summary and action items',
     defaultOverlay: 'risk',
-    sections: new Set(['insights', 'briefing-actions', 'briefing-qa', 'ask-pin-universal']),
+    sections: new Set(['insights', 'briefing-actions', 'triage-queue', 'briefing-qa', 'ask-pin-universal']),
   },
   'political-briefing': {
     label: 'Political Briefing',
@@ -2590,6 +2591,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   </div>
                 </CardContent>
               </Card>
+            );
+
+            case 'triage-queue': return DS(
+              <TriageQueueSection scope="state" stateFilter={stateAbbr} user={user} />
             );
 
             case 'briefing-qa': return DS(

@@ -69,6 +69,7 @@ import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitiv
 import { ecoScoreStyle } from '@/lib/scoringUtils';
 import { NUTRIENT_TRADING_STATES } from '@/lib/constants';
 import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
+import { TriageQueueSection } from './TriageQueueSection';
 
 // --- Types -------------------------------------------------------------------
 
@@ -118,7 +119,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'AI Briefing',
     description: 'AI-generated overnight summary and action items',
     sections: new Set([
-      'briefing-actions', 'local-constituent-tldr', 'ask-pin-universal', 'disclaimer',
+      'briefing-actions', 'triage-queue', 'local-constituent-tldr', 'ask-pin-universal', 'disclaimer',
     ]),
   },
   'political-briefing': {
@@ -1488,6 +1489,10 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
               />
             );
           }
+
+          case 'triage-queue': return DS(
+            <TriageQueueSection scope="state" stateFilter={effectiveState} user={user} />
+          );
 
           case 'detail': return DS(
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
