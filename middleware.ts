@@ -76,8 +76,8 @@ export function middleware(request: NextRequest) {
       const csrfToken = generateCsrfToken();
       response.cookies.set(CSRF_COOKIE, csrfToken, {
         httpOnly: false, // Client JS must read this
-        secure: true,
-        sameSite: 'strict',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax', // Changed from 'strict' for better compatibility
         path: '/',
       });
     }
