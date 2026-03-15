@@ -70,9 +70,13 @@ export default function TargetedOutreachPanel() {
         const data = await res.json();
         throw new Error(data.error || 'Failed to add target');
       }
+      const data = await res.json();
+      // Update local state directly from response to avoid stale GET
+      if (data.target) {
+        setTargets(prev => [...prev, data.target]);
+      }
       setOrgName('');
       setWhyTarget('');
-      await fetchTargets();
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -98,8 +102,15 @@ export default function TargetedOutreachPanel() {
         const data = await res.json();
         throw new Error(data.error || 'Research failed');
       }
+      const data = await res.json();
+      // Update local state directly from the response to avoid stale GET
+      // (the GET endpoint is a separate serverless function with its own cache)
+      if (data.target) {
+        setTargets(prev => prev.map(t =>
+          t.id === target.id ? { ...t, ...data.target } : t,
+        ));
+      }
       setExpandedId(target.id);
-      await fetchTargets();
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -115,7 +126,7 @@ export default function TargetedOutreachPanel() {
         headers: csrfHeaders()
       });
       if (!res.ok) throw new Error('Failed to delete target');
-      await fetchTargets();
+      setTargets(prev => prev.filter(t => t.id !== targetId));
     } catch (err: any) {
       setError(err.message);
     }
