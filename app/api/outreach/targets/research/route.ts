@@ -15,7 +15,7 @@ import { callOpenAI } from '@/lib/llmHelpers';
 import type { TargetResearch } from '@/lib/outreach/types';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
   if (!isAuthorized(request)) {
@@ -50,9 +50,12 @@ export async function POST(request: NextRequest) {
   });
 
   try {
+    console.log('[Outreach] Starting research for:', parsed.data.orgName);
     const raw = await callOpenAI(apiKey, system, user, 'gpt-4o', 4000, 0.7);
+    console.log('[Outreach] AI response received, length:', raw.length);
 
     const jsonStr = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    console.log('[Outreach] Cleaned JSON:', jsonStr.substring(0, 200) + '...');
     const research = JSON.parse(jsonStr);
 
     const aiResearch: TargetResearch = {
