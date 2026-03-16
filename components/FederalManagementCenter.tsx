@@ -2994,8 +2994,8 @@ export function FederalManagementCenter(props: Props) {
           return (<>
           <div className={`space-y-10 ${isEditMode ? 'pl-12' : ''}`}>
 
-        {/* Compact impairment summary for lenses where impairmentprofile was removed */}
-        {(viewLens === 'compliance' || viewLens === 'monitoring') && !isEditMode && (
+        {/* Compact impairment summary for monitoring lens only */}
+        {viewLens === 'monitoring' && !isEditMode && (
           <div className="flex items-center gap-2 text-xs text-slate-500 px-4 py-2 bg-slate-50 rounded-lg border border-slate-200">
             <span>National Impairment: {attainsAggregation.totalImpaired?.toLocaleString() ?? '69K'} waterbodies, {attainsAggregation.totalAssessed > 0 ? Math.round((attainsAggregation.totalImpaired / attainsAggregation.totalAssessed) * 100) : 69}% impaired</span>
             <button onClick={() => setViewLens('water-quality')} className="text-blue-600 hover:underline ml-1">
