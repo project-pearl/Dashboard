@@ -44,7 +44,6 @@ import { useAuth } from '@/lib/authContext';
 import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
-import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { WatershedWaterbodyPanel } from '@/components/WatershedWaterbodyPanel';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
@@ -1197,9 +1196,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
         </div>
             );
 
-            case 'insights': return DS(
-        <AIInsightsEngine key={stateAbbr} role="State" stateAbbr={stateAbbr} regionData={regionData as any} />
-            );
+            case 'insights': return DS(<>{/* AI Insights Engine removed */}</>);
 
             case 'detail': return DS(<>
         <div className="space-y-4">

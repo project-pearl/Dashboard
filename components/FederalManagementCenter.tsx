@@ -26,7 +26,6 @@ import { useAuth } from '@/lib/authContext';
 import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
 import { useTierFilter } from '@/lib/useTierFilter';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
-import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import StateWaterbodyCard from '@/components/StateWaterbodyCard';
 import ResolutionPlanner, { type ScopeContext, type DataReliabilityReport } from '@/components/ResolutionPlanner';
 import RestorationPlanner from '@/components/RestorationPlanner';
@@ -3095,18 +3094,7 @@ export function FederalManagementCenter(props: Props) {
             />;
           }
           // Fallback to original implementation
-          return DS(<>
-          {/* ── AI Water Intelligence — Claude-powered, ATTAINS-fed ── */}
-          {lens.showAIInsights && (
-            <AIInsightsEngine
-              key={`national-${attainsAggregation.totalAssessed}`}
-              role="Federal"
-              stateAbbr="US"
-              regionData={regionData as any}
-              nationalData={nationalAIData}
-            />
-          )}
-          </>);
+          return DS(<>{/* AI Water Intelligence removed */}</>);
         }
 
         case 'national-briefing': {
@@ -3129,15 +3117,6 @@ export function FederalManagementCenter(props: Props) {
 
         case 'aiinsights': return DS(<>
         {/* ── Combined AI Insights (legacy — used by non-briefing lenses) ── */}
-        {lens.showAIInsights && (
-          <AIInsightsEngine
-            key={`national-${attainsAggregation.totalAssessed}`}
-            role="Federal"
-            stateAbbr="US"
-            regionData={regionData as any}
-            nationalData={nationalAIData}
-          />
-        )}
         {lens.showAIInsights && aiInsights.length > 0 && (
           <Card id="section-aiinsights">
             <CardHeader className="pb-2 pt-5 px-5">
