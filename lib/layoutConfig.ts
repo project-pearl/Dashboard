@@ -68,6 +68,7 @@ export const DEFAULT_SECTIONS = {
   State: [
     { id: 'briefing-qa',        label: 'Ask Your Briefing',            order: -2, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'ask-pin-universal',  label: 'Ask PIN',                      order: -1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'lens-data-story',    label: 'Data Story',                   order: 1.5, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Shared / multi-lens sections ──
     { id: 'regprofile',          label: 'Water Health Dashboard',          order: 0,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'datareport',          label: 'Data Report Card',               order: 1,  visible: true, defaultExpanded: true,  lensControlled: true },
@@ -645,6 +646,7 @@ export const DEFAULT_SECTIONS = {
   FMC: [
     { id: 'briefing-qa',        label: 'Ask Your Briefing',            order: -2, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'ask-pin-universal',  label: 'Ask PIN',                      order: -1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'lens-data-story',    label: 'Data Story',                   order: 1.5, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'usmap',              label: 'US Map',                      order: 0,  visible: true, defaultExpanded: true, compound: true, lensControlled: true },
     { id: 'situation',          label: 'Situation Summary',           order: 1,  visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'impairmentprofile',  label: 'Waterbody & Impairment Profile', order: 2,  visible: true, defaultExpanded: true, lensControlled: true },
@@ -715,6 +717,10 @@ export const DEFAULT_SECTIONS = {
     { id: 'disaster-emergency', label: 'Disaster & Emergency',        order: 37, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'ntas-status',           label: 'NTAS Threat Level',         order: 4.0, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'at-risk-facilities',    label: 'At-Risk Installations & Embassies', order: 5.01, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'installation-supply-chain', label: 'Installation Water Supply Chain', order: 5.011, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'threat-fusion',         label: 'Cross-Domain Threat Fusion',       order: 5.012, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'sentinel-intel-feed',   label: 'Sentinel Intelligence Feed',       order: 5.016, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'escalation-summary',    label: 'Escalation Indicators',            order: 5.02, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'military-installations', label: 'Military Installations',  order: 5.0, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'waterfront-exposure', label: 'Waterfront Value Exposure',  order: 39, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'fund-srf',           label: 'SRF Program',                 order: 39.1, visible: true, defaultExpanded: true, lensControlled: true },
@@ -925,6 +931,7 @@ export const DEFAULT_SECTIONS = {
   Local: [
     // ── Ask cards (always first after hero) ──
     { id: 'ask-pin-universal',   label: 'Ask PIN',                      order: -1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'lens-data-story',     label: 'Data Story',                   order: 1.5, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Overview (10) ──
     { id: 'local-identity',   label: 'Jurisdiction Identity',         order: 0,   visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'map-grid',         label: 'Map & Waterbody List',          order: 1,   visible: true, defaultExpanded: true,  lensControlled: true, compound: true },

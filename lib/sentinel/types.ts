@@ -313,6 +313,63 @@ export interface NwssCorrelation {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Sentinel Intelligence Feed Types                                  */
+/* ------------------------------------------------------------------ */
+
+export interface SentinelFeedEntry {
+  eventId: string;
+  detectedAt: string;
+  source: ChangeSource;
+  changeType: ChangeType;
+  severityHint: SeverityHint;
+  geography: ChangeEventGeography;
+  huc8: string;
+  hucScore: number;
+  hucLevel: ScoreLevel;
+  baseScore: number;
+  decayedScore: number;
+  activePatterns: string[];
+  classification: AttackClassificationType;
+  threatScore: number;
+  confounders: ConfounderCheck[];
+  reasoning: ClassificationReasoning[];
+  cbrnIndicators: CbrnIndicator[];
+  coordination: {
+    coordinationScore: number;
+    memberHucs: string[];
+    parameterBreadth: number;
+    temporalSpread: number;
+  } | null;
+  plumeAdjustment: ActivePattern['plumeAdjustment'] | null;
+  payload: Record<string, unknown>;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Escalation Indicator Types                                        */
+/* ------------------------------------------------------------------ */
+
+export interface ScoreSnapshot {
+  hoursAgo: number;
+  score: number;
+  level: ScoreLevel;
+}
+
+export interface EscalationIndicators {
+  huc8: string;
+  stateAbbr: string;
+  score: number;
+  level: ScoreLevel;
+  trajectory: ScoreSnapshot[];
+  velocity: number;
+  acceleration: number;
+  nextThreshold: { level: ScoreLevel; min: number } | null;
+  estimatedHoursToNext: number | null;
+  patternEmergence: { newPatterns: string[]; stablePatterns: string[]; totalActive: number };
+  zScoreTrend: { currentAvg: number; trend: 'rising' | 'falling' | 'stable'; paramCount: number };
+  escalationClass: 'rapid' | 'steady' | 'plateaued' | 'deescalating';
+}
+
+/* ------------------------------------------------------------------ */
 /*  Enriched Alert Types                                              */
 /* ------------------------------------------------------------------ */
 
