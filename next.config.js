@@ -5,6 +5,24 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // ── Exclude large non-runtime files from serverless function bundles ──
+  // These are either CDN-served (public/), pipeline data (lib/wqp/), or build artifacts.
+  // Without this, Vercel traces ~400 MB into each function, exceeding the 250 MB limit.
+  outputFileTracingExcludes: {
+    '*': [
+      './lib/wqp/**',             // 258 MB — Python pipeline data, not used at runtime
+      './public/images/heroes/**', // 49 MB  — hero banner images, served by CDN
+      './public/*.png',            // ~40 MB — marketing images, served by CDN
+      './public/*.PNG',
+      './public/*.jpg',
+      './public/*.JPG',
+      './export/**',               // 6 MB   — codebase text exports
+      './scripts/**',              // build scripts
+      './pin-pipeline/**',         // Python pipeline
+      './tsconfig.tsbuildinfo',
+      './package-lock.json',
+    ],
+  },
   typescript: {
     ignoreBuildErrors: true,
   },

@@ -21,6 +21,9 @@ export interface DraggableSectionProps {
 // Sections that should not show collapse controls (too small or structural)
 const NO_COLLAPSE = new Set(['disclaimer']);
 
+// Sections that already ARE Ask PIN — skip the section-level "Ask PIN" helper icon
+const SKIP_ASK_PIN_HELPER = new Set(['ask-pin-universal', 'briefing-qa']);
+
 // Interactive elements that should not trigger collapse
 const INTERACTIVE = 'button, a, input, select, textarea, [role="button"], [data-no-collapse]';
 
@@ -101,17 +104,19 @@ export function DraggableSection({
       {/* Ask PIN — always visible; Collapse — hover-only */}
       {canCollapse && (
         <div className="absolute top-2 right-2 z-10 flex gap-1">
-          <button
-            onClick={() => setAskPinOpen(v => !v)}
-            className={`p-1 rounded-md border shadow-sm transition-all hover:border-blue-300 hover:shadow ${
-              askPinOpen
-                ? 'border-blue-300 bg-blue-50 dark:bg-blue-950/40'
-                : 'border-slate-200 dark:border-slate-600 bg-white/90 dark:bg-slate-800/90'
-            }`}
-            title="Ask PIN"
-          >
-            <HelpCircle className="h-3.5 w-3.5 text-blue-400" />
-          </button>
+          {!SKIP_ASK_PIN_HELPER.has(id) && (
+            <button
+              onClick={() => setAskPinOpen(v => !v)}
+              className={`p-1 rounded-md border shadow-sm transition-all hover:border-blue-300 hover:shadow ${
+                askPinOpen
+                  ? 'border-blue-300 bg-blue-50 dark:bg-blue-950/40'
+                  : 'border-slate-200 dark:border-slate-600 bg-white/90 dark:bg-slate-800/90'
+              }`}
+              title="Ask PIN"
+            >
+              <HelpCircle className="h-3.5 w-3.5 text-blue-400" />
+            </button>
+          )}
           <button
             onClick={() => setCollapsed(prev => !prev)}
             className={`p-1 rounded-md border border-slate-200 dark:border-slate-600 bg-white/90 dark:bg-slate-800/90 shadow-sm transition-all hover:border-blue-300 hover:shadow ${
