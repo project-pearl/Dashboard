@@ -45,6 +45,23 @@ export default function AudienceDiscoveryPanel() {
     }
   };
 
+  const handleDeleteSegment = async (segmentId: string) => {
+    try {
+      const res = await fetch(`/api/outreach/segments?id=${segmentId}`, {
+        method: 'DELETE',
+        headers: csrfHeaders(),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || 'Failed to delete segment');
+        return;
+      }
+      setSegments(prev => prev.filter(s => s.id !== segmentId));
+    } catch {
+      setError('Network error');
+    }
+  };
+
   const handleGenerateEmail = async (segmentId: string) => {
     setGeneratingFor(segmentId);
     setGenResult(null);
@@ -113,6 +130,7 @@ export default function AudienceDiscoveryPanel() {
               <SegmentCard
                 segment={seg}
                 onGenerateEmail={generatingFor ? undefined : handleGenerateEmail}
+                onDelete={handleDeleteSegment}
               />
               {generatingFor === seg.id && (
                 <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 flex items-center justify-center rounded-lg">

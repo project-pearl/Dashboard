@@ -50,6 +50,27 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ success: true, segment });
 }
 
+export async function DELETE(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+  if (!id) {
+    return NextResponse.json({ error: 'id query param required' }, { status: 400 });
+  }
+
+  const segments = await loadSegments();
+  const filtered = segments.filter(s => s.id !== id);
+  if (filtered.length === segments.length) {
+    return NextResponse.json({ error: 'Segment not found' }, { status: 404 });
+  }
+
+  await saveSegments(filtered);
+  return NextResponse.json({ success: true });
+}
+
 export async function PUT(request: NextRequest) {
   if (!isAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

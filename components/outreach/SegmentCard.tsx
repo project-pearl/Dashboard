@@ -11,11 +11,12 @@ const PRIORITY_COLORS = {
 interface Props {
   segment: AudienceSegment;
   onGenerateEmail?: (segmentId: string) => void;
+  onDelete?: (segmentId: string) => void;
   selected?: boolean;
   onSelect?: (segmentId: string) => void;
 }
 
-export default function SegmentCard({ segment, onGenerateEmail, selected, onSelect }: Props) {
+export default function SegmentCard({ segment, onGenerateEmail, onDelete, selected, onSelect }: Props) {
   return (
     <div
       className={`border rounded-lg p-4 space-y-3 transition-colors ${
@@ -36,9 +37,20 @@ export default function SegmentCard({ segment, onGenerateEmail, selected, onSele
           )}
           <h3 className="font-semibold text-gray-900 dark:text-white">{segment.name}</h3>
         </div>
-        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${PRIORITY_COLORS[segment.priority]}`}>
-          {segment.priority}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${PRIORITY_COLORS[segment.priority]}`}>
+            {segment.priority}
+          </span>
+          {onDelete && (
+            <button
+              onClick={() => onDelete(segment.id)}
+              className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 transition-colors"
+              title="Delete segment"
+            >
+              &times;
+            </button>
+          )}
+        </div>
       </div>
 
       <p className="text-sm text-gray-600 dark:text-gray-400">{segment.description}</p>
@@ -68,6 +80,19 @@ export default function SegmentCard({ segment, onGenerateEmail, selected, onSele
           ))}
         </ul>
       </div>
+
+      {segment.decisionMakers.length > 0 && (
+        <div>
+          <h4 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Key Roles / Decision Makers</h4>
+          <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-0.5">
+            {segment.decisionMakers.map((dm, i) => (
+              <li key={i} className="flex items-start gap-1">
+                <span className="text-blue-400 mt-0.5">&#x2022;</span> {dm}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {onGenerateEmail && (
         <button

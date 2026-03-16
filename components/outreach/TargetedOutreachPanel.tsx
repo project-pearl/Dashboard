@@ -147,7 +147,7 @@ export default function TargetedOutreachPanel() {
           painPoints: target.aiResearch.painPoints,
           buyingMotivations: target.aiResearch.talkingPoints,
           objections: [],
-          decisionMakers: target.aiResearch.keyRoles.slice(0, 5),
+          decisionMakers: target.aiResearch.keyRoles,
           toneGuidance: target.aiResearch.approachStrategy,
           priority: 'high',
         }),
