@@ -117,8 +117,12 @@ function parseCsvLine(line: string): string[] {
 
 async function fetchWqxForState(stFips: [string, string]): Promise<WqxResult[]> {
   const [st, fips] = stFips;
-  // WQP no longer accepts mimeType=json (returns 406); use CSV
-  const url = `https://www.waterqualitydata.us/data/Result/search?mimeType=csv&zip=no&statecode=US:${fips}&startDateLo=01-01-2024&dataProfile=resultPhysChem&providers=NWIS&providers=STORET`;
+  // WQP no longer accepts mimeType=json (returns 406); use CSV.
+  // Limit to last 6 months + 2000 results per state to avoid OOM on serverless.
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  const startDate = `${String(sixMonthsAgo.getMonth() + 1).padStart(2, '0')}-01-${sixMonthsAgo.getFullYear()}`;
+  const url = `https://www.waterqualitydata.us/data/Result/search?mimeType=csv&zip=no&statecode=US:${fips}&startDateLo=${startDate}&dataProfile=resultPhysChem&providers=NWIS&providers=STORET&sorted=no`;
   const resp = await fetch(url, {
     signal: AbortSignal.timeout(REQUEST_TIMEOUT),
   });
@@ -144,8 +148,9 @@ async function fetchWqxForState(stFips: [string, string]): Promise<WqxResult[]> 
   const iMonType = col('MonitoringLocationTypeName');
   const iDate = col('ActivityStartDate');
 
+  const MAX_PER_STATE = 3000;
   const results: WqxResult[] = [];
-  for (let i = 1; i < lines.length; i++) {
+  for (let i = 1; i < lines.length && results.length < MAX_PER_STATE; i++) {
     const fields = parseCsvLine(lines[i]);
     const lat = parseFloat(fields[iLat] || '0');
     const lng = parseFloat(fields[iLng] || '0');
