@@ -2390,12 +2390,16 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
                 <CardContent>
                   <div className="space-y-2">
                     {[
-                      { grant: 'EPA 319(h) Watershed Restoration', amount: '$275,000', period: '2024-2027', remaining: '$180,000', status: 'Active' },
-                      { grant: 'NFWF Five Star & Urban Waters', amount: '$50,000', period: '2025-2026', remaining: '$42,000', status: 'Active' },
-                      { grant: 'State Chesapeake Bay Trust', amount: '$95,000', period: '2025-2027', remaining: '$95,000', status: 'New' },
+                      { grant: 'EPA 319(h) Watershed Restoration', url: 'https://www.epa.gov/nps/319-grant-program-states-and-territories', amount: '$275,000', period: '2024-2027', remaining: '$180,000', status: 'Active' },
+                      { grant: 'NFWF Five Star & Urban Waters', url: 'https://www.nfwf.org/programs/five-star-and-urban-waters-restoration-grant-program', amount: '$50,000', period: '2025-2026', remaining: '$42,000', status: 'Active' },
+                      { grant: 'State Chesapeake Bay Trust', url: 'https://cbtrust.org/grants/', amount: '$95,000', period: '2025-2027', remaining: '$95,000', status: 'New' },
                     ].map((g, i) => (
                       <div key={i} className="flex items-center justify-between text-xs border border-slate-200 rounded-lg px-3 py-2">
-                        <span className="text-slate-700 font-medium">{g.grant}</span>
+                        {g.url ? (
+                          <a href={g.url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-blue-700 hover:text-blue-900 hover:underline">{g.grant}</a>
+                        ) : (
+                          <span className="text-xs font-semibold text-slate-800">{g.grant}</span>
+                        )}
                         <div className="flex items-center gap-3">
                           <span className="text-slate-500">{g.amount}</span>
                           <span className="text-slate-400">{g.period}</span>
@@ -2417,17 +2421,21 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
                     <TrendingUp className="h-5 w-5 text-blue-600" />
                     Opportunity Pipeline
                   </CardTitle>
-                  <CardDescription>Upcoming grant opportunities and application pipeline.</CardDescription>
+                  <CardDescription>Currently open grants matched to your priorities — best fit first</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     {[
-                      { opportunity: 'EPA Environmental Education Grant', amount: 'Up to $100K', deadline: 'May 2026', status: 'Preparing' },
-                      { opportunity: 'NFWF Chesapeake Bay Stewardship', amount: 'Up to $500K', deadline: 'Jul 2026', status: 'Eligible' },
-                      { opportunity: 'NOAA Community Resilience Grant', amount: 'Up to $300K', deadline: 'Sep 2026', status: 'Researching' },
+                      { opportunity: 'EPA Environmental Education Grant', url: 'https://www.epa.gov/education/grants', amount: 'Up to $100K', deadline: 'May 2026', status: 'Preparing' },
+                      { opportunity: 'NFWF Chesapeake Bay Stewardship', url: 'https://www.nfwf.org/programs/chesapeake-bay-stewardship-fund', amount: 'Up to $500K', deadline: 'Jul 2026', status: 'Eligible' },
+                      { opportunity: 'NOAA Community Resilience Grant', url: 'https://www.fisheries.noaa.gov/grant/transformational-habitat-restoration-and-coastal-resilience-grants', amount: 'Up to $300K', deadline: 'Sep 2026', status: 'Researching' },
                     ].map((o, i) => (
                       <div key={i} className="flex items-center justify-between text-xs border border-slate-200 rounded-lg px-3 py-2">
-                        <span className="text-slate-700">{o.opportunity}</span>
+                        {o.url ? (
+                          <a href={o.url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-blue-700 hover:text-blue-900 hover:underline">{o.opportunity}</a>
+                        ) : (
+                          <span className="text-xs font-semibold text-slate-800">{o.opportunity}</span>
+                        )}
                         <div className="flex items-center gap-3">
                           <span className="text-slate-500">{o.amount}</span>
                           <span className="text-slate-400">Due: {o.deadline}</span>

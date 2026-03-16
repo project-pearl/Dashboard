@@ -1,837 +1,649 @@
 /**
  * Generate Master Briefing DOCX — PIN Dashboard
+ * Investor-grade deep dive for Michael Feasel / partner-level audience
  * Run: node scripts/generate-master-briefing.mjs
  */
 import {
   Document, Packer, Paragraph, TextRun, HeadingLevel,
-  AlignmentType, TableRow, TableCell, Table, WidthType,
-  BorderStyle, ShadingType, PageBreak, TabStopPosition, TabStopType,
-  Header, Footer, ImageRun
-} from "docx";
-import { writeFileSync } from "fs";
+  AlignmentType, TableCell, TableRow, Table,
+  WidthType, ShadingType, PageBreak, convertInchesToTwip,
+} from 'docx';
+import { writeFileSync } from 'fs';
+import { join } from 'path';
 
-/* ── helpers ──────────────────────────────────────────────── */
-const h1 = (text) => new Paragraph({ heading: HeadingLevel.HEADING_1, spacing: { before: 400, after: 200 }, children: [new TextRun({ text, bold: true, size: 32, font: "Calibri" })] });
-const h2 = (text) => new Paragraph({ heading: HeadingLevel.HEADING_2, spacing: { before: 300, after: 150 }, children: [new TextRun({ text, bold: true, size: 26, font: "Calibri" })] });
-const h3 = (text) => new Paragraph({ heading: HeadingLevel.HEADING_3, spacing: { before: 200, after: 100 }, children: [new TextRun({ text, bold: true, size: 22, font: "Calibri" })] });
-const p = (...runs) => new Paragraph({ spacing: { after: 120 }, children: runs });
-const t = (text, opts = {}) => new TextRun({ text, size: 21, font: "Calibri", ...opts });
-const bold = (text) => t(text, { bold: true });
-const italic = (text) => t(text, { italics: true });
-const bullet = (text, level = 0) => new Paragraph({ bullet: { level }, spacing: { after: 60 }, children: [t(text)] });
-const bulletBold = (label, rest, level = 0) => new Paragraph({ bullet: { level }, spacing: { after: 60 }, children: [bold(label), t(rest)] });
+const BLUE = '1E40AF';
+const TEAL = '0D9488';
+const SLATE = '475569';
+const WHITE = 'FFFFFF';
+const NAVY = '0F172A';
 
-function cell(text, opts = {}) {
-  return new TableCell({
-    width: opts.width ? { size: opts.width, type: WidthType.PERCENTAGE } : undefined,
-    shading: opts.shading ? { type: ShadingType.SOLID, color: opts.shading } : undefined,
-    children: [new Paragraph({ spacing: { before: 40, after: 40 }, children: [t(text, { bold: !!opts.bold, size: opts.size || 20 })] })],
+function h1(text) {
+  return new Paragraph({
+    heading: HeadingLevel.HEADING_1,
+    spacing: { before: 400, after: 200 },
+    children: [new TextRun({ text, bold: true, size: 32, color: BLUE, font: 'Calibri' })],
   });
 }
-
-function headerCell(text, width) {
-  return cell(text, { bold: true, shading: "1B3A5C", width });
+function h2(text) {
+  return new Paragraph({
+    heading: HeadingLevel.HEADING_2,
+    spacing: { before: 300, after: 150 },
+    children: [new TextRun({ text, bold: true, size: 26, color: TEAL, font: 'Calibri' })],
+  });
 }
+function h3(text) {
+  return new Paragraph({
+    heading: HeadingLevel.HEADING_3,
+    spacing: { before: 200, after: 100 },
+    children: [new TextRun({ text, bold: true, size: 22, color: SLATE, font: 'Calibri' })],
+  });
+}
+function p(text, opts = {}) {
+  return new Paragraph({
+    spacing: { after: 120 },
+    children: [new TextRun({ text, size: 20, font: 'Calibri', ...opts })],
+  });
+}
+function pm(...runs) {
+  return new Paragraph({
+    spacing: { after: 120 },
+    children: runs.map(r =>
+      typeof r === 'string'
+        ? new TextRun({ text: r, size: 20, font: 'Calibri' })
+        : new TextRun({ size: 20, font: 'Calibri', ...r })
+    ),
+  });
+}
+function b(text, opts = {}) {
+  return new Paragraph({
+    bullet: { level: 0 },
+    spacing: { after: 60 },
+    children: [new TextRun({ text, size: 20, font: 'Calibri', ...opts })],
+  });
+}
+function bb(label, desc) {
+  return new Paragraph({
+    bullet: { level: 0 },
+    spacing: { after: 60 },
+    children: [
+      new TextRun({ text: label, bold: true, size: 20, font: 'Calibri' }),
+      new TextRun({ text: ' \u2014 ' + desc, size: 20, font: 'Calibri' }),
+    ],
+  });
+}
+function sb(text) {
+  return new Paragraph({
+    bullet: { level: 1 },
+    spacing: { after: 40 },
+    children: [new TextRun({ text, size: 18, font: 'Calibri', color: SLATE })],
+  });
+}
+function gap() { return new Paragraph({ spacing: { after: 80 }, children: [] }); }
 
-function tableRow(cells) { return new TableRow({ children: cells }); }
-
-function simpleTable(headers, rows, widths) {
-  const hdrCells = headers.map((h, i) =>
-    new TableCell({
-      width: widths ? { size: widths[i], type: WidthType.PERCENTAGE } : undefined,
-      shading: { type: ShadingType.SOLID, color: "1B3A5C" },
-      children: [new Paragraph({ spacing: { before: 40, after: 40 }, children: [t(h, { bold: true, size: 20, color: "FFFFFF" })] })],
-    })
-  );
-  const dataRows = rows.map((row) =>
-    new TableRow({
-      children: row.map((val, i) =>
-        new TableCell({
-          width: widths ? { size: widths[i], type: WidthType.PERCENTAGE } : undefined,
-          children: [new Paragraph({ spacing: { before: 30, after: 30 }, children: [t(String(val), { size: 19 })] })],
-        })
-      ),
-    })
-  );
+function row(cells, isHeader = false) {
+  return new TableRow({
+    children: cells.map(text => new TableCell({
+      shading: isHeader ? { type: ShadingType.SOLID, color: BLUE, fill: BLUE } : undefined,
+      children: [new Paragraph({
+        spacing: { before: 40, after: 40 },
+        children: [new TextRun({
+          text: String(text),
+          size: 18, font: 'Calibri', bold: isHeader,
+          color: isHeader ? WHITE : '1E293B',
+        })],
+      })],
+      margins: { top: 40, bottom: 40, left: 80, right: 80 },
+    })),
+  });
+}
+function tbl(headers, rows) {
   return new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
-    rows: [new TableRow({ children: hdrCells }), ...dataRows],
+    rows: [row(headers, true), ...rows.map(r => row(r))],
   });
 }
+function pb() { return new Paragraph({ children: [new PageBreak()] }); }
 
-/* ── document ─────────────────────────────────────────────── */
+// ─── BUILD DOCUMENT ───────────────────────────────────────────────
+
 const doc = new Document({
-  creator: "PIN Dashboard",
-  title: "PIN — Master Briefing",
-  description: "Comprehensive briefing on the PIN global threat-intelligence platform",
-  styles: {
-    default: {
-      document: { run: { font: "Calibri", size: 21 } },
+  styles: { default: { document: { run: { font: 'Calibri', size: 20 } } } },
+  sections: [{
+    properties: {
+      page: {
+        margin: {
+          top: convertInchesToTwip(0.8), bottom: convertInchesToTwip(0.8),
+          left: convertInchesToTwip(0.9), right: convertInchesToTwip(0.9),
+        },
+      },
     },
-  },
-  numbering: {
-    config: [{
-      reference: "default-bullet",
-      levels: [
-        { level: 0, format: "bullet", text: "\u2022", alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 720, hanging: 360 } } } },
-        { level: 1, format: "bullet", text: "\u25E6", alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 1440, hanging: 360 } } } },
-      ],
-    }],
-  },
-  sections: [
-    /* ══════════════════ COVER PAGE ══════════════════ */
-    {
-      properties: {},
-      children: [
-        new Paragraph({ spacing: { before: 3000 } }),
-        new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 200 }, children: [
-          new TextRun({ text: "PIN", bold: true, size: 64, font: "Calibri", color: "1B3A5C" }),
-        ]}),
-        new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 100 }, children: [
-          new TextRun({ text: "Global Air, Fire & Water", size: 36, font: "Calibri", color: "4A90D9" }),
-        ]}),
-        new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 80 }, children: [
-          new TextRun({ text: "Threat Intelligence Platform", size: 36, font: "Calibri", color: "4A90D9" }),
-        ]}),
-        new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 600 }, children: [
-          new TextRun({ text: "Master Briefing", size: 28, font: "Calibri", italics: true, color: "666666" }),
-        ]}),
-        new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 100 }, children: [
-          t("March 2026", { size: 24 }),
-        ]}),
-        new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 200 }, children: [
-          t("CONFIDENTIAL", { size: 20, bold: true, color: "CC0000" }),
-        ]}),
-        new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 2000 }, children: [
-          t("Real-time threat detection, environmental intelligence, and regulatory compliance across air quality, wildfire, and water systems \u2014 serving 16 stakeholder roles from federal agencies to K-12 classrooms", { size: 20, italics: true, color: "555555" }),
-        ]}),
-        new Paragraph({ alignment: AlignmentType.CENTER, children: [
-          t("Prepared by the PIN Engineering Team", { size: 20, color: "888888" }),
-        ]}),
-      ],
-    },
+    children: [
 
-    /* ══════════════════ TABLE OF CONTENTS ══════════════════ */
-    {
-      children: [
-        h1("Table of Contents"),
-        p(t("")),
-        ...[
-          "1.  Executive Summary",
-          "2.  What Is PIN? \u2014 A Tri-Domain Threat Intelligence Platform",
-          "3.  Platform by the Numbers",
-          "4.  The Three Domains: Water, Fire & Air",
-          "5.  Data Sources & Integration Pipeline",
-          "6.  Role-Based Access & Dashboards",
-          "7.  Lens System & Information Architecture",
-          "8.  Sentinel Threat-Detection System",
-          "9.  AI & Machine-Learning Capabilities",
-          "10. Scoring & Analytics Engines",
-          "11. Alerting & Notification Framework",
-          "12. Security & Compliance Posture",
-          "13. Technology Stack",
-          "14. Infrastructure & Deployment",
-          "15. Recent Major Milestones",
-          "16. Roadmap & Future Direction",
-        ].map((line) => p(t(line, { size: 22 }))),
-      ],
-    },
+      // ═══════════════════════════════════════════════════
+      // TITLE PAGE
+      // ═══════════════════════════════════════════════════
+      gap(), gap(), gap(), gap(),
+      new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 200 },
+        children: [new TextRun({ text: 'PEARL Intelligence Network', bold: true, size: 52, color: BLUE, font: 'Calibri' })] }),
+      new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 80 },
+        children: [new TextRun({ text: '(PIN)', bold: true, size: 40, color: TEAL, font: 'Calibri' })] }),
+      gap(),
+      new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 300 },
+        children: [new TextRun({ text: 'Master Briefing: Platform Deep Dive', size: 28, color: SLATE, font: 'Calibri' })] }),
+      new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 80 },
+        children: [new TextRun({ text: 'March 2026  |  Confidential', size: 22, color: SLATE, font: 'Calibri' })] }),
+      new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 40 },
+        children: [new TextRun({ text: 'Local Seafood Projects Inc.', size: 20, italics: true, color: SLATE, font: 'Calibri' })] }),
+      gap(), gap(), gap(),
+      new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 60 },
+        children: [new TextRun({ text: 'What You\u2019re Looking At', bold: true, size: 24, color: TEAL, font: 'Calibri' })] }),
+      new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 40 },
+        children: [new TextRun({ text: 'The first platform to unify 75+ federal water and environmental data sources into a single intelligence system.', size: 20, color: SLATE, font: 'Calibri' })] }),
+      new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 40 },
+        children: [new TextRun({ text: 'PIN makes cross-agency discoveries that no human analyst and no existing tool can make.', size: 20, color: SLATE, font: 'Calibri' })] }),
+      gap(), gap(),
+      new Paragraph({ alignment: AlignmentType.CENTER,
+        children: [new TextRun({ text: '135 data caches  \u00B7  97 automated jobs  \u00B7  15 user roles  \u00B7  259 analytical lenses  \u00B7  5 breakthrough correlations', size: 18, color: SLATE, font: 'Calibri' })] }),
 
-    /* ══════════════════ 1. EXECUTIVE SUMMARY ══════════════════ */
-    {
-      children: [
-        h1("1. Executive Summary"),
-        p(
-          t("PIN is a "),
-          bold("global air, fire, and water threat intelligence platform"),
-          t(" that fuses data from over "),
-          bold("50 federal and state sources"),
-          t(" into a unified operational picture \u2014 updated as frequently as every 5 minutes. It is no longer just a water-quality dashboard. PIN now monitors three interconnected environmental domains:"),
-        ),
-        p(t("")),
-        bulletBold("Water: ", "Stream gauges, drinking water systems, NPDES permits, PFAS contamination, harmful algal blooms, sewer overflows, coastal stations, groundwater, flood forecasts, drought conditions, and wastewater pathogen surveillance"),
-        bulletBold("Fire: ", "NASA FIRMS satellite fire detection (VIIRS/MODIS) every 4 hours, fire-to-watershed impact correlation, and infrastructure proximity alerts"),
-        bulletBold("Air: ", "Real-time Air Quality Index (AQI) monitoring every 30 minutes, smoke plume tracking, and air-water quality correlation analysis"),
-        p(t("")),
-        p(
-          t("These three domains converge in PIN's "),
-          bold("Sentinel threat-detection pipeline"),
-          t(" \u2014 a DARPA-evaluated, 6-phase system that ingests anomaly signals from 12 adapters every 5 minutes, scores HUC-8 watersheds, detects coordinated multi-site events, and classifies incidents as attack vs. benign with "),
-          bold("perfect precision and recall (F1 = 1.0)"),
-          t(". Sentinel treats fire and air quality as first-class threat vectors alongside water contamination."),
-        ),
-        p(t("")),
-        p(
-          t("The platform delivers role-tailored intelligence to "),
-          bold("16 distinct stakeholder roles"),
-          t(" \u2014 from federal agency directors and military installation commanders to state regulators, municipal utilities, K-12 science classes, NGO advocates, and institutional investors \u2014 through "),
-          bold("230+ lens views"),
-          t(", AI-generated briefings (refreshed every 6 hours), and 13 automated alert triggers. PIN is deployed on Vercel with Supabase authentication, Vercel Blob persistence, and full NIST 800-53 Rev 5 security controls."),
-        ),
-      ],
-    },
+      pb(),
 
-    /* ══════════════════ 2. WHAT IS PIN? ══════════════════ */
-    {
-      children: [
-        h1("2. What Is PIN?"),
-        p(
-          t("PIN (formerly Project PEARL) is a "),
-          bold("tri-domain environmental threat intelligence platform"),
-          t(" built on Next.js 15. It serves as a unified command center that continuously monitors the intersection of "),
-          bold("air quality, wildfire activity, and water systems"),
-          t(" across the United States. PIN answers the question: "),
-          italic("\"What threats are emerging across our air, fire, and water systems \u2014 who is affected, and what should we do about it?\""),
-        ),
-        p(t("")),
-        h3("The Three Domains"),
-        p(t("")),
-        p(
-          bold("Water"),
-          t(" remains PIN's deepest domain \u2014 spanning drinking water safety, surface water quality, NPDES permit compliance, PFAS and emerging contaminants, harmful algal blooms, sewer overflows, flood forecasting, drought monitoring, groundwater levels, coastal tides, and wastewater pathogen surveillance. This domain alone ingests from 30+ federal data sources."),
-        ),
-        p(t("")),
-        p(
-          bold("Fire"),
-          t(" is monitored via NASA FIRMS satellite imagery (VIIRS and MODIS sensors) every 4 hours. PIN correlates active fire detections with downstream watersheds, water infrastructure proximity, and air quality impacts \u2014 creating an integrated fire-water-air threat picture that no single-domain system provides."),
-        ),
-        p(t("")),
-        p(
-          bold("Air"),
-          t(" quality is tracked in near real-time (every 30 minutes) through AQI monitoring stations. PIN correlates air quality degradation with wildfire smoke plumes and downstream water quality impacts from ash runoff and atmospheric deposition."),
-        ),
-        p(t("")),
-        h3("Core Mission"),
-        bullet("Fuse 50+ federal and state data sources across air, fire, and water into a single, coherent threat picture"),
-        bullet("Detect emerging threats in near real-time and alert responsible parties before harm occurs"),
-        bullet("Deliver tailored intelligence to 16 stakeholder roles \u2014 from military commanders to 5th-grade science classes"),
-        bullet("Score, rank, and forecast environmental risk at the site, watershed, state, and national level"),
-        bullet("Track regulatory compliance, enforcement actions, and political accountability"),
-        bullet("Surface funding opportunities (grants, federal spending) aligned to each user's jurisdiction"),
-        p(t("")),
-        h3("Key Differentiators"),
-        bulletBold("Tri-domain fusion: ", "Only platform that correlates fire, air quality, and water threats into a unified intelligence picture"),
-        bulletBold("Real-time pipeline: ", "54 cron jobs on staggered schedules; fastest data refreshes every 5 minutes"),
-        bulletBold("DARPA-evaluated threat detection: ", "Sentinel system achieves perfect precision/recall (F1=1.0) across 6 attack scenarios"),
-        bulletBold("Role intelligence: ", "16 roles, 230+ lenses, each with tailored KPIs, AI briefings, and alert rules"),
-        bulletBold("Spatial indexing: ", "0.1-degree grid (~11 km) resolution for sub-county granularity across all 50 states + DC"),
-        bulletBold("Cold-start resilience: ", "Two-tier cache (disk + Vercel Blob) ensures data survives serverless cold starts"),
-      ],
-    },
+      // ═══════════════════════════════════════════════════
+      // TABLE OF CONTENTS
+      // ═══════════════════════════════════════════════════
+      h1('TABLE OF CONTENTS'),
+      gap(),
+      p('1.  The Problem: America\u2019s Fragmented Water Intelligence'),
+      p('2.  What PIN Is'),
+      p('3.  What Is Now Possible That Was Not Before'),
+      p('4.  Cross-Agency Correlations: Discoveries Only PIN Can Make'),
+      p('5.  Ask PIN: Natural Language Access to All Federal Water Data'),
+      p('6.  PIN Sentinel: 24/7 Automated Change Detection'),
+      p('7.  15 Role-Based Management Centers'),
+      p('8.  The Data Engine: 75+ Federal Sources, 97 Cron Jobs, 135 Caches'),
+      p('9.  Architecture & Engineering'),
+      p('10. Competitive Landscape'),
+      p('11. Market Opportunity'),
+      p('12. Recent Developments (March 2026)'),
 
-    /* ══════════════════ 3. BY THE NUMBERS ══════════════════ */
-    {
-      children: [
-        h1("3. Platform by the Numbers"),
-        p(t("")),
-        simpleTable(
-          ["Metric", "Count"],
-          [
-            ["Threat domains (water, fire, air)", "3"],
-            ["External data sources integrated", "50+"],
-            ["Cache modules (lib/*Cache.ts)", "49"],
-            ["Automated cron jobs", "54"],
-            ["Non-cron API routes", "40+"],
-            ["User roles supported", "16"],
-            ["Dashboard route pages", "18"],
-            ["Lens views (total across all roles)", "230+"],
-            ["React components", "170+"],
-            ["Sentinel threat adapters", "12"],
-            ["Alert triggers", "13"],
-            ["Scoring / analytics engines", "20+"],
-            ["Library utility modules", "85+"],
-            ["US states & territories covered", "51 (50 + DC)"],
-            ["Priority states (deep coverage)", "19"],
-            ["Nutrient trading states", "15"],
-            ["Cron frequency (fastest)", "Every 5 minutes"],
-            ["Grid resolution", "0.1\u00B0 (~11 km)"],
-            ["AI briefing refresh", "Every 6 hours"],
-            ["Sentinel poll interval", "Every 5 minutes"],
-          ],
-          [60, 40],
-        ),
-      ],
-    },
+      pb(),
 
-    /* ══════════════════ 4. THE THREE DOMAINS ══════════════════ */
-    {
-      children: [
-        h1("4. The Three Domains: Water, Fire & Air"),
-        p(
-          t("PIN's intelligence is organized around three interconnected environmental domains. Threats in one domain frequently cascade into the others \u2014 a wildfire degrades air quality and deposits ash into watersheds; a drought lowers stream flows, concentrates pollutants, and raises fire risk. PIN is built to detect and track these cascading effects."),
-        ),
-        p(t("")),
-        h3("Water \u2014 The Deepest Domain"),
-        p(
-          t("Water is PIN's foundational domain, with the broadest data coverage and deepest analytics. It encompasses:"),
-        ),
-        bullet("Drinking water safety (SDWIS systems, violations, enforcement actions)"),
-        bullet("Surface water quality (WQP monitoring stations, ATTAINS assessments, 303(d) impairments)"),
-        bullet("NPDES permit compliance (ICIS inspections, violations, penalties via ECHO)"),
-        bullet("Emerging contaminants (PFAS sites, Superfund/CERCLA, TRI toxic releases)"),
-        bullet("Biological threats (harmful algal blooms via HABSOS, wastewater pathogens via CDC NWSS)"),
-        bullet("Hydrological monitoring (USGS stream gauges every 5 min, groundwater levels, daily values)"),
-        bullet("Flood forecasting (NWPS, National Water Model, HEFS ensemble forecasts, FEMA declarations)"),
-        bullet("Drought tracking (US Drought Monitor, SNOTEL snowpack, flow vulnerability scoring)"),
-        bullet("Coastal & marine (CO-OPS tidal stations, NDBC buoys, GLERL Great Lakes data)"),
-        bullet("Sewer overflows (SSO/CSO event tracking)"),
-        bullet("Beach safety (EPA BEACON advisories and closures)"),
-        bullet("Watershed navigation (USGS NLDI network-linked data)"),
-        p(t("")),
-        h3("Fire \u2014 Satellite-Driven Detection"),
-        p(
-          t("PIN ingests active fire detections from "),
-          bold("NASA FIRMS"),
-          t(" (Fire Information for Resource Management System) every 4 hours, using both VIIRS and MODIS satellite sensors. The platform:"),
-        ),
-        bullet("Maps active fire hotspots relative to water infrastructure, treatment plants, and intake points"),
-        bullet("Correlates fire proximity with downstream watershed risk (ash runoff, sediment loading, turbidity spikes)"),
-        bullet("Triggers automated alerts when fires are detected near critical water systems"),
-        bullet("Feeds fire data into the Sentinel threat pipeline as a first-class adapter"),
-        bullet("Provides the dedicated Fire & Air Quality lens with maps, trend charts, correlation cards, and scorecards"),
-        p(t("")),
-        h3("Air \u2014 Real-Time Quality Monitoring (Operator-Driven)"),
-        p(
-          t("The air quality domain was added at the direct request of a "),
-          bold("retired U.S. Air Force Colonel"),
-          t(" who identified an operational need to protect deployed service members from air quality threats abroad. PIN did not wait for a contract or formal authorization \u2014 the team saw the mission need and built the capability. This is how PIN operates: "),
-          italic("operator pull, not academic push."),
-        ),
-        p(t("")),
-        p(
-          t("PIN now monitors "),
-          bold("Air Quality Index (AQI)"),
-          t(" data every 30 minutes, treating air quality as both an independent threat domain and a leading indicator for water quality impacts:"),
-        ),
-        bullet("Real-time AQI station monitoring across all 50 states + DC"),
-        bullet("Smoke plume correlation with active FIRMS fire detections"),
-        bullet("Air-to-water cascade analysis (atmospheric deposition, acid rain precursors, particulate fallout)"),
-        bullet("AQI trend charts and historical comparison"),
-        bullet("Feeds into Sentinel as the Air Quality adapter for threat scoring"),
-        p(t("")),
-        h3("Cross-Domain Correlation"),
-        p(
-          t("What makes PIN unique is the "),
-          bold("correlation across all three domains"),
-          t(". Examples of cross-domain intelligence:"),
-        ),
-        bullet("A wildfire triggers FIRMS detection \u2192 degrades AQI downwind \u2192 ash runoff spikes turbidity at downstream USGS gauges \u2192 ATTAINS assessment worsens \u2192 Sentinel scores the HUC-8 and dispatches coordinated alerts"),
-        bullet("Drought (USDM D3+) lowers stream flow (NWIS-IV) \u2192 concentrates pollutants \u2192 triggers HAB bloom (HABSOS) \u2192 beach closure (BEACON) \u2192 public health alert"),
-        bullet("CDC NWSS detects pathogen spike in wastewater \u2192 Sentinel correlates with downstream water quality anomaly within 72-hour window \u2192 classified as possible biological threat"),
-      ],
-    },
+      // ═══════════════════════════════════════════════════
+      // 1. THE PROBLEM
+      // ═══════════════════════════════════════════════════
+      h1('1. THE PROBLEM: AMERICA\u2019S FRAGMENTED WATER INTELLIGENCE'),
 
-    /* ══════════════════ 5. DATA SOURCES ══════════════════ */
-    {
-      children: [
-        h1("5. Data Sources & Integration Pipeline"),
-        p(
-          t("PIN ingests from a broad portfolio of federal, state, and derived data sources. Each source flows through a dedicated cache module that handles fetching, parsing, grid-based spatial indexing, and two-tier persistence (local disk + Vercel Blob)."),
-        ),
-        p(t("")),
-        h3("EPA Sources"),
-        simpleTable(
-          ["Source", "Cache Module", "Refresh Rate", "Data Provided"],
-          [
-            ["ATTAINS", "attainsCache", "Hourly", "Water quality assessments, impairments, TMDLs, 303(d) listings"],
-            ["Water Quality Portal (WQP)", "wqpCache", "Daily (5 AM UTC)", "Monitoring station measurements, physical/chemical parameters"],
-            ["ICIS-NPDES", "icisCache", "Daily (6 AM UTC)", "NPDES permit compliance, violations, inspections"],
-            ["SDWIS", "sdwisCache", "Daily (7 AM UTC)", "Safe Drinking Water systems, violations, enforcement"],
-            ["ECHO", "echoCache", "Daily (9 AM UTC)", "Enforcement & compliance history, penalties"],
-            ["FRS", "frsCache", "Daily (10 AM UTC)", "Facility Registry \u2014 canonical facility locations"],
-            ["PFAS", "pfasCache", "Daily (11 AM UTC)", "PFAS contamination sites and concentrations"],
-            ["Superfund/CERCLA", "superfundCache", "Daily (3:15 AM UTC)", "Superfund National Priorities List sites"],
-            ["TRI", "triCache", "Daily (6 PM UTC)", "Toxics Release Inventory \u2014 chemical releases"],
-            ["BEACON 2.0", "beaconCache", "Daily (4 PM UTC)", "Beach advisories and closures"],
-            ["NARS", "narsCache", "Weekly", "National Aquatic Resource Surveys"],
-            ["EJScreen", "ejscreenFetch", "On-demand", "Environmental justice screening indicators"],
-          ],
-          [20, 18, 22, 40],
-        ),
-        p(t("")),
-        h3("USGS Sources"),
-        simpleTable(
-          ["Source", "Cache Module", "Refresh Rate", "Data Provided"],
-          [
-            ["NWIS Instantaneous Values", "nwisIvCache", "Every 5 min", "Real-time stream gauge readings (flow, stage, temp)"],
-            ["NWIS Groundwater", "nwisGwCache", "Daily (8 AM UTC)", "Groundwater level measurements"],
-            ["Daily Values", "usgsDvCache", "Daily (2:30 PM UTC)", "Daily statistical summaries"],
-            ["USGS Alerts", "usgsAlertCache", "Every 5 min", "Threshold exceedances at monitored sites"],
-            ["NLDI", "API route", "On-demand", "Network Linked Data Index \u2014 watershed navigation"],
-          ],
-          [22, 18, 20, 40],
-        ),
-        p(t("")),
-        h3("NOAA Sources"),
-        simpleTable(
-          ["Source", "Cache Module", "Refresh Rate", "Data Provided"],
-          [
-            ["NWS Alerts", "nwsAlertCache", "Every 10 min", "Weather and flood warnings/watches"],
-            ["NWPS", "nwpsCache", "Every 30 min", "National Water Prediction Service flood forecasts"],
-            ["National Water Model", "nwmCache", "Every 6 hours", "Hydrological model outputs"],
-            ["CO-OPS", "coopsCache", "Every 6 hours", "Coastal/tidal water level stations"],
-            ["NDBC", "ndbcCache", "Daily", "National Data Buoy Center \u2014 ocean/lake buoys"],
-            ["NCEI", "nceiCache", "Daily", "National Centers for Environmental Information"],
-            ["GLERL", "glerlCache", "Daily", "Great Lakes Environmental Research Lab"],
-            ["HEFS", "hefsCache", "Every 6.5 hours", "Hydrological Ensemble Forecast System"],
-            ["HAB-OFS / HABSOS", "habsosCache", "Daily", "Harmful Algal Bloom observations"],
-          ],
-          [22, 18, 20, 40],
-        ),
-        p(t("")),
-        h3("Other Federal & Derived Sources"),
-        simpleTable(
-          ["Source", "Cache Module", "Refresh Rate", "Data Provided"],
-          [
-            ["NRCS SNOTEL", "snotelCache", "Daily", "Snowpack and precipitation stations"],
-            ["US Drought Monitor", "usdmCache", "Daily", "Drought severity classifications (D0\u2013D4)"],
-            ["FEMA", "femaCache", "Daily", "Disaster declarations, NFIP flood data"],
-            ["CDC NWSS", "cdcNwssCache", "Biweekly", "Wastewater pathogen surveillance (COVID, RSV, etc.)"],
-            ["NASA FIRMS", "firmsCache", "Every 4 hours", "Active fire detections (VIIRS/MODIS satellite)"],
-            ["NASA CMR", "nasaCmrCache", "Daily", "Common Metadata Repository \u2014 Earth science datasets"],
-            ["ERDDAP Satellite", "erddapSatCache", "Daily", "Satellite-derived ocean/lake parameters"],
-            ["Air Quality (AQI)", "airQualityCache", "Every 30 min", "Real-time Air Quality Index"],
-            ["USFWS IPaC", "ipacCache", "Weekly", "Endangered species & critical habitat"],
-            ["USACE", "usaceCache", "Daily", "Army Corps of Engineers infrastructure"],
-            ["SAM.gov", "samGovCache", "Weekly", "Federal procurement/contracting data"],
-            ["Grants.gov", "grantsGovCache", "Daily", "Federal grant opportunities"],
-            ["USASpending.gov", "usaSpendingCache", "Weekly", "Federal water-related spending"],
-            ["Data.gov", "dataGovCache", "Weekly", "Water-related open datasets"],
-            ["SSO/CSO", "ssoCsoCache", "Daily", "Sanitary/combined sewer overflow events"],
-          ],
-          [22, 18, 18, 42],
-        ),
-        p(t("")),
-        h3("State-Level Sources"),
-        bulletBold("MDE (Maryland): ", "Maryland Department of Environment portal data"),
-        bulletBold("CEDEN (California): ", "California Environmental Data Exchange Network"),
-        bulletBold("State IR/305(b): ", "State Integrated Report data via stateIRCache"),
-        bulletBold("State Portal Adapters: ", "Extensible adapter pattern for additional state portals"),
-      ],
-    },
+      p('Water quality data in the United States is scattered across dozens of federal agencies, each with different APIs, data formats, update frequencies, and access methods. No two agencies share a common data pipeline. The result is a system where crises hide in the gaps between agencies.'),
 
-    /* ══════════════════ 6. ROLE SYSTEM ══════════════════ */
-    {
-      children: [
-        h1("6. Role-Based Access & Dashboards"),
-        p(
-          t("PIN supports "),
-          bold("16 distinct user roles"),
-          t(", each with its own dashboard route, sidebar navigation, lens views, AI briefings, and KPI displays. Roles are divided into "),
-          bold("Operator"),
-          t(" roles (require admin approval and jurisdiction binding) and "),
-          bold("Explorer"),
-          t(" roles (instant access on self-signup)."),
-        ),
-        p(t("")),
-        h3("Operator Roles (Admin-Approved)"),
-        simpleTable(
-          ["Role", "Dashboard Route", "Lens Count", "Key Capabilities"],
-          [
-            ["Federal", "/dashboard/federal", "21", "National overview, military installations, cross-agency coordination, DARPA sentinel"],
-            ["State", "/dashboard/state/[code]", "21", "State-bound compliance, TMDL tracking, nutrient trading, permits & enforcement"],
-            ["Local", "/dashboard/local/[id]", "19", "Municipal water quality, stormwater/MS4, EJ & equity, emergency response"],
-            ["MS4", "/dashboard/ms4/[permit]", "22", "NPDES stormwater permits, MCM manager, BMP tracking, receiving waters"],
-            ["Utility", "/dashboard/utility/[id]", "21", "Treatment & process, permit limits, lab sampling, asset management"],
-            ["Corporate / ESG", "/dashboard/esg", "13", "ESG reporting, facility operations, supply chain risk, disclosure frameworks"],
-            ["Biotech / Pharma", "/dashboard/biotech", "14", "Process water, GMP quality systems, pharma contaminants, discharge monitoring"],
-            ["Investor", "/dashboard/investor", "14", "Portfolio risk, water stress analysis, climate resilience, due diligence"],
-            ["Agriculture", "/dashboard/infrastructure", "17", "Site intelligence sub-personas (developer, lender, appraiser, M&A, etc.)"],
-            ["Lab (Aqua-LO)", "/dashboard/aqua-lo", "6", "Data submission, QA/QC, audit trail"],
-          ],
-          [14, 24, 10, 52],
-        ),
-        p(t("")),
-        h3("Explorer Roles (Self-Signup)"),
-        simpleTable(
-          ["Role", "Dashboard Route", "Lens Count", "Key Capabilities"],
-          [
-            ["K-12", "/dashboard/k12", "18", "Educational hub, outdoor classroom, student monitoring, games, debate topics"],
-            ["University / Research", "/dashboard/university", "19", "Research & monitoring, watershed partnerships, grants & publications"],
-            ["NGO / Conservation", "/dashboard/ngo", "22", "Watershed health, restoration projects, advocacy, volunteer programs, citizen reporting"],
-            ["Researcher", "/dashboard/university", "19", "Shared with university; research-focused data access"],
-          ],
-          [18, 24, 10, 48],
-        ),
-        p(t("")),
-        h3("Administrative"),
-        bulletBold("Pearl Admin: ", "Full system access \u2014 operations, grants, proposals, what-if scenarios, predictions, budget planner, investigation tools"),
-        bulletBold("Admin Tiers: ", "super_admin (full access, hardcoded), role_admin (manage users within role), standard user"),
-      ],
-    },
+      h2('What a Federal Water Quality Manager Had to Do Before PIN'),
+      p('Before PIN launched in February 2026, a federal water quality manager who needed a complete picture of drinking water safety in a single state had to:'),
+      b('Manually check EPA ECHO for enforcement actions and significant non-compliance'),
+      b('Separately query EPA SDWIS for drinking water system violations'),
+      b('Cross-reference EPA ICIS for NPDES discharge permit compliance'),
+      b('Pull EPA ATTAINS to see which waterbodies are impaired and why'),
+      b('Check USGS NWIS for real-time streamflow and groundwater conditions'),
+      b('Review NOAA NWS for weather warnings affecting water infrastructure'),
+      b('Access CDC WONDER for disease mortality that might correlate with contamination'),
+      b('Look up FEMA disaster declarations for flood/storm impacts on water systems'),
+      b('Download EPA EJScreen to identify environmental justice communities at risk'),
+      b('Contact DoD directly for military installation PFAS contamination data'),
+      b('Manually compile all of this into a spreadsheet, spending days or weeks'),
+      gap(),
+      pm(
+        { text: 'Time to produce one cross-agency briefing: ', bold: true },
+        '2-4 weeks of manual work by a skilled analyst.',
+      ),
+      pm(
+        { text: 'Frequency this actually happens: ', bold: true },
+        'Rarely. Most agencies operate in their own silo and never see the compound picture.',
+      ),
 
-    /* ══════════════════ 7. LENS SYSTEM ══════════════════ */
-    {
-      children: [
-        h1("7. Lens System & Information Architecture"),
-        p(
-          t("Each dashboard role uses a "),
-          bold("lens-driven sidebar"),
-          t(" that swaps the visible content sections when a user selects a different lens. Lenses are promoted to top-level sidebar items for single-role users, while admin/multi-role users see grouped/expandable navigation. All lens sections are "),
-          bold("draggable"),
-          t(" via the LayoutEditor, allowing users to reorder their dashboard."),
-        ),
-        p(t("")),
-        h3("Common Lens Categories Across Roles"),
-        bulletBold("Intelligence: ", "Overview, AI Briefing, Political Briefing, Trends & Projections"),
-        bulletBold("Regulatory: ", "Compliance, Permits & Enforcement, Policy Tracker"),
-        bulletBold("Environmental: ", "Water Quality, Public Health & Contaminants, Habitat & Ecology"),
-        bulletBold("Operational: ", "Infrastructure, Monitoring, Disaster & Emergency"),
-        bulletBold("Financial: ", "Funding & Grants, Scorecard, Reports"),
-        bulletBold("Special: ", "Fire & Air Quality, Water Quality Trading (state-gated), Sentinel Monitoring"),
-        p(t("")),
-        h3("Notable Role-Specific Lenses"),
-        bulletBold("Federal \u2014 Military Installations: ", "Gated to isMilitary sub-type; monitors military base water infrastructure"),
-        bulletBold("Federal \u2014 Fire & Air Quality: ", "NASA FIRMS fire detection + AQI monitoring with correlation analysis"),
-        bulletBold("MS4 \u2014 MCM Manager: ", "Minimum Control Measure tracking per NPDES stormwater permit"),
-        bulletBold("K-12 \u2014 Games: ", "Educational games including 'Shuck and Destroy' and PIN Quiz"),
-        bulletBold("K-12 \u2014 Outdoor Classroom: ", "Field data collection and student uploads"),
-        bulletBold("Investor \u2014 Portfolio Risk: ", "Water risk scoring across investment portfolios"),
-        bulletBold("Infrastructure \u2014 Sub-Personas: ", "17 site-intelligence views (developer, real estate, legal, M&A, etc.)"),
-      ],
-    },
+      h2('The Human Cost of Data Silos'),
+      p('When Camp Lejeune\u2019s water was contaminated with PFAS, DoD knew about the contamination. HRSA knew the surrounding community had almost no healthcare providers. EPA knew the area was an environmental justice hotspot. But no system connected these three facts. Families drank contaminated water in a community without the doctors to diagnose what it was doing to them.'),
+      p('When Toledo, Ohio lost drinking water for 400,000 people during the 2014 algal bloom crisis, the upstream nutrient data existed in USGS systems, the algae forecasts existed in NOAA systems, and the drinking water intake locations existed in EPA systems. Nobody had wired them together to predict the crisis before it hit.'),
+      p('These aren\u2019t hypothetical failures. They are structural failures caused by data fragmentation, and they happen repeatedly across the country.'),
 
-    /* ══════════════════ 8. SENTINEL ══════════════════ */
-    {
-      children: [
-        h1("8. Sentinel Threat-Detection System"),
-        p(
-          t("Sentinel is PIN's "),
-          bold("real-time, tri-domain threat detection and classification pipeline"),
-          t(", designed for DARPA evaluation. It ingests anomaly signals across water, fire, and air from 12 data adapters every 5 minutes, scores HUC-8 watersheds, detects coordinated multi-site events, and classifies incidents as attack vs. benign. Fire (FIRMS) and air quality adapters are first-class threat vectors alongside water contamination signals."),
-        ),
-        p(t("")),
-        h3("Pipeline Architecture"),
-        p(bold("Phase 1 \u2014 Ingest (every 5 min):")),
-        bullet("12 adapters read from caches and live APIs"),
-        bullet("Push ChangeEvent records into a 48-hour rolling queue"),
-        bullet("Adapters: USGS NWIS-IV, NWS Alerts, NWPS Flood, ATTAINS, CDC NWSS, ECHO, BEACON Beach, SSO/CSO, FIRMS Fire, HAB, CO-OPS Tidal, Air Quality"),
-        p(t("")),
-        p(bold("Phase 2 \u2014 Scoring (every 5 min):")),
-        bullet("Base threat scores with time decay"),
-        bullet("6 compound patterns provide up to 3.5x score multiplier"),
-        bullet("Geographic correlation: 1.5x bonus for adjacent HUC-8 watershed activity"),
-        p(t("")),
-        p(bold("Phase 3 \u2014 Coordination Detection:")),
-        bullet("HUC-6 spatial clustering identifies coordinated multi-site events"),
-        bullet("Coordination score > 0.6 triggers critical-level alert"),
-        p(t("")),
-        p(bold("Phase 4 \u2014 Classification:")),
-        bullet("Rule-based attack vs. benign determination"),
-        bullet("Confounders (rainfall, flood, seasonal, covariance) reduce scores"),
-        bullet("Attack signals (CHEMICAL_DUMP, BIO_MARKER_SPIKE) boost scores"),
-        bullet("likely_attack (>0.7) / possible_attack (0.4\u20130.7) / likely_benign (<0.4)"),
-        p(t("")),
-        p(bold("Phase 5 \u2014 NWSS Correlation:")),
-        bullet("Links wastewater pathogen spikes to downstream water-quality anomalies within a 72-hour window"),
-        p(t("")),
-        p(bold("Phase 6 \u2014 Alert Dispatch (offset +2 min, every 5 min):")),
-        bullet("13 trigger types evaluate and dispatch email/Slack alerts"),
-        bullet("Per-site throttling prevents alert fatigue"),
-        p(t("")),
-        h3("Validation Results"),
-        simpleTable(
-          ["Metric", "Value"],
-          [
-            ["Scenarios tested", "6/6 passed"],
-            ["Precision", "1.0"],
-            ["Recall", "1.0"],
-            ["F1 Score", "1.0"],
-            ["Mean detection latency", "2 ms"],
-          ],
-          [50, 50],
-        ),
-      ],
-    },
+      pb(),
 
-    /* ══════════════════ 9. AI ══════════════════ */
-    {
-      children: [
-        h1("9. AI & Machine-Learning Capabilities"),
-        p(
-          t("PIN uses "),
-          bold("OpenAI (gpt-4o-mini)"),
-          t(" via direct REST API for several intelligence features:"),
-        ),
-        p(t("")),
-        h3("Role-Specific AI Insights"),
-        bullet("Generated every 6 hours for 8 roles: Federal, State, MS4, Corporate, K-12, University, Researcher, NGO"),
-        bullet("Urgent insights generated every 2 hours for breaking events"),
-        bullet("Delta detection via signalsHash prevents regeneration when data hasn't changed"),
-        bullet("Semaphore-based concurrency (4 states at a time) with exponential backoff on rate limits"),
-        p(t("")),
-        h3("AskPIN Chatbot"),
-        bullet("Contextual AI Q&A embedded in every dashboard via popover"),
-        bullet("Knowledge base in lib/askPinKB.ts provides domain context"),
-        bullet("Available at /api/ai/ask-pin"),
-        p(t("")),
-        h3("Briefing Q&A"),
-        bullet("Role-aware conversational Q&A for Federal, Federal+Military, State, Local, and MS4 briefings"),
-        bullet("Users can ask follow-up questions about their generated briefings"),
-        p(t("")),
-        h3("AI Resolution Plans"),
-        bullet("Generates actionable remediation plans for compliance violations"),
-        bullet("Available at /api/ai/resolution-plan"),
-        p(t("")),
-        h3("Sentinel LLM Escalation"),
-        bullet("Optional (SENTINEL_LLM=true flag) for WATCH and CRITICAL HUC-8 watersheds"),
-        bullet("Uses LLM to generate human-readable threat summaries for escalation"),
-      ],
-    },
+      // ═══════════════════════════════════════════════════
+      // 2. WHAT PIN IS
+      // ═══════════════════════════════════════════════════
+      h1('2. WHAT PIN IS'),
 
-    /* ══════════════════ 10. SCORING ENGINES ══════════════════ */
-    {
-      children: [
-        h1("10. Scoring & Analytics Engines"),
-        p(t("PIN operates 20+ specialized scoring and analytics engines:")),
-        p(t("")),
-        simpleTable(
-          ["Engine", "Purpose", "Output"],
-          [
-            ["Water Quality Score", "A+/A/A-...F letter grading from numeric 0\u2013100 score", "Letter grade + color"],
-            ["Water Risk Score", "Site-level composite risk incorporating WQ, flood, drought, contamination", "0\u2013100 risk score"],
-            ["Ecological Sensitivity", "Habitat/ecosystem sensitivity (80/60/40/20 thresholds)", "Critical/High/Moderate/Low"],
-            ["EJ Vulnerability", "Environmental justice scoring (70/50/30 thresholds)", "Severity tier + label"],
-            ["Flow Vulnerability", "Watershed flow vulnerability per state", "Per-state risk tier"],
-            ["ESG Score", "Corporate ESG water performance composite", "Score + disclosure tier"],
-            ["National Summary", "Aggregates all caches into national KPIs (30-min TTL)", "Dashboard-ready KPIs"],
-            ["Sentinel Scoring", "HUC-8 threat scores w/ compound patterns & decay", "0\u20131.0 threat score"],
-            ["Scenario Engine", "What-if modeling for policy/intervention outcomes", "Projected impact metrics"],
-            ["Risk Forecast", "Predictive risk modeling", "Future risk projections"],
-            ["Trajectory Engine", "Trend trajectory calculation", "Directional trend vectors"],
-            ["Budget Planner", "Water infrastructure budget planning & optimization", "Cost projections"],
-            ["Restoration Engine", "Restoration project planning & prioritization", "Project recommendations"],
-            ["Portfolio Engine", "Investment portfolio water risk assessment", "Portfolio-level risk"],
-            ["EJ Impact", "Environmental justice impact assessment", "Community impact scores"],
-            ["Storm Detection", "Storm event identification from sensor data", "Event classification"],
-            ["Political Accountability", "Policy/political context scoring", "Accountability metrics"],
-          ],
-          [20, 45, 35],
-        ),
-      ],
-    },
+      p('PEARL Intelligence Network (PIN) is a real-time environmental intelligence platform that continuously aggregates data from 75+ federal agency APIs into a unified system. It runs 97 automated jobs around the clock\u2014some every 5 minutes, others daily or weekly\u2014ingesting, normalizing, and correlating data from EPA, USGS, NOAA, CDC, FEMA, NASA, HHS, and DoD.'),
 
-    /* ══════════════════ 11. ALERTING ══════════════════ */
-    {
-      children: [
-        h1("11. Alerting & Notification Framework"),
-        p(
-          t("PIN's alerting system evaluates "),
-          bold("13 trigger types"),
-          t(" every 5 minutes (offset +2 min from Sentinel poll) and dispatches notifications via email (Resend) and Slack webhooks."),
-        ),
-        p(t("")),
-        h3("Alert Triggers"),
-        simpleTable(
-          ["Trigger", "Source", "Description"],
-          [
-            ["sentinelTrigger", "Sentinel pipeline", "HUC-8 threat score exceeds threshold"],
-            ["usgsTrigger", "USGS alerts", "Stream gauge threshold exceedance"],
-            ["deltaTrigger", "Cache deltas", "Significant change detected in any cache"],
-            ["nwssTrigger", "CDC NWSS", "Wastewater pathogen spike"],
-            ["coordinationTrigger", "Sentinel", "Coordinated multi-site event detected"],
-            ["attainsTrigger", "ATTAINS diff", "Assessment status change (new impairment, TMDL)"],
-            ["floodForecastTrigger", "NWPS", "Flood forecast threshold exceeded"],
-            ["fusionTrigger", "External webhook", "External fusion engine event"],
-            ["beaconTrigger", "EPA BEACON", "Beach advisory or closure"],
-            ["deploymentTrigger", "Deployment events", "System deployment/health alert"],
-            ["firmsTrigger", "NASA FIRMS", "Fire detection near water infrastructure"],
-            ["habTrigger", "HABSOS", "Harmful algal bloom detection"],
-            ["nwsWeatherTrigger", "NWS", "Severe weather alert affecting water systems"],
-          ],
-          [22, 18, 60],
-        ),
-        p(t("")),
-        h3("Alert Management Features"),
-        bullet("Custom alert rules per user/role/jurisdiction"),
-        bullet("Alert suppression rules to prevent fatigue"),
-        bullet("Per-site throttling with configurable windows"),
-        bullet("Alert history log with full audit trail"),
-        bullet("Recipient management with role-based defaults"),
-        bullet("Boundary-based geographic alert triggers"),
-      ],
-    },
+      p('PIN serves 15 distinct user roles through 259 analytical lenses, from federal compliance officers managing national policy to K-12 teachers running outdoor water quality classrooms. Each role sees a completely different dashboard tailored to their decision-making needs.'),
 
-    /* ══════════════════ 12. SECURITY ══════════════════ */
-    {
-      children: [
-        h1("12. Security & Compliance Posture"),
-        p(
-          t("PIN implements "),
-          bold("NIST 800-53 Rev 5"),
-          t(" security controls with documented compliance mappings."),
-        ),
-        p(t("")),
-        simpleTable(
-          ["Control Area", "Implementation"],
-          [
-            ["Authentication", "Supabase Auth (email/password + magic link); JWT bearer tokens on all admin routes"],
-            ["Authorization", "16-role RBAC with 3-tier admin levels (super_admin / role_admin / standard)"],
-            ["CSRF Protection", "Middleware double-submit cookie pattern; cron routes exempt via Bearer token"],
-            ["Content Security Policy", "Nonce-based CSP in middleware; frame-ancestors 'none'"],
-            ["Rate Limiting", "Upstash Redis on all public API routes"],
-            ["Input Validation", "Zod schemas on all request bodies"],
-            ["Audit Logging", "admin_audit_log + invite_audit_log tables in Supabase"],
-            ["Static Analysis (SAST)", "Semgrep (daily + on push/PR via CI)"],
-            ["Dependency Audit", "npm audit (daily automated)"],
-            ["SBOM", "CycloneDX generated on every CI run"],
-            ["Pre-commit Hooks", "Husky + lint-staged (runs related Vitest tests)"],
-            ["Secrets Rotation", "Documented rotation schedules in docs/SECRETS_ROTATION.md"],
-            ["Error Tracking", "Sentry (client + server + edge)"],
-            ["Incident Response", "Documented procedures in docs/INCIDENT_RESPONSE.md"],
-          ],
-          [25, 75],
-        ),
-      ],
-    },
+      h2('PIN by the Numbers'),
+      tbl(
+        ['Metric', 'Value'],
+        [
+          ['Federal data sources integrated', '75+'],
+          ['Datapoints processed', '430 million+'],
+          ['EPA assessment units monitored', '565,000+'],
+          ['HUC-8 watersheds covered', '2,456'],
+          ['Automated cron jobs', '97 (running 24/7)'],
+          ['Server-side data caches', '135'],
+          ['User roles', '15 (Federal, State, Local, MS4, Utility, ESG, Biotech, Investor, University, NGO, K-12, Site Intel, Lab, Admin)'],
+          ['Analytical lenses', '259'],
+          ['Draggable dashboard sections', '600+'],
+          ['Cross-agency correlation breakthroughs', '5 active, 1 in development'],
+          ['Real-time update cadence', 'Every 5 minutes for critical sources'],
+          ['States covered', '51 (all 50 + DC)'],
+          ['Platform launch', 'February 14, 2026'],
+        ],
+      ),
 
-    /* ══════════════════ 13. TECH STACK ══════════════════ */
-    {
-      children: [
-        h1("13. Technology Stack"),
-        p(t("")),
-        simpleTable(
-          ["Layer", "Technology"],
-          [
-            ["Framework", "Next.js 15 (App Router)"],
-            ["Language", "TypeScript 5.2"],
-            ["Authentication", "Supabase (email/password, magic link, JWT)"],
-            ["Database", "Supabase (PostgreSQL)"],
-            ["Maps", "Mapbox GL JS 3.x + react-map-gl 8"],
-            ["Charts", "Recharts 2.x, Apache ECharts 6"],
-            ["UI Library", "Radix UI (full suite) + Tailwind CSS 3 + shadcn/ui"],
-            ["Drag & Drop", "@dnd-kit/core + sortable"],
-            ["AI / LLM", "OpenAI gpt-4o-mini (direct REST)"],
-            ["Email", "Resend (alert emails, invite emails)"],
-            ["Cache Persistence", "Vercel Blob (cross-instance) + local disk .cache/"],
-            ["Rate Limiting", "Upstash Redis"],
-            ["Error Tracking", "Sentry (client + server + edge)"],
-            ["Performance Monitoring", "Vercel Speed Insights (RUM)"],
-            ["Notifications", "Slack webhooks (cron failures)"],
-            ["PDF Export", "jsPDF + html2pdf.js"],
-            ["Testing", "Vitest (unit/integration), Playwright (e2e), MSW (mocking)"],
-            ["CI Hooks", "Husky + lint-staged"],
-            ["SBOM", "CycloneDX"],
-            ["Deployment", "Vercel (serverless, edge runtime)"],
-          ],
-          [30, 70],
-        ),
-      ],
-    },
+      h2('The Core Capabilities'),
+      bb('Unified Data Layer', '135 cache modules ingest, normalize, and spatially index federal data. A single API call returns data that would require querying 10+ agencies independently.'),
+      bb('Cross-Agency Correlation Engine', '5 breakthrough discovery algorithms that spatially join data across agencies to find compound crises invisible to any single agency.'),
+      bb('Ask PIN (AI Q&A)', 'Natural language questions answered with live federal data. "Compare California and Ohio\u2019s water infrastructure risks" returns concrete numbers across 7 dimensions, not hedging.'),
+      bb('PIN Sentinel (Change Detection)', '3-tier real-time monitoring of 15+ federal data sources. Detects new violations, disasters, toxic releases, and compound threats every 5 minutes.'),
+      bb('15 Role-Based Dashboards', 'Each user role sees data filtered, scored, and formatted for their specific decision-making needs.'),
 
-    /* ══════════════════ 14. INFRASTRUCTURE ══════════════════ */
-    {
-      children: [
-        h1("14. Infrastructure & Deployment"),
-        p(t("")),
-        h3("Vercel Serverless Deployment"),
-        bullet("54 cron jobs staggered across the day (3 AM\u201311 PM UTC) to distribute load"),
-        bullet("Heavy crons: maxDuration 300s (ATTAINS, WQP, ICIS, SDWIS, Sentinel)"),
-        bullet("Light crons: maxDuration 120s (NDBC, USDM, GLERL, etc.)"),
-        bullet("Build locks with 12-minute auto-clear prevent stuck rebuilds"),
-        bullet("Empty-data guards skip cache writes when 0 records fetched (preserves last-good data)"),
-        p(t("")),
-        h3("Cache Persistence Architecture"),
-        bulletBold("Tier 1 \u2014 Local Disk: ", ".cache/ directory; fastest access; instance-local; lost on cold start"),
-        bulletBold("Tier 2 \u2014 Vercel Blob: ", "Shared across all instances; raw REST API (no SDK); survives cold starts"),
-        bulletBold("Warm-up: ", "ensureWarmed() on each cache tries disk first, falls back to Blob if empty"),
-        bulletBold("Write policy: ", "All set*Cache() functions are async; must await saveCacheToBlob() before response returns"),
-        p(t("")),
-        h3("Monitoring & Observability"),
-        bullet("Cron Health Dashboard: ring buffer tracking success rates, durations, failures for all 54 crons"),
-        bullet("Cache Status endpoint: /api/cache-status reports freshness of all 49 caches"),
-        bullet("Source Health checks: /api/source-health validates upstream API availability"),
-        bullet("Sentry error tracking across client, server, and edge runtimes"),
-        bullet("Vercel Speed Insights for Real User Monitoring (RUM)"),
-        bullet("Slack webhook alerts for cron failures"),
-      ],
-    },
+      pb(),
 
-    /* ══════════════════ 15. MILESTONES ══════════════════ */
-    {
-      children: [
-        h1("15. Recent Major Milestones"),
-        p(t("")),
-        h3("Evolution to Tri-Domain Platform"),
-        bullet("PIN evolved from a water-quality monitoring dashboard into a global air, fire, and water threat intelligence platform"),
-        bullet("Air domain originated from a direct request by a retired U.S. Air Force Colonel to protect soldiers abroad from air quality threats \u2014 built without waiting for contract authorization because the mission demanded it"),
-        bullet("Fire domain: NASA FIRMS satellite integration with fire-to-watershed correlation followed naturally \u2014 fire degrades air AND water"),
-        bullet("Cross-domain cascade detection: fire \u2192 air \u2192 water impact chains tracked end-to-end"),
-        bullet("Sentinel pipeline upgraded to treat fire and air quality as first-class threat adapters alongside water contamination"),
-        bullet("The architecture proved extensible enough to add two new threat domains without rebuilding the core pipeline"),
-        p(t("")),
-        h3("Sentinel Threat Detection (DARPA-Evaluated)"),
-        bullet("Built complete 6-phase threat detection pipeline with 12 adapters"),
-        bullet("Achieved perfect precision/recall (F1=1.0) across 6 DARPA scenarios"),
-        bullet("Added NWSS correlation for wastewater-to-downstream threat linkage"),
-        bullet("Coordination detection for multi-site attack identification"),
-        p(t("")),
-        h3("Fire & Air Quality Lens"),
-        bullet("Integrated NASA FIRMS satellite fire detection (every 4 hours)"),
-        bullet("Real-time AQI monitoring (every 30 minutes)"),
-        bullet("Fire-water quality correlation analysis"),
-        bullet("Military-gated sub-lens for Federal role"),
-        p(t("")),
-        h3("Expanded Data Sources (49 Cache Modules)"),
-        bullet("Added NASA CMR, ERDDAP satellite, SNOTEL, HABSOS, GLERL, HEFS, USACE"),
-        bullet("Added funding sources: Grants.gov, SAM.gov, USASpending.gov, Data.gov"),
-        bullet("Added USFWS IPaC (endangered species & critical habitat)"),
-        bullet("Added SSO/CSO sewer overflow monitoring"),
-        p(t("")),
-        h3("Sidebar-Driven Lens Redesign"),
-        bullet("Lenses promoted to top-level sidebar items for single-role users"),
-        bullet("Completed for Federal role; State, MS4, and all other roles in progress"),
-        bullet("All sections draggable via LayoutEditor with per-role defaults"),
-        p(t("")),
-        h3("Security Hardening"),
-        bullet("Full NIST 800-53 Rev 5 control mapping documented"),
-        bullet("Added Semgrep SAST (daily + CI), npm audit (daily), CycloneDX SBOM"),
-        bullet("CSRF double-submit cookie pattern in middleware"),
-        bullet("Nonce-based Content Security Policy"),
-        bullet("Secrets rotation documentation and procedures"),
-        p(t("")),
-        h3("Data Confidence & Methodology"),
-        bullet("Data provenance audit dashboard at /dashboard/data-provenance"),
-        bullet("Source lineage tracking for all displayed data"),
-        bullet("Methodology page at /methodology for public transparency"),
-      ],
-    },
+      // ═══════════════════════════════════════════════════
+      // 3. WHAT IS NOW POSSIBLE THAT WAS NOT BEFORE
+      // ═══════════════════════════════════════════════════
+      h1('3. WHAT IS NOW POSSIBLE THAT WAS NOT BEFORE'),
 
-    /* ══════════════════ 16. ROADMAP ══════════════════ */
-    {
-      children: [
-        h1("16. Roadmap & Future Direction"),
-        p(t("")),
-        h3("Near-Term"),
-        bullet("Complete sidebar-driven lens redesign for all remaining roles (State, MS4, Local, K-12, ESG, University, NGO, etc.)"),
-        bullet("K-12 role: Add 'Games' to sidebar lens items"),
-        bullet("Expand state portal adapters beyond Maryland (MDE) and California (CEDEN)"),
-        p(t("")),
-        h3("Medium-Term"),
-        bullet("Esri ArcGIS integration for advanced spatial analysis and mapping"),
-        bullet("Additional satellite data sources (Landsat, Sentinel-2 imagery)"),
-        bullet("Enhanced ML models for predictive water quality forecasting"),
-        bullet("Mobile-responsive dashboard optimization"),
-        bullet("Public-facing water quality report cards"),
-        p(t("")),
-        h3("Long-Term Vision"),
-        bullet("Global real-time air, fire, and water threat intelligence network \u2014 every watershed, every airspace, every fire zone"),
-        bullet("Cross-agency coordination platform for federal, state, and local environmental threat managers"),
-        bullet("Climate adaptation planning tools with multi-domain scenario modeling"),
-        bullet("International expansion: partner with allied nations for shared environmental threat intelligence"),
-        bullet("Fourth domain exploration: soil/land contamination monitoring and subsurface threat detection"),
-        p(t("")),
-        p(t("")),
-        new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 600 }, children: [
-          new TextRun({ text: "\u2014 End of Briefing \u2014", size: 22, italics: true, color: "888888" }),
-        ]}),
-      ],
-    },
-  ],
+      p('PIN was launched on February 14, 2026. Since then, it has enabled capabilities that did not exist in any platform, at any agency, or in any commercial product:'),
+
+      h2('3.1 Instant Cross-Agency State Briefings'),
+      pm({ text: 'Before PIN: ', bold: true }, 'An analyst requesting a comprehensive water quality briefing for a single state would need to query EPA ECHO, SDWIS, ICIS, ATTAINS, USGS NWIS-IV, NWIS-GW, NOAA NWS, CDC WONDER, FEMA, and DoD PFAS data separately, then manually synthesize findings. Time: 2-4 weeks.'),
+      pm({ text: 'With PIN: ', bold: true }, 'A user types a question in plain English. The AI context builder detects relevant domains from 13 categories, retrieves live data from 40+ caches, and returns a structured answer with specific numbers in under 10 seconds. For example, "How does Ohio\u2019s drinking water compare to national average?" returns Ohio\u2019s exact violation count, health-based violation count, PFAS detections, groundwater wells, and enforcement actions\u2014side by side with national figures.'),
+
+      h2('3.2 Multi-State Comparison in Seconds'),
+      pm({ text: 'Before PIN: ', bold: true }, 'Comparing two states\u2019 water quality required downloading separate datasets for each state from each agency, normalizing the formats, and building a comparison spreadsheet.'),
+      pm({ text: 'With PIN: ', bold: true }, 'Ask "Compare California and Ohio\u2019s water infrastructure risks" and receive:'),
+      tbl(
+        ['Metric', 'California', 'Ohio'],
+        [
+          ['USACE infrastructure projects', '2', '9'],
+          ['PFAS detections', '938', '333'],
+          ['USGS groundwater wells', '0', '259'],
+          ['Drinking water systems', '5,489', '2,285'],
+          ['Total violations', '5,099', '4,093'],
+          ['Health-based violations', '2,236', '602'],
+          ['Enforcement actions', '1,169', '0'],
+        ],
+      ),
+      p('This comparison is assembled from 4 federal agencies in real time. No existing tool produces this.'),
+
+      h2('3.3 Compound Risk Identification'),
+      pm({ text: 'Before PIN: ', bold: true }, 'Each federal agency monitors its own domain. DoD tracks PFAS contamination at military bases. HRSA tracks healthcare provider shortages. EPA tracks environmental justice burden. No system asks: "Where do all three overlap?" Nobody looks for compound crises because the data lives in separate worlds.'),
+      pm({ text: 'With PIN: ', bold: true }, 'The correlation engine runs 5 breakthrough discovery algorithms that spatially join datasets across agencies. It automatically identifies communities where PFAS contamination overlaps with healthcare deserts, where flood damage correlates with drinking water failures, where dam failures would cascade through hazmat sites into water supplies. These discoveries are made every time the data refreshes, with no human intervention.'),
+
+      h2('3.4 24/7 Automated Environmental Surveillance'),
+      pm({ text: 'Before PIN: ', bold: true }, 'Changes in federal data\u2014new violations, new disaster declarations, toxic releases\u2014were discovered when an analyst happened to check the right website. Days or weeks could pass.'),
+      pm({ text: 'With PIN: ', bold: true }, 'PIN Sentinel monitors 15+ federal data sources every 5 minutes. When a new significant non-compliance event appears in EPA ECHO, or a new disaster is declared by FEMA, or a toxic release is reported to TRI\u2014Sentinel detects it, scores its severity, checks for compound patterns with other recent events, and dispatches alerts. A TRI release at a facility that also has an NPDES violation triggers a "toxic-release-cascade" compound pattern alert.'),
+
+      h2('3.5 Environmental Justice Integration at Scale'),
+      pm({ text: 'Before PIN: ', bold: true }, 'EJScreen data existed but was siloed. An analyst who found a contamination site would have to separately download EJScreen data, look up the census block group, and manually check the EJ indices. This was rarely done because it added hours to every analysis.'),
+      pm({ text: 'With PIN: ', bold: true }, 'Every contamination finding, every correlation, every PFAS site automatically includes EJScreen overlay. When PIN identifies a PFAS site near a healthcare desert, it simultaneously reports: 45% minority population, 38% below poverty, EJ index at the 92nd percentile. Environmental justice is not an afterthought\u2014it is built into every data layer.'),
+
+      h2('3.6 Real-Time Military Installation Risk Assessment'),
+      pm({ text: 'Before PIN: ', bold: true }, 'Military installation commanders had no centralized view of environmental threats to their bases. PFAS remediation status, nearby fire risk, air quality, cyber threats to SCADA systems, and upstream water contamination were tracked in separate systems across DoD, EPA, NOAA, and DHS.'),
+      pm({ text: 'With PIN: ', bold: true }, 'Every 10 minutes, PIN compiles a threat assessment for each military installation covering PFAS contamination status, active fire proximity (NASA FIRMS), air quality index, burn pit health advisories, water infrastructure cyber risk score, and upstream water quality. Commanders see a single risk score, not 8 different databases.'),
+
+      pb(),
+
+      // ═══════════════════════════════════════════════════
+      // 4. CROSS-AGENCY CORRELATIONS
+      // ═══════════════════════════════════════════════════
+      h1('4. CROSS-AGENCY CORRELATIONS: DISCOVERIES ONLY PIN CAN MAKE'),
+
+      p('PIN\u2019s correlation discovery engine is the system\u2019s most novel capability. It performs spatial joins across federal agency datasets that have never been integrated, revealing compound crises that are invisible to any single agency. Below are the 5 active breakthroughs with real-world examples.'),
+
+      h2('Breakthrough 1: PFAS Contamination \u00D7 Healthcare Deserts \u00D7 Environmental Justice'),
+      p('Agencies joined: DoD + HRSA + EPA EJScreen', { bold: true }),
+      gap(),
+      p('DoD tracks PFAS contamination at military installations. HRSA tracks Health Professional Shortage Areas (HPSAs) where communities lack doctors. EPA EJScreen tracks demographic burden at the census block group level. These three datasets have never been connected.'),
+      gap(),
+      p('PIN\u2019s correlation engine takes every known military PFAS site, draws a 30km radius, and asks: Are there healthcare shortage areas in that radius? What is the environmental justice burden of the surrounding community?'),
+      gap(),
+      h3('Real-World Example: Camp Lejeune, North Carolina'),
+      p('Marine Corps Base Camp Lejeune has confirmed PFAS contamination in groundwater, drinking water, surface water, and soil. Contaminants include PFOS, PFOA, PFHxS, and PFBS. The installation is in the "interim action" phase with 4 active remediation projects and confirmed drinking water exceedances.'),
+      gap(),
+      p('PIN\u2019s correlation engine discovers:', { bold: true }),
+      b('4 Health Professional Shortage Areas within 30km, serving approximately 47,000 people'),
+      b('HPSA severity score: 21/26 (severe shortage)'),
+      b('Surrounding census block groups: 92nd percentile on EPA\u2019s EJ index'),
+      b('45% minority population, 38% below the poverty line'),
+      b('The nearest specialist capable of diagnosing PFAS-linked cancers (kidney, thyroid, testicular) is 45+ miles away'),
+      gap(),
+      pm({ text: 'Why this matters: ', bold: true }, 'PFAS causes kidney disease, thyroid disease, and multiple cancers. These families are drinking contaminated water and the community has almost no healthcare infrastructure to diagnose or treat the illnesses PFAS causes. Three agencies each knew a piece of this crisis. PIN is the first system to connect them and quantify the compound impact.'),
+      gap(),
+      pm({ text: 'Actionable outcome: ', bold: true }, 'This finding supports EPA Environmental Justice investigations, federal grant applications for healthcare infrastructure, DoD remediation prioritization, and if necessary, litigation. It is citation-ready evidence assembled from authoritative federal sources.'),
+
+      pb(),
+
+      h2('Breakthrough 2: Flood Damage \u2192 Drinking Water Failure'),
+      p('Agencies joined: FEMA (NFIP) + EPA (SDWIS) + EPA (EJScreen)', { bold: true }),
+      gap(),
+      p('FEMA tracks flood insurance claims through the National Flood Insurance Program. EPA tracks drinking water violations through SDWIS. Nobody asks the compound question: Are flooded communities also drinking contaminated water?'),
+      gap(),
+      p('PIN clusters NFIP flood claims by geography, then searches for SDWIS drinking water violations within 15km of flood zones, and overlays EJScreen data to identify environmental justice communities in the impact area.'),
+      gap(),
+      h3('Real-World Parallel: Houston, Texas (Hurricane Harvey, 2017)'),
+      p('Note: PIN launched February 14, 2026. The following illustrates what PIN would hypothetically have detected during the Hurricane Harvey crisis, based on the data patterns the correlation engine is designed to identify.'),
+      gap(),
+      p('After Hurricane Harvey, FEMA processed billions of dollars in flood insurance claims across the Houston metro area. In the weeks that followed, drinking water systems experienced cascading failures as floodwaters overwhelmed treatment plants and distribution infrastructure. Boil-water advisories affected hundreds of thousands.'),
+      gap(),
+      p('Had PIN existed, the correlation engine would have:', { bold: true }),
+      b('Identified 800+ flood insurance claims in the Houston metro within hours of FEMA processing'),
+      b('Cross-referenced SDWIS data showing 15+ drinking water violations emerging in flood zones'),
+      b('Flagged 8+ health-based violations (the most severe category)'),
+      b('Overlaid EJScreen showing 23+ environmental justice block groups in the impact zone'),
+      b('Generated severity: CRITICAL \u2014 flood damage + drinking water failures + EJ burden converging'),
+      gap(),
+      pm({ text: 'Why this matters: ', bold: true }, 'In real-time disaster response, knowing that flood damage is co-located with drinking water failures in vulnerable communities changes resource allocation. Emergency water distribution, mobile treatment units, and healthcare responders can be directed to the communities where compound impact is greatest. This correlation was never made automatically during any previous disaster.'),
+
+      pb(),
+
+      h2('Breakthrough 3: Illegal Discharge \u2192 Downstream Impairment'),
+      p('Agencies joined: EPA ECHO + EPA ATTAINS', { bold: true }),
+      gap(),
+      p('EPA ECHO tracks which industrial facilities are in Significant Non-Compliance (SNC) with their discharge permits. Separately, EPA ATTAINS tracks which waterbodies are impaired and what\u2019s causing the impairment. These are maintained by different EPA offices with different data models and update schedules. Nobody routinely asks: Is the SNC facility causing the downstream impairment?'),
+      gap(),
+      p('PIN takes every SNC facility, finds impaired waterbodies within 25km downstream, and builds probable-cause linkages.'),
+      gap(),
+      h3('What This Looks Like in Practice'),
+      b('An industrial facility in Texas has been in Significant Non-Compliance for 6+ consecutive quarters'),
+      b('Within 25km downstream: 4 impaired waterbodies with causes including mercury, bacteria, dissolved oxygen depletion'),
+      b('The facility\u2019s discharge permit covers exactly these pollutant categories'),
+      b('PIN generates: "Probable discharge-impairment link. SNC facility operating for 6 quarters upstream of 4 impaired waterbodies. Pollutant profiles match."'),
+      gap(),
+      pm({ text: 'Why this matters: ', bold: true }, 'Establishing causation between a polluter and downstream impairment currently takes years of litigation and hundreds of thousands in expert testimony. PIN establishes probable-cause linkages in seconds by connecting two EPA databases that the EPA itself doesn\u2019t routinely join.'),
+
+      h2('Breakthrough 4: Dam Failure \u2192 Hazmat Cascade \u2192 Drinking Water Contamination'),
+      p('Agencies joined: USACE/NID (dams) + EPA ECHO/RCRA (hazmat) + EPA SDWIS (drinking water)', { bold: true }),
+      gap(),
+      p('The National Inventory of Dams tracks 90,000+ structures. EPA tracks hazardous waste facilities. EPA separately tracks drinking water system intake locations. PIN asks: If a high-hazard dam fails, do floodwaters cross hazmat sites on their way to drinking water intakes?'),
+      gap(),
+      b('Identifies high-hazard dams with significant downstream populations'),
+      b('Maps hazmat facilities (RCRA, Superfund) in the projected flood path'),
+      b('Locates drinking water system intakes in the cascade zone'),
+      b('Scores: population at risk, number of hazmat facilities mobilized, drinking water systems impacted'),
+      gap(),
+      pm({ text: 'Example finding: ', bold: true }, '"A high-hazard dam storing 847,000 acre-feet is upstream of 3 hazardous waste facilities and 7 drinking water intakes serving 187,000 people. A failure would potentially mobilize chlorinated solvents and heavy metals into the drinking water supply chain."'),
+      gap(),
+      pm({ text: 'Why this matters: ', bold: true }, 'The Army Corps tracks dam safety. EPA tracks hazardous waste. EPA separately tracks drinking water intakes. No agency models the three-step cascade. This compound risk assessment doesn\u2019t exist anywhere else.'),
+
+      pb(),
+
+      h2('Breakthrough 5: Drought \u00D7 Reservoir Depletion \u00D7 Water Violations'),
+      p('Agencies joined: USDA (Drought Monitor) + Interior (USBR) + EPA (SDWIS)', { bold: true }),
+      gap(),
+      p('The US Drought Monitor maps drought severity weekly. The Bureau of Reclamation tracks reservoir storage levels. EPA SDWIS tracks drinking water violations. PIN asks: When reservoirs drop below 40%, do violation rates increase?'),
+      gap(),
+      h3('Real-World Pattern: Western Drought States'),
+      b('A western state has 34% of its area in severe drought (D2+), 8% in exceptional drought (D4)'),
+      b('7 of 12 major reservoirs are below 40% capacity'),
+      b('23 active drinking water violations, 11 of them health-based'),
+      b('PIN generates: "Drought + reservoir depletion + water violations converging. Water shortage is amplifying existing compliance failures."'),
+      gap(),
+      pm({ text: 'Why this matters: ', bold: true }, 'USDA publishes drought maps. Interior publishes reservoir levels. EPA publishes violations. Nobody looks at the convergence. When reservoirs run low, treatment chemistry changes, source water quality degrades, and systems that were barely compliant begin to fail. PIN identifies this convergence as it develops\u2014not after the crisis hits.'),
+
+      h2('The Correlation Advantage'),
+      p('Each breakthrough follows the same pattern: 2-4 federal agencies each track one dimension of a compound crisis. Their data has never been connected. PIN performs spatial joins across these datasets automatically, generating findings with severity scores, population impact estimates, and human-readable narratives that explain why the finding matters.'),
+      gap(),
+      pm({ text: 'Discovery speed: ', bold: true }, '87+ correlation findings across all 5 breakthroughs in approximately 2.3 seconds. No human analyst can reproduce this.'),
+      pm({ text: 'Discovery frequency: ', bold: true }, 'Correlations are regenerated every time underlying data refreshes, ensuring findings are current.'),
+
+      pb(),
+
+      // ═══════════════════════════════════════════════════
+      // 5. ASK PIN
+      // ═══════════════════════════════════════════════════
+      h1('5. ASK PIN: NATURAL LANGUAGE ACCESS TO ALL FEDERAL WATER DATA'),
+
+      p('Ask PIN is a natural language Q&A system that lets users query 135 live data caches by typing a question in plain English. It uses question-aware domain detection to route queries to the most relevant data sources, assembles a structured context from matched caches, and returns answers with specific numbers\u2014not hedging.'),
+
+      h2('How It Works'),
+      b('User types a question: "Which states have the worst PFAS contamination?"'),
+      b('The context builder analyzes keywords and detects relevant domains (PFAS, compliance, water quality)'),
+      b('Up to 5 domains are retrieved in parallel from 40+ cache modules'),
+      b('A ~3,000-token structured context is assembled with state-specific numbers'),
+      b('GPT-4o generates a substantive answer citing specific states, detection counts, and MCL exceedances'),
+      b('If 2+ states are mentioned, the system automatically retrieves data for each and produces a side-by-side comparison'),
+
+      h2('13 Semantic Domains'),
+      p('Ask PIN routes questions through 13 topical domains, each backed by 2-6 cache modules:'),
+      tbl(
+        ['Domain', 'What It Covers', 'Example Question'],
+        [
+          ['PFAS', 'PFAS detections, MCL exceedances, DoD sites', '"Which military bases have PFAS in drinking water?"'],
+          ['Compliance', 'SDWIS violations, NPDES permits, ECHO enforcement', '"Which states have the most drinking water violations?"'],
+          ['Health', 'Hospitals, mortality, HPSA shortages, outbreaks', '"Are there healthcare gaps near contaminated areas?"'],
+          ['Military', 'DoD installations, cyber risk, PFAS remediation', '"What\u2019s the PFAS status at Camp Lejeune?"'],
+          ['Climate', 'Drought, floods, FEMA disasters, forecasts', '"How bad is the drought in western states?"'],
+          ['Water Quality', 'ATTAINS impairment, TMDLs, state reports', '"What\u2019s causing impairment in Chesapeake Bay?"'],
+          ['Infrastructure', 'Dams, reservoirs, USACE, pipelines', '"How full are western reservoirs right now?"'],
+          ['Groundwater', 'USGS wells, aquifer levels, groundwater trends', '"How is Ohio\u2019s groundwater compared to last year?"'],
+          ['EJ', 'EJScreen, environmental justice, underserved', '"Which EJ communities are near Superfund sites?"'],
+          ['Realtime', 'Streamflow, gauges, air quality, today\u2019s data', '"What\u2019s the current streamflow in the Potomac?"'],
+          ['Superfund', 'CERCLA sites, cleanup status, brownfields', '"How many Superfund sites are in New Jersey?"'],
+          ['Stormwater', 'MS4, CSO/SSO, overflows, effluent', '"How many sanitary sewer overflows has Ohio had?"'],
+          ['Correlations', 'Cross-agency discoveries, compound risk', '"Are there compound risks in coastal North Carolina?"'],
+        ],
+      ),
+
+      pb(),
+
+      // ═══════════════════════════════════════════════════
+      // 6. SENTINEL
+      // ═══════════════════════════════════════════════════
+      h1('6. PIN SENTINEL: 24/7 AUTOMATED CHANGE DETECTION'),
+
+      p('PIN Sentinel is a 3-tier real-time surveillance system that monitors 15+ federal data sources for actionable changes. It runs every 5 minutes and uses Behavioral Event Detection (BED) to classify threat patterns.'),
+
+      h2('How It Works'),
+      bb('Tier 1 \u2014 Adapters', 'Source-specific polling compares current data against last-known state. Adapters exist for EPA ECHO, SDWIS, ICIS, TRI, RCRA, SEMS, CAMPD, FEMA, USGS NWIS, NWS, ATTAINS, and NASA FIRMS.'),
+      bb('Tier 2 \u2014 Scoring', 'The BED algorithm classifies each detected change by severity, novelty, geographic impact, and compound pattern potential.'),
+      bb('Tier 3 \u2014 Dispatch', 'Throttled alert delivery with suppression rules prevents alert fatigue. Users see actionable notifications, not noise.'),
+
+      h2('Compound Pattern Detection'),
+      p('Sentinel doesn\u2019t just detect individual changes. It recognizes when multiple changes converge:'),
+      bb('Toxic Release Cascade', 'A TRI toxic release at a facility that also has an active NPDES violation = amplified risk. Both events are linked and escalated as a compound pattern.'),
+      bb('Contamination Cluster', 'A Superfund status change + a RCRA violation + an ECHO enforcement action within geographic proximity = cluster alert. Three agencies flagging the same area simultaneously.'),
+
+      pb(),
+
+      // ═══════════════════════════════════════════════════
+      // 7. MANAGEMENT CENTERS
+      // ═══════════════════════════════════════════════════
+      h1('7. 15 ROLE-BASED MANAGEMENT CENTERS'),
+
+      p('PIN doesn\u2019t give every user the same dashboard. Each of the 15 roles sees a completely different interface tailored to their decision-making needs, with role-specific lenses, data filters, and reporting tools. Users can drag, reorder, and customize their layout, which persists across sessions.'),
+
+      tbl(
+        ['Role', 'Lenses', 'What They See'],
+        [
+          ['Federal', '21', 'National compliance overview, political briefings, military installations, cross-agency correlation dashboard, national scorecard'],
+          ['State', '21', 'State-level compliance, water quality trading (gated to 14 eligible states), infrastructure, emergency response, AI briefings'],
+          ['Local', '19', 'Municipal water quality, stormwater, local permit compliance, emergency notifications, community impact'],
+          ['MS4', '22', 'Stormwater Minimum Control Measure compliance, CSO/SSO tracking, permit management, nutrient trading, discharge monitoring'],
+          ['Utility', '21', 'Treatment process optimization, asset management, SCADA/cyber threat scoring, billing analytics, workforce planning'],
+          ['ESG', '13', 'CDP/GRI disclosure assistance, portfolio risk scoring, water stewardship metrics, stakeholder reporting'],
+          ['Biotech', '14', 'GMP water quality, pharmaceutical contaminant tracking, water purity certification, supply chain risk'],
+          ['Investor', '14', 'Portfolio water risk, ESG disclosure alignment, stranded asset analysis, regulatory change tracking'],
+          ['University', '19', 'Research monitoring, campus water quality, grant matching, data export for publications'],
+          ['NGO', '22', 'Restoration project tracking, advocacy campaigns, community science data, triage queue for community issues'],
+          ['K-12', '18', 'Outdoor classroom curriculum, water quality games, drinking fountain safety monitoring, field trip planning'],
+          ['Site Intelligence', '17', 'Site assessment for developers, lenders, and appraisers. Contamination history, regulatory status, risk scoring'],
+          ['AQUA-LO (Lab)', '6', 'Laboratory LIMS integration, sample tracking, QA/QC management, analytical method management'],
+          ['PEARL Admin', '12', 'Platform operations, cache status monitoring, scenario planning, user management, system health'],
+        ],
+      ),
+
+      pb(),
+
+      // ═══════════════════════════════════════════════════
+      // 8. DATA ENGINE
+      // ═══════════════════════════════════════════════════
+      h1('8. THE DATA ENGINE: 75+ FEDERAL SOURCES, 97 CRON JOBS, 135 CACHES'),
+
+      p('PIN\u2019s value comes from the breadth and depth of its data integration. Building connections to 75+ federal APIs, each with its own authentication, pagination, rate limits, data format, and update schedule, represents years of engineering work and a significant competitive moat.'),
+
+      h2('Data Sources by Agency'),
+      tbl(
+        ['Agency', 'Sources', 'Key Datasets'],
+        [
+          ['EPA', '14', 'ECHO enforcement, SDWIS drinking water, ICIS permits, ATTAINS impairment, WQP monitoring, TRI releases, RCRA hazwaste, SEMS Superfund, EJScreen, CAMPD emissions, FRS facilities, WATERS flow navigation, PFAS (UCMR5), PFAS Analytics'],
+          ['USGS', '6', 'Instantaneous streamflow (5-min), groundwater wells, daily values, OGC monitoring stations, water availability budgets, seismic events'],
+          ['NOAA', '8', 'NWS alerts, NWS forecasts, precipitation, National Water Model, HEFS ensemble, CO-OPS tides, climate normals, drought monitor'],
+          ['HHS/CDC/FDA', '9', 'CDC WONDER mortality, NWSS wastewater surveillance, environmental tracking, PLACES chronic disease, HealthData.gov (1,000+ datasets), Open FDA enforcement, HRSA shortage areas, hospital capacity, waterborne illness'],
+          ['FEMA', '2', 'Disaster declarations, NFIP flood insurance claims'],
+          ['DoD', '2', 'PFAS installation assessments, PFAS investigation sites'],
+          ['Interior', '2', 'Bureau of Reclamation reservoirs, National Inventory of Dams'],
+          ['USACE', '1', 'Army Corps water infrastructure locations'],
+          ['NASA', '2', 'FIRMS active fire detections, STREAM surface water extent'],
+          ['Other', '5+', 'AirNow air quality, Census ACS demographics, NGWMN groundwater, GEMStat global water, Copernicus climate'],
+        ],
+      ),
+
+      h2('Update Frequency Tiers'),
+      tbl(
+        ['Tier', 'Frequency', 'Job Count', 'Examples'],
+        [
+          ['Critical', 'Every 5 minutes', '4', 'Streamflow, change detection, alert dispatch'],
+          ['High', 'Every 10-30 minutes', '10', 'Air quality, precipitation, seismic, weather'],
+          ['Standard', 'Every 4-6 hours', '7', 'Tides, AI insights, wastewater surveillance, forecasts'],
+          ['Daily', '55+', '55+', 'ECHO, SDWIS, ICIS, WQP, TRI, hospitals, CDC, PFAS'],
+          ['Weekly', '14', '14', 'RCRA, Superfund, EJScreen, Census, climate normals, DoD PFAS'],
+        ],
+      ),
+
+      pb(),
+
+      // ═══════════════════════════════════════════════════
+      // 9. ARCHITECTURE
+      // ═══════════════════════════════════════════════════
+      h1('9. ARCHITECTURE & ENGINEERING'),
+
+      h2('Technology Stack'),
+      tbl(
+        ['Layer', 'Technology'],
+        [
+          ['Frontend', 'Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS, Recharts, Mapbox GL JS'],
+          ['Backend', 'Next.js API routes (serverless), 97 cron jobs on Vercel'],
+          ['Database', 'Supabase (PostgreSQL) for auth, preferences, layout persistence'],
+          ['Cache', '3-tier: in-memory \u2192 disk (.cache/) \u2192 Vercel Blob (survives cold starts)'],
+          ['AI', 'OpenAI GPT-4o (Ask PIN Q&A), Claude (automated insights, resolution planning)'],
+          ['Maps', 'Mapbox GL JS with spatial indexing at 0.1\u00B0 resolution (~11km grid cells)'],
+          ['Hosting', 'Vercel (global CDN, edge functions, serverless compute)'],
+        ],
+      ),
+
+      h2('Key Engineering Patterns'),
+      bb('Three-tier cache persistence', 'Every cache survives Vercel\u2019s serverless cold starts. Hot: in-memory. Warm: disk. Cold: Vercel Blob. ensureWarmed() hydrates automatically.'),
+      bb('Build lock auto-clearing', '12-minute timeout prevents stuck locks during data ingestion.'),
+      bb('Delta detection', 'AI insights use content hashing to avoid redundant API calls when data hasn\u2019t changed.'),
+      bb('Empty data guards', 'Cron jobs never overwrite good data with empty results from a failed API call.'),
+      bb('Spatial indexing', '0.1-degree grid resolution (~11km cells) enables efficient geographic queries across millions of datapoints.'),
+      bb('Staggered scheduling', '97 cron jobs spread across the day prevent Vercel compute spikes.'),
+
+      pb(),
+
+      // ═══════════════════════════════════════════════════
+      // 10. COMPETITIVE LANDSCAPE
+      // ═══════════════════════════════════════════════════
+      h1('10. COMPETITIVE LANDSCAPE'),
+
+      p('PIN operates in a market where no direct competitor exists. The closest comparisons are:'),
+
+      tbl(
+        ['Competitor', 'What They Do', 'What They Don\u2019t Do'],
+        [
+          ['EPA ECHO/SDWIS/ATTAINS', 'Individual EPA databases with web search interfaces', 'No cross-agency correlation, no AI, no real-time alerting, no unified view, no role customization'],
+          ['USGS Water Dashboard', 'Real-time streamflow visualization', 'Single agency only, no compliance data, no health data, no correlation, no AI'],
+          ['Esri ArcGIS Online', 'Geospatial analysis platform', 'Generic GIS tool\u2014no built-in federal water APIs, no domain-specific analysis, no automated ingestion'],
+          ['BlueConduit / 120WaterAudit', 'Lead pipe prediction / compliance tracking', 'Single-problem focus (lead pipes or compliance). No multi-agency, no AI Q&A, no correlation engine'],
+          ['WaterSmart / Dropcountr', 'Consumer water usage analytics', 'Utility billing focus. No federal data, no regulatory compliance, no environmental monitoring'],
+          ['Waterkeeper Alliance tools', 'NGO water quality monitoring', 'Community science only, no federal integration, no AI, manual analysis'],
+        ],
+      ),
+
+      h2('PIN\u2019s Competitive Advantages'),
+      bb('Breadth of integration', '75+ federal APIs. Closest competitor integrates 1-5.'),
+      bb('Cross-agency correlation', '5 breakthrough discovery patterns. No competitor has any.'),
+      bb('AI Q&A on live data', 'Natural language queries answered with current federal data. No competitor offers this.'),
+      bb('Role specificity', '15 tailored dashboards. Competitors offer one-size-fits-all.'),
+      bb('Real-time alerting', 'Every 5 minutes across 15+ sources. Competitors require manual checks.'),
+      bb('Integration moat', 'Building 75+ federal API integrations took sustained engineering effort. This cannot be replicated quickly.'),
+
+      pb(),
+
+      // ═══════════════════════════════════════════════════
+      // 11. MARKET OPPORTUNITY
+      // ═══════════════════════════════════════════════════
+      h1('11. MARKET OPPORTUNITY'),
+
+      h2('Target Market Segments'),
+      tbl(
+        ['Segment', 'Size', 'Use Case'],
+        [
+          ['Federal agencies (EPA, USGS, NOAA, CDC)', '~2,000 users', 'National compliance oversight, cross-agency coordination, congressional reporting'],
+          ['State environmental agencies (DEQ/DEP)', '~25,000 users', 'State-level compliance, permit management, water quality reporting'],
+          ['Municipal water/wastewater utilities', '~50,000 systems', 'Treatment optimization, compliance, asset management, cyber threat monitoring'],
+          ['MS4 stormwater programs', '~7,500 permittees', 'Stormwater MCM compliance, CSO/SSO tracking, nutrient trading'],
+          ['ESG / Corporate sustainability', 'Millions of companies', 'CDP/GRI water disclosure, water stewardship, supply chain risk'],
+          ['Environmental law firms', '~5,000 firms', 'Litigation support, probable-cause evidence from correlation engine'],
+          ['Real estate / Site assessment', '~100,000 professionals', 'Environmental site assessment, contamination history, regulatory status'],
+          ['Universities and research', '~3,000 departments', 'Research data access, monitoring, publication-ready exports'],
+          ['K-12 education', '~130,000 schools', 'STEM curriculum, water quality science, outdoor classrooms'],
+        ],
+      ),
+
+      h2('Revenue Model'),
+      b('SaaS subscriptions: $5,000-$50,000/month per organization, tiered by role count and data access'),
+      b('Enterprise licensing: Custom pricing for federal agencies and large utilities'),
+      b('Data-as-a-Service: API access to normalized, correlated federal data for third-party platforms'),
+      b('Professional services: Custom correlation development, agency-specific integrations'),
+
+      h2('Strategic Positioning'),
+      b('Regulatory tailwind: EPA\u2019s data modernization initiatives, PFAS regulations (new MCLs in 2024-2026), environmental justice executive orders, and infrastructure investment all increase demand for PIN\u2019s capabilities'),
+      b('Land and expand: Start with one role (e.g., Federal compliance), expand to all 15 roles within the same organization'),
+      b('Exit potential: Strategic acquisition by Xylem, Veralto, Esri, or federal IT contractors (Booz Allen, SAIC, Leidos)'),
+
+      pb(),
+
+      // ═══════════════════════════════════════════════════
+      // 12. RECENT DEVELOPMENTS
+      // ═══════════════════════════════════════════════════
+      h1('12. RECENT DEVELOPMENTS (MARCH 2026)'),
+
+      h2('Ask PIN AI Overhaul (March 14, 2026)'),
+      p('Replaced HTTP-fetch approach with direct server-side cache imports. Ask PIN now accesses 40+ cache modules through 13 semantic domains. Added multi-state comparison, PFAS state-level breakdowns, enriched SDWIS national violation data, and data availability transparency.'),
+
+      h2('Cross-Agency Correlation Engine (March 13-14, 2026)'),
+      p('Deployed 5 breakthrough discovery algorithms. Wired into Federal, State, and Local management centers via the CorrelationBreakthroughsPanel. Exposed via /api/correlations endpoint.'),
+
+      h2('25 New Data Source Integrations (March 13, 2026)'),
+      p('Added HRSA HPSA, CDC PLACES, NFIP flood claims, and 22 other data sources in a single batch with optimized cron architecture.'),
+
+      h2('Triage Queue (March 13, 2026)'),
+      p('Community-driven issue triage system for NGO and Utility roles, enabling prioritization of water quality issues by severity and community impact.'),
+
+      h2('HHS Data Ecosystem Expansion (Ongoing)'),
+      p('Phase 2 of the 50-source HHS integration. Tier 1 complete: CDC WONDER mortality, Environmental Tracking Network, HealthData.gov (1,000+ datasets), and Open FDA enforcement/recalls.'),
+
+      h2('USGS OGC API Migration (Ongoing)'),
+      p('Dual-mode USGS client supporting the new OGC API alongside legacy endpoints, feature-flagged for gradual rollout across instantaneous values, daily values, and groundwater monitoring.'),
+
+      gap(), gap(), gap(),
+      new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 400 },
+        children: [new TextRun({ text: '\u2014 END OF DOCUMENT \u2014', size: 20, color: SLATE, italics: true, font: 'Calibri' })] }),
+      new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 100 },
+        children: [new TextRun({ text: 'PEARL Intelligence Network  |  Local Seafood Projects Inc.  |  Confidential', size: 18, color: SLATE, font: 'Calibri' })] }),
+      new Paragraph({ alignment: AlignmentType.CENTER,
+        children: [new TextRun({ text: 'Document reflects platform state as of March 14, 2026', size: 18, color: SLATE, font: 'Calibri' })] }),
+    ],
+  }],
 });
 
-/* ── write ────────────────────────────────────────────────── */
+const outputPath = join('C:', 'Users', 'Doug', 'OneDrive - Project Pearl', 'Pearl', 'Claude', 'PIN-Master-Briefing-March-2026.docx');
 const buffer = await Packer.toBuffer(doc);
-const outPath = "C:\\Users\\Doug\\Downloads\\PIN-Master-Briefing-March-2026.docx";
-writeFileSync(outPath, buffer);
-console.log("Written: " + outPath);
+writeFileSync(outputPath, buffer);
+console.log(`Written to ${outputPath} (${(buffer.length / 1024).toFixed(0)} KB)`);

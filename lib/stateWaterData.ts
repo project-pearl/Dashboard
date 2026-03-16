@@ -623,18 +623,18 @@ export function getStateGrants(stateAbbr: string): GrantOpportunity[] {
     if (stateAbbr === 'VA') {
       grants.push(
         { name: 'VA DEQ Stormwater Local Assistance Fund (SLAF)', source: 'VA DEQ', amount: '$50K–$1M', maxAmount: 1000, fit: 'high', url: 'https://www.deq.virginia.gov/water/stormwater/stormwater-local-assistance-fund', description: 'State matching for MS4 stormwater BMPs. Strong preference for innovative nature-based approaches.' },
-        { name: 'VA Environmental Endowment', source: 'VEE', amount: '$10K–$100K', maxAmount: 100, fit: 'medium', url: 'https://www.vee.org/grants/', description: 'Innovative environmental projects in Virginia watersheds.' },
+        { name: 'VA Environmental Endowment', source: 'VEE', amount: '$10K–$100K', maxAmount: 100, fit: 'medium', url: 'https://www.vee.org/grant-programs-application/', description: 'Innovative environmental projects in Virginia watersheds.' },
       );
     }
     if (stateAbbr === 'PA') {
       grants.push(
-        { name: 'PA Growing Greener', source: 'PA DEP', amount: '$30K–$300K', maxAmount: 300, fit: 'high', url: 'https://www.dep.pa.gov/Citizens/GrantsLoansRebates/Growing-Greener/Pages/default.aspx', description: 'Pennsylvania\'s largest environmental grant program. Funds watershed restoration and innovative BMPs.' },
+        { name: 'PA Growing Greener', source: 'PA DEP', amount: '$30K–$300K', maxAmount: 300, fit: 'high', url: 'https://www.pa.gov/en/services/dep/water/bwrnsm/apply-for-a-department-of-environmental-protection-growing-greener-plus-grant.html', description: 'Pennsylvania\'s largest environmental grant program. Funds watershed restoration and innovative BMPs.' },
         { name: 'PA DCED Watershed Restoration', source: 'PA DCED', amount: '$50K–$250K', maxAmount: 250, fit: 'medium', url: 'https://dced.pa.gov/programs/watershed-restoration-protection-program/', description: 'Economic development angle for water infrastructure in PA communities.' },
       );
     }
     if (stateAbbr === 'DE') {
       grants.push(
-        { name: 'DE DNREC Inland Bays Foundation', source: 'CIB', amount: '$10K–$100K', maxAmount: 100, fit: 'high', url: 'https://www.inlandbays.org/projects-and-issues/', description: 'Inland Bays nutrient reduction and habitat restoration. Nature-based solutions prioritized.' },
+        { name: 'DE DNREC Inland Bays Foundation', source: 'CIB', amount: '$10K–$100K', maxAmount: 100, fit: 'high', url: 'https://inlandbays.org/projects_issues/', description: 'Inland Bays nutrient reduction and habitat restoration. Nature-based solutions prioritized.' },
       );
     }
   }
@@ -651,7 +651,7 @@ export function getStateGrants(stateAbbr: string): GrantOpportunity[] {
       grants.push(
         // FL DEP grants for local governments
         { name: 'FL DEP Water Quality Improvement Grant Program', source: 'FL DEP', amount: '$500K–$10M', maxAmount: 10000, fit: 'high', url: 'https://floridadep.gov/wra/wra/content/water-quality-improvement-grant-program', description: 'Florida\'s flagship water quality program — nearly $2.9B awarded to 1,098 projects statewide. Funds shovel-ready stormwater treatment, septic-to-sewer, wastewater upgrades, and NPS BMPs in TMDL/BMAP impaired waterbodies. Apply via protectingfloridatogether.gov portal. PEARL continuous monitoring directly supports nutrient reduction documentation required for BMAP compliance.' },
-        { name: 'FL DEP Nonpoint Source (Section 319) Grants', source: 'FL DEP / EPA', amount: '$50K–$500K', maxAmount: 500, fit: 'high', url: 'https://floridadep.gov/water/nonpoint-source-management', description: 'CWA Section 319 funds for stormwater BMPs, septic work, ag BMPs, monitoring, and education. PEARL monitoring quantifies BMP effectiveness for NPS reduction documentation.' },
+        { name: 'FL DEP Nonpoint Source (Section 319) Grants', source: 'FL DEP / EPA', amount: '$50K–$500K', maxAmount: 500, fit: 'high', url: 'https://floridadep.gov/wra/319-tmdl-fund', description: 'CWA Section 319 funds for stormwater BMPs, septic work, ag BMPs, monitoring, and education. PEARL monitoring quantifies BMP effectiveness for NPS reduction documentation.' },
         { name: 'FL DEP Resilient Florida Grants', source: 'FL DEP', amount: '$100K–$5M', maxAmount: 5000, fit: 'high', url: 'https://floridadep.gov/rcp/resilient-florida-program/content/resilient-florida-grants', description: 'Planning and implementation grants for flood resilience infrastructure. Includes nature-based solutions like PEARL biofiltration. Requires vulnerability assessment. Applications via protectingfloridatogether.gov.' },
         { name: 'FL DEP Springs Restoration Grant Program', source: 'FL DEP', amount: '$500K–$5M', maxAmount: 5000, fit: 'high', url: 'https://protectingfloridatogether.gov/state-action/grants-submissions', description: '$430M invested since 2019 in 147 springs projects, reducing 907K+ lbs TN/year. Funds septic-to-sewer, wastewater upgrades, stormwater treatment, aquifer recharge, and land acquisition. PEARL monitoring validates nutrient reduction at spring vents and contributing watersheds.' },
         { name: 'FL DEP Innovative Technology for HAB Grants', source: 'FL DEP', amount: '$100K–$1M', maxAmount: 1000, fit: 'high', url: 'https://protectingfloridatogether.gov/state-action/grants-submissions', description: '$12M awarded in 2025 for 16 projects deploying innovative tech to prevent, detect, and mitigate harmful algal blooms. Six vendors now on statewide standby. PEARL real-time chlorophyll-a and nutrient monitoring enables early HAB detection and response — strong alignment.' },
@@ -665,10 +665,10 @@ export function getStateGrants(stateAbbr: string): GrantOpportunity[] {
         { name: 'FDACS Water Resource Project Funding', source: 'FDACS', amount: '$50K–$500K', maxAmount: 500, fit: 'medium', url: 'https://www.fdacs.gov/Agriculture-Industry/Water', description: 'Competitive funding rounds for nutrient reduction projects. PEARL monitoring data strengthens applications by quantifying baseline loading and treatment performance.' },
         // RESTORE Act Gulf funding
         { name: 'Triumph Gulf Coast', source: 'Triumph Gulf Coast Inc.', amount: '$250K–$25M', maxAmount: 25000, fit: 'high', url: 'https://www.myfloridatriumph.com/', description: '$1.5B Deepwater Horizon settlement fund for 8 NW FL Panhandle counties (Escambia to Wakulla). Over $754M awarded since 2018. Funds infrastructure and environmental restoration. PEARL water quality monitoring supports ecosystem restoration priorities.' },
-        { name: 'FL RESTORE Water Quality Improvement Program', source: 'FL DEP / RESTORE', amount: '$100K–$5M', maxAmount: 5000, fit: 'high', url: 'https://floridadep.gov/wra/restore-act', description: 'FL DEP administers RESTORE Act programs for Gulf restoration. Eligible projects include stormwater, septic abatement, wastewater improvements, and sediment reduction — all PEARL deployment targets.' },
-        { name: 'FL RESTORE Centers of Excellence', source: 'FL Institute of Oceanography', amount: '$100K–$1M', maxAmount: 1000, fit: 'medium', url: 'https://www.floridainstitute.usf.edu/', description: 'Research-oriented Gulf restoration through Florida Institute of Oceanography. PEARL continuous monitoring generates publishable datasets for research partnerships.' },
+        { name: 'FL RESTORE Water Quality Improvement Program', source: 'FL DEP / RESTORE', amount: '$100K–$5M', maxAmount: 5000, fit: 'high', url: 'https://floridadep.gov/wra/deepwater-horizon', description: 'FL DEP administers RESTORE Act programs for Gulf restoration. Eligible projects include stormwater, septic abatement, wastewater improvements, and sediment reduction — all PEARL deployment targets.' },
+        { name: 'FL RESTORE Centers of Excellence', source: 'FL Institute of Oceanography', amount: '$100K–$1M', maxAmount: 1000, fit: 'medium', url: 'https://www.fio.usf.edu/', description: 'Research-oriented Gulf restoration through Florida Institute of Oceanography. PEARL continuous monitoring generates publishable datasets for research partnerships.' },
         // Wildlife / habitat
-        { name: 'FL Fish & Wildlife Conservation', source: 'FWC', amount: '$25K–$200K', maxAmount: 200, fit: 'medium', url: 'https://myfwc.com/conservation/special-initiatives/fwli/grant/', description: 'Habitat restoration with water quality co-benefits in Florida waterways.' },
+        { name: 'FL Fish & Wildlife Conservation', source: 'FWC', amount: '$25K–$200K', maxAmount: 200, fit: 'medium', url: 'https://myfwc.com/conservation/special-initiatives/swap/grant/', description: 'Habitat restoration with water quality co-benefits in Florida waterways.' },
       );
     }
     if (stateAbbr === 'TX') {
@@ -683,25 +683,25 @@ export function getStateGrants(stateAbbr: string): GrantOpportunity[] {
         { name: 'TWDB Flood Infrastructure Fund (FIF)', source: 'TWDB', amount: '$100K–$10M', maxAmount: 10000, fit: 'medium', url: 'https://www.twdb.texas.gov/financial/programs/fif/', description: 'Loans and grants for flood control, mitigation, and drainage. Water quality co-benefits from stormwater management. PEARL monitoring quantifies flood event water quality impacts.' },
         { name: 'TWDB Economically Distressed Areas Program (EDAP)', source: 'TWDB', amount: '$100K–$5M', maxAmount: 5000, fit: 'medium', url: 'https://www.twdb.texas.gov/financial/programs/EDAP/', description: 'Grants and loans for water/wastewater services in economically distressed areas where existing systems are inadequate. PEARL monitoring verifies treatment effectiveness in underserved communities.' },
         // Coastal/estuary programs
-        { name: 'Galveston Bay Foundation', source: 'GBF', amount: '$25K–$150K', maxAmount: 150, fit: 'high', url: 'https://www.galvbay.org/how-we-protect-the-bay/grants/', description: 'Galveston Bay restoration and monitoring. Bacteria and nutrient reduction prioritized. Oyster reef restoration aligns with PEARL biofiltration approach.' },
-        { name: 'TX General Land Office — Coastal Erosion Response', source: 'TX GLO', amount: '$100K–$2M', maxAmount: 2000, fit: 'medium', url: 'https://www.glo.texas.gov/coast/coastal-management/forms/index.html', description: 'Coastal management and erosion response funding. Nature-based shoreline protection projects eligible. PEARL monitoring supports habitat restoration documentation.' },
+        { name: 'Galveston Bay Foundation', source: 'GBF', amount: '$25K–$150K', maxAmount: 150, fit: 'high', url: 'https://galvbay.org/', description: 'Galveston Bay restoration and monitoring. Bacteria and nutrient reduction prioritized. Oyster reef restoration aligns with PEARL biofiltration approach.' },
+        { name: 'TX General Land Office — Coastal Erosion Response', source: 'TX GLO', amount: '$100K–$2M', maxAmount: 2000, fit: 'medium', url: 'https://www.glo.texas.gov/coastal/protecting-coast/funding-opportunities', description: 'Coastal management and erosion response funding. Nature-based shoreline protection projects eligible. PEARL monitoring supports habitat restoration documentation.' },
       );
     }
     if (stateAbbr === 'LA') {
       grants.push(
         { name: 'LA CPRA Coastal Master Plan', source: 'CPRA', amount: '$250K–$10M', maxAmount: 10000, fit: 'high', url: 'https://coastal.la.gov/our-plan/', description: 'Louisiana coastal restoration. PEARL addresses water quality within restoration context.' },
-        { name: 'LA DEQ 319 NPS Grants', source: 'LA DEQ', amount: '$30K–$200K', maxAmount: 200, fit: 'high', url: 'https://www.deq.louisiana.gov/page/nonpoint-source-program', description: 'Lake Pontchartrain and Calcasieu Estuary water quality improvement.' },
+        { name: 'LA DEQ 319 NPS Grants', source: 'LA DEQ', amount: '$30K–$200K', maxAmount: 200, fit: 'high', url: 'https://www.deq.louisiana.gov/page/nonpoint-source', description: 'Lake Pontchartrain and Calcasieu Estuary water quality improvement.' },
       );
     }
     if (stateAbbr === 'AL') {
       grants.push(
-        { name: 'Alabama ADEM 319 Grants', source: 'ADEM', amount: '$30K–$200K', maxAmount: 200, fit: 'high', url: 'https://adem.alabama.gov/programs/water/319grants.cnt', description: 'NPS control for impaired waters. Mobile Bay and Dog River bacteria prioritized.' },
+        { name: 'Alabama ADEM 319 Grants', source: 'ADEM', amount: '$30K–$200K', maxAmount: 200, fit: 'high', url: 'https://adem.alabama.gov/water/nonpoint-source-pollution-program/section-319-grant-resources', description: 'NPS control for impaired waters. Mobile Bay and Dog River bacteria prioritized.' },
         { name: 'Mobile Bay NEP', source: 'MBNEP', amount: '$25K–$150K', maxAmount: 150, fit: 'high', url: 'https://www.mobilebaynep.com/', description: 'National Estuary Program funding for Mobile Bay watershed restoration.' },
       );
     }
     if (stateAbbr === 'MS') {
       grants.push(
-        { name: 'MS DEQ Section 319 Grants', source: 'MDEQ', amount: '$30K–$200K', maxAmount: 200, fit: 'high', url: 'https://www.mdeq.ms.gov/water/surface-water/nonpoint-source-pollution/', description: 'NPS pollution control for 303(d)-listed waters. Coastal bacteria TMDLs prioritized.' },
+        { name: 'MS DEQ Section 319 Grants', source: 'MDEQ', amount: '$30K–$200K', maxAmount: 200, fit: 'high', url: 'https://www.mdeq.ms.gov/water/surface-water/nonpoint-source-pollution-program/', description: 'NPS pollution control for 303(d)-listed waters. Coastal bacteria TMDLs prioritized.' },
       );
     }
   }
@@ -715,8 +715,8 @@ export function getStateGrants(stateAbbr: string): GrantOpportunity[] {
     );
     if (stateAbbr === 'OH') {
       grants.push(
-        { name: 'H2Ohio Fund', source: 'Ohio', amount: '$50K–$500K', maxAmount: 500, fit: 'high', url: 'https://h2.ohio.gov/', description: 'Governor\'s water quality initiative targeting Lake Erie HABs. Innovative nutrient reduction priority.' },
-        { name: 'Ohio EPA 319 Program', source: 'Ohio EPA', amount: '$30K–$200K', maxAmount: 200, fit: 'high', url: 'https://epa.ohio.gov/divisions-and-offices/surface-water/reports-data/319-program', description: 'NPS grants for Maumee watershed and Lake Erie tributaries.' },
+        { name: 'H2Ohio Fund', source: 'Ohio', amount: '$50K–$500K', maxAmount: 500, fit: 'high', url: 'https://h2ohio.ohio.gov/', description: 'Governor\'s water quality initiative targeting Lake Erie HABs. Innovative nutrient reduction priority.' },
+        { name: 'Ohio EPA 319 Program', source: 'Ohio EPA', amount: '$30K–$200K', maxAmount: 200, fit: 'high', url: 'https://epa.ohio.gov/monitor-pollution/maps-and-advisories/nonpoint-source-implementation-strategies', description: 'NPS grants for Maumee watershed and Lake Erie tributaries.' },
       );
     }
     if (stateAbbr === 'MI') {
@@ -726,17 +726,17 @@ export function getStateGrants(stateAbbr: string): GrantOpportunity[] {
     }
     if (stateAbbr === 'WI') {
       grants.push(
-        { name: 'WI DNR Targeted Runoff Management', source: 'WI DNR', amount: '$50K–$250K', maxAmount: 250, fit: 'high', url: 'https://dnr.wisconsin.gov/topic/nonpoint/TRM', description: 'Cost-sharing for BMPs in priority watersheds. Fox River and Green Bay areas prioritized.' },
+        { name: 'WI DNR Targeted Runoff Management', source: 'WI DNR', amount: '$50K–$250K', maxAmount: 250, fit: 'high', url: 'https://dnr.wisconsin.gov/aid/TargetedRunoff.html', description: 'Cost-sharing for BMPs in priority watersheds. Fox River and Green Bay areas prioritized.' },
       );
     }
     if (stateAbbr === 'IN') {
       grants.push(
-        { name: 'IN DEM 319 Grants', source: 'IDEM', amount: '$30K–$200K', maxAmount: 200, fit: 'high', url: 'https://www.in.gov/idem/nps/funding-opportunities/', description: 'White River bacteria and Grand Calumet sediment/toxics remediation.' },
+        { name: 'IN DEM 319 Grants', source: 'IDEM', amount: '$30K–$200K', maxAmount: 200, fit: 'high', url: 'https://www.in.gov/idem/nps/funding/', description: 'White River bacteria and Grand Calumet sediment/toxics remediation.' },
       );
     }
     if (stateAbbr === 'MN') {
       grants.push(
-        { name: 'MN Clean Water Fund', source: 'MN PCA', amount: '$50K–$500K', maxAmount: 500, fit: 'high', url: 'https://www.pca.state.mn.us/business-with-us/clean-water-fund', description: 'Constitutional amendment funding for water quality. Minnesota River TSS and Mississippi nutrients prioritized.' },
+        { name: 'MN Clean Water Fund', source: 'MN PCA', amount: '$50K–$500K', maxAmount: 500, fit: 'high', url: 'https://www.pca.state.mn.us/air-water-land-climate/clean-water-fund', description: 'Constitutional amendment funding for water quality. Minnesota River TSS and Mississippi nutrients prioritized.' },
       );
     }
   }
@@ -749,20 +749,20 @@ export function getStateGrants(stateAbbr: string): GrantOpportunity[] {
     if (stateAbbr === 'CA') {
       grants.push(
         { name: 'CA Prop 1 Storm Water Grant Program', source: 'SWRCB', amount: '$250K–$10M', maxAmount: 10000, fit: 'high', url: 'https://www.waterboards.ca.gov/water_issues/programs/grants_loans/proposition1.html', description: 'Major stormwater funding. Multi-benefit nature-based BMPs strongly preferred.' },
-        { name: 'CA Prop 68 — Water Quality', source: 'SWRCB', amount: '$100K–$5M', maxAmount: 5000, fit: 'high', url: 'https://www.waterboards.ca.gov/water_issues/programs/grants_loans/proposition68/', description: 'Parks, Environment, and Water Bond for water quality improvement.' },
+        { name: 'CA Prop 68 — Water Quality', source: 'SWRCB', amount: '$100K–$5M', maxAmount: 5000, fit: 'high', url: 'https://www.waterboards.ca.gov/water_issues/programs/grants_loans/propositions/prop68.html', description: 'Parks, Environment, and Water Bond for water quality improvement.' },
         { name: 'CA Ocean Protection Council', source: 'OPC', amount: '$50K–$500K', maxAmount: 500, fit: 'medium', url: 'https://www.opc.ca.gov/funding/', description: 'Coastal water quality and marine habitat protection. Biofiltration technology aligns with OPC.' },
       );
     }
     if (stateAbbr === 'WA') {
       grants.push(
         { name: 'Puget Sound Partnership NEP', source: 'EPA/PSP', amount: '$100K–$1M', maxAmount: 1000, fit: 'high', url: 'https://www.psp.wa.gov/NEP-overview.php', description: 'National Estuary Program for Puget Sound recovery. Water quality and treatment projects prioritized.' },
-        { name: 'WA Ecology Centennial Clean Water Fund', source: 'WA Ecology', amount: '$50K–$500K', maxAmount: 500, fit: 'high', url: 'https://ecology.wa.gov/about-us/payments-contracts-grants/grants-loans/find-a-grant-or-loan/water-quality-grants-loans', description: 'Washington\'s primary water quality grant program. Innovative treatment and monitoring.' },
+        { name: 'WA Ecology Centennial Clean Water Fund', source: 'WA Ecology', amount: '$50K–$500K', maxAmount: 500, fit: 'high', url: 'https://ecology.wa.gov/water-shorelines/water-quality/water-quality-grants-and-loans', description: 'Washington\'s primary water quality grant program. Innovative treatment and monitoring.' },
       );
     }
     if (stateAbbr === 'OR') {
       grants.push(
-        { name: 'Oregon Watershed Enhancement Board', source: 'OWEB', amount: '$50K–$500K', maxAmount: 500, fit: 'high', url: 'https://www.oregon.gov/oweb/grants/Pages/index.aspx', description: 'Oregon\'s premier watershed restoration program. Nature-based solutions with monitoring data preferred.' },
-        { name: 'OR DEQ 319 Grants', source: 'OR DEQ', amount: '$30K–$200K', maxAmount: 200, fit: 'high', url: 'https://www.oregon.gov/deq/wq/Pages/TMDLs-Grants.aspx', description: 'NPS pollution control. Willamette Valley and coastal watersheds prioritized.' },
+        { name: 'Oregon Watershed Enhancement Board', source: 'OWEB', amount: '$50K–$500K', maxAmount: 500, fit: 'high', url: 'https://www.oregon.gov/oweb/grants/pages/grant-programs.aspx', description: 'Oregon\'s premier watershed restoration program. Nature-based solutions with monitoring data preferred.' },
+        { name: 'OR DEQ 319 Grants', source: 'OR DEQ', amount: '$30K–$200K', maxAmount: 200, fit: 'high', url: 'https://www.oregon.gov/deq/wq/tmdls/pages/tmdls-funding.aspx', description: 'NPS pollution control. Willamette Valley and coastal watersheds prioritized.' },
       );
     }
   }
@@ -774,8 +774,8 @@ export function getStateGrants(stateAbbr: string): GrantOpportunity[] {
     );
     if (stateAbbr === 'ME') {
       grants.push(
-        { name: 'ME DEP 319 NPS Grants', source: 'ME DEP', amount: '$25K–$150K', maxAmount: 150, fit: 'high', url: 'https://www.maine.gov/dep/water/grants/319-program.html', description: 'NPS grants for Maine impaired waters. Penobscot and Casco Bay projects prioritized.' },
-        { name: 'ME Outdoor Heritage Fund', source: 'Maine', amount: '$25K–$100K', maxAmount: 100, fit: 'medium', url: 'https://www.maine.gov/ifw/programs-resources/outdoor-heritage-fund.html', description: 'Conservation and habitat projects with water quality benefits.' },
+        { name: 'ME DEP 319 NPS Grants', source: 'ME DEP', amount: '$25K–$150K', maxAmount: 150, fit: 'high', url: 'https://www.maine.gov/dep/water/grants/319.html', description: 'NPS grants for Maine impaired waters. Penobscot and Casco Bay projects prioritized.' },
+        { name: 'ME Outdoor Heritage Fund', source: 'Maine', amount: '$25K–$100K', maxAmount: 100, fit: 'medium', url: 'https://www.maine.gov/ifw/programs-resources/grants/outdoor-heritage-fund.html', description: 'Conservation and habitat projects with water quality benefits.' },
       );
     }
     if (stateAbbr === 'VT') {
@@ -787,7 +787,7 @@ export function getStateGrants(stateAbbr: string): GrantOpportunity[] {
     if (stateAbbr === 'MA') {
       grants.push(
         { name: 'MA MVP Action Grants', source: 'MA EEA', amount: '$50K–$2M', maxAmount: 2000, fit: 'high', url: 'https://www.mass.gov/municipal-vulnerability-preparedness-mvp-program', description: 'Municipal Vulnerability Preparedness grants. Nature-based infrastructure for climate resilience.' },
-        { name: 'MassDEP 604(b) Water Quality Planning', source: 'MassDEP', amount: '$25K–$150K', maxAmount: 150, fit: 'medium', url: 'https://www.mass.gov/water-quality-grants-financial-assistance', description: 'Water quality assessment. Cape Cod nitrogen and Charles River bacteria focus.' },
+        { name: 'MassDEP 604(b) Water Quality Planning', source: 'MassDEP', amount: '$25K–$150K', maxAmount: 150, fit: 'medium', url: 'https://www.mass.gov/info-details/grants-financial-assistance-watersheds-water-quality', description: 'Water quality assessment. Cape Cod nitrogen and Charles River bacteria focus.' },
       );
     }
     if (stateAbbr === 'CT') {
@@ -802,7 +802,7 @@ export function getStateGrants(stateAbbr: string): GrantOpportunity[] {
     }
     if (stateAbbr === 'RI') {
       grants.push(
-        { name: 'RI DEM Narragansett Bay Commission', source: 'RI DEM', amount: '$25K–$200K', maxAmount: 200, fit: 'high', url: 'https://dem.ri.gov/financial-assistance', description: 'Bay restoration and CSO-related water quality improvement.' },
+        { name: 'RI DEM Narragansett Bay Commission', source: 'RI DEM', amount: '$25K–$200K', maxAmount: 200, fit: 'high', url: 'https://dem.ri.gov/environmental-protection-bureau/water-resources/financial-assistance', description: 'Bay restoration and CSO-related water quality improvement.' },
       );
     }
   }
@@ -810,17 +810,17 @@ export function getStateGrants(stateAbbr: string): GrantOpportunity[] {
   // ── South Atlantic states ──
   if (['NC', 'SC', 'GA'].includes(stateAbbr)) {
     grants.push(
-      { name: 'NFWF Southeast Aquatics Fund', source: 'NFWF', amount: '$50K–$300K', maxAmount: 300, fit: 'medium', url: 'https://www.nfwf.org/programs/southeastern-aquatics-fund', description: 'Aquatic habitat and water quality in the Southeast. Nature-based solutions preferred.' },
+      { name: 'NFWF Southeast Aquatics Fund', source: 'NFWF', amount: '$50K–$300K', maxAmount: 300, fit: 'medium', url: 'https://www.nfwf.org/programs/southeast-aquatics', description: 'Aquatic habitat and water quality in the Southeast. Nature-based solutions preferred.' },
     );
     if (stateAbbr === 'NC') {
       grants.push(
-        { name: 'NC Clean Water Management Trust Fund', source: 'CWMTF', amount: '$100K–$1M', maxAmount: 1000, fit: 'high', url: 'https://cwmtf.nc.gov/', description: 'North Carolina\'s premier water quality and land conservation program.' },
-        { name: 'NC DEQ 319 Grants', source: 'NC DEQ', amount: '$30K–$200K', maxAmount: 200, fit: 'high', url: 'https://www.deq.nc.gov/about/divisions/water-resources/planning/nonpoint-source-management/319-grant-program', description: 'NPS control. Neuse River nutrients and Cape Fear PFAS areas prioritized.' },
+        { name: 'NC Clean Water Management Trust Fund', source: 'CWMTF', amount: '$100K–$1M', maxAmount: 1000, fit: 'high', url: 'https://nclwf.nc.gov/', description: 'North Carolina\'s premier water quality and land conservation program.' },
+        { name: 'NC DEQ 319 Grants', source: 'NC DEQ', amount: '$30K–$200K', maxAmount: 200, fit: 'high', url: 'https://www.deq.nc.gov/about/divisions/water-resources/water-planning/nonpoint-source-planning/319-grant-program', description: 'NPS control. Neuse River nutrients and Cape Fear PFAS areas prioritized.' },
       );
     }
     if (stateAbbr === 'SC') {
       grants.push(
-        { name: 'SC DHEC 319 Grants', source: 'SC DHEC', amount: '$25K–$150K', maxAmount: 150, fit: 'high', url: 'https://scdhec.gov/environment/water-quality/nonpoint-source-management-program', description: 'NPS grants for impaired waters. Coastal bacteria TMDLs prioritized.' },
+        { name: 'SC DHEC 319 Grants', source: 'SC DHEC', amount: '$25K–$150K', maxAmount: 150, fit: 'high', url: 'https://des.sc.gov/programs/bureau-water/watersheds-program/nonpoint-source-program', description: 'NPS grants for impaired waters. Coastal bacteria TMDLs prioritized.' },
       );
     }
     if (stateAbbr === 'GA') {
@@ -844,12 +844,12 @@ export function getStateGrants(stateAbbr: string): GrantOpportunity[] {
     }
     if (stateAbbr === 'MO') {
       grants.push(
-        { name: 'MO DNR 319 NPS Grants', source: 'MO DNR', amount: '$30K–$200K', maxAmount: 200, fit: 'high', url: 'https://dnr.mo.gov/water/business-industry-other-entities/financial-assistance-business-industry/nonpoint-source-management', description: 'Meramec River bacteria and Big River lead remediation.' },
+        { name: 'MO DNR 319 NPS Grants', source: 'MO DNR', amount: '$30K–$200K', maxAmount: 200, fit: 'high', url: 'https://dnr.mo.gov/water/what-were-doing/initiatives/nonpoint-source-management-program', description: 'Meramec River bacteria and Big River lead remediation.' },
       );
     }
     if (stateAbbr === 'KS') {
       grants.push(
-        { name: 'KS WRAPS Grants', source: 'KDHE', amount: '$25K–$150K', maxAmount: 150, fit: 'high', url: 'https://www.kdhe.ks.gov/358/Watershed-Restoration-and-Protection-Strateg', description: 'Watershed Restoration and Protection Strategy grants for Kansas impaired waters.' },
+        { name: 'KS WRAPS Grants', source: 'KDHE', amount: '$25K–$150K', maxAmount: 150, fit: 'high', url: 'https://www.kdhe.ks.gov/1099/Watershed-Restoration-Protection-Strategy', description: 'Watershed Restoration and Protection Strategy grants for Kansas impaired waters.' },
       );
     }
   }
@@ -879,7 +879,7 @@ export function getStateGrants(stateAbbr: string): GrantOpportunity[] {
     }
     if (stateAbbr === 'UT') {
       grants.push(
-        { name: 'UT DEQ Water Quality Grants', source: 'UT DEQ', amount: '$30K–$200K', maxAmount: 200, fit: 'high', url: 'https://deq.utah.gov/water-quality/financial-assistance-water-quality', description: 'Utah Lake phosphorus and Jordan River bacteria reduction. Innovative monitoring welcome.' },
+        { name: 'UT DEQ Water Quality Grants', source: 'UT DEQ', amount: '$30K–$200K', maxAmount: 200, fit: 'high', url: 'https://deq.utah.gov/water-quality/financial-assistance-programs-water-quality', description: 'Utah Lake phosphorus and Jordan River bacteria reduction. Innovative monitoring welcome.' },
       );
     }
     if (stateAbbr === 'AZ') {
@@ -898,12 +898,12 @@ export function getStateGrants(stateAbbr: string): GrantOpportunity[] {
   if (['ND', 'SD'].includes(stateAbbr)) {
     if (stateAbbr === 'SD') {
       grants.push(
-        { name: 'SD DANR 319 Grants', source: 'SD DANR', amount: '$25K–$150K', maxAmount: 150, fit: 'high', url: 'https://danr.sd.gov/Conservation/WatershedProtection/NPS/', description: 'Big Sioux River bacteria and James River nutrient reduction.' },
+        { name: 'SD DANR 319 Grants', source: 'SD DANR', amount: '$25K–$150K', maxAmount: 150, fit: 'high', url: 'https://danr.sd.gov/Conservation/WatershedProtection/NonpointSource.aspx', description: 'Big Sioux River bacteria and James River nutrient reduction.' },
       );
     }
     if (stateAbbr === 'ND') {
       grants.push(
-        { name: 'ND DEQ 319 Grants', source: 'ND DEQ', amount: '$25K–$150K', maxAmount: 150, fit: 'high', url: 'https://deq.nd.gov/wq/3_WM/NPS_Section319.aspx', description: 'Red River nutrients and Sheyenne River bacteria projects.' },
+        { name: 'ND DEQ 319 Grants', source: 'ND DEQ', amount: '$25K–$150K', maxAmount: 150, fit: 'high', url: 'https://deq.nd.gov/WQ/3_Watershed_Mgmt/1_NPS_Mgmt/nps.aspx', description: 'Red River nutrients and Sheyenne River bacteria projects.' },
       );
     }
   }
@@ -955,6 +955,34 @@ export function getLiveGrantOpportunities(): GrantOpportunity[] {
   }
 }
 
+
+/** Returns forecasted/upcoming grant opportunities not yet open, with expected open dates */
+export function getUpcomingGrantOpportunities(): (GrantOpportunity & { openDate?: string })[] {
+  try {
+    const { getGrantsGovForecasted } = require('./grantsGovCache');
+    const opps = getGrantsGovForecasted();
+    return opps.map((o: any): GrantOpportunity & { openDate?: string } => {
+      const floor = o.awardFloor || 0;
+      const ceiling = o.awardCeiling || 0;
+      const fmtDollars = (n: number) => n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `$${(n / 1_000).toFixed(0)}K` : `$${n}`;
+      const amount = ceiling > 0 ? (floor > 0 ? `${fmtDollars(floor)}–${fmtDollars(ceiling)}` : `Up to ${fmtDollars(ceiling)}`) : 'See listing';
+      return {
+        name: o.title,
+        source: o.agencyCode || o.agency || 'Grants.gov',
+        amount,
+        maxAmount: Math.round(ceiling / 1000) || 0,
+        fit: 'medium' as const,
+        deadline: o.closeDate || undefined,
+        description: o.description || '',
+        url: o.url,
+        grantsGovId: o.opportunityId,
+        openDate: o.openDate || undefined,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
 
 // ─── MS4 Jurisdiction Compliance Data ──────────────────────────────────────
 

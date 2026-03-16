@@ -745,7 +745,7 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
     switch (scopeContext.scope) {
       case 'national': {
         const d = scopeContext.data;
-        return `Analyze ${d.totalStates} states with ${d.totalImpaired.toLocaleString()} impaired waterbodies. Identifies systemic issues, interstate patterns, and ${roleCtx.label.toLowerCase()}-level actions including situation assessment, root causes, stakeholder mapping, phased actions, co-benefits, cost estimates, regulatory pathway, and grant opportunities.`;
+        return `Analyze ${d.totalStates} states with ${d.totalImpaired.toLocaleString()} impaired waterbodies. Identifies systemic issues, interstate patterns, and ${roleCtx.label.toLowerCase()}-level actions including situation assessment, root causes, stakeholder mapping, phased actions, co-benefits, cost estimates, regulatory pathway, and currently open grants.`;
       }
       case 'region': {
         const d = scopeContext.data;

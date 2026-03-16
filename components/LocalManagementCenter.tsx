@@ -175,7 +175,7 @@ const LENS_CONFIG: Record<ViewLens, {
   },
   funding: {
     label: 'Funding & Grants',
-    description: 'Grant opportunities, USASpending, and funding timeline',
+    description: 'Currently open grants, best-fit funding, USASpending, and deadline tracking',
     sections: new Set([
       'grants', 'local-usaspending', 'fund-active', 'fund-srf',
       'local-match-requirements', 'grant-outcomes', 'local-funding-timeline', 'disclaimer',

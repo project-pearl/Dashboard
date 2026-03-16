@@ -430,7 +430,7 @@ export function ESGImpactReporting({
         <CardHeader>
           <CardTitle className="text-green-900 flex items-center gap-2">
             <Download className="h-5 w-5" />
-            Sustainability Grant Opportunities
+            Grants — Currently Open & Best Fit
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -455,7 +455,7 @@ export function ESGImpactReporting({
               </AlertDescription>
             </Alert>
             <p className="text-xs text-green-700 italic">
-              Check the Grant Opportunity Matcher for full details and additional funding opportunities.
+              Check the Grant Opportunity Matcher for full details and additional currently open grants.
             </p>
           </div>
         </CardContent>

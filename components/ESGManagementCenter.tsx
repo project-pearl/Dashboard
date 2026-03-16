@@ -2124,13 +2124,17 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                 <CardContent>
                   <div className="space-y-2">
                     {[
-                      { grant: 'EPA Water Infrastructure Finance (WIFIA)', amount: '$2.5M', period: '2024-2029', remaining: '$2.1M', status: 'Active' },
-                      { grant: 'State Clean Water SRF Loan', amount: '$1.8M', period: '2024-2028', remaining: '$1.4M', status: 'Active' },
-                      { grant: 'EPA Environmental Stewardship Grant', amount: '$500,000', period: '2025-2027', remaining: '$500,000', status: 'New' },
-                      { grant: 'State Water Quality Improvement Fund', amount: '$400,000', period: '2023-2026', remaining: '$120,000', status: 'Active' },
+                      { grant: 'EPA Water Infrastructure Finance (WIFIA)', url: 'https://www.epa.gov/wifia', amount: '$2.5M', period: '2024-2029', remaining: '$2.1M', status: 'Active' },
+                      { grant: 'State Clean Water SRF Loan', url: 'https://www.epa.gov/cwsrf', amount: '$1.8M', period: '2024-2028', remaining: '$1.4M', status: 'Active' },
+                      { grant: 'EPA Environmental Stewardship Grant', url: 'https://www.epa.gov/grants', amount: '$500,000', period: '2025-2027', remaining: '$500,000', status: 'New' },
+                      { grant: 'State Water Quality Improvement Fund', url: 'https://www.epa.gov/grants/water-quality-improvement-fund', amount: '$400,000', period: '2023-2026', remaining: '$120,000', status: 'Active' },
                     ].map((g, i) => (
                       <div key={i} className="flex items-center justify-between text-xs border border-slate-200 rounded-lg px-3 py-2">
-                        <span className="text-slate-700 font-medium">{g.grant}</span>
+                        {g.url ? (
+                          <a href={g.url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-blue-700 hover:text-blue-900 hover:underline">{g.grant}</a>
+                        ) : (
+                          <span className="text-xs font-semibold text-slate-800">{g.grant}</span>
+                        )}
                         <div className="flex items-center gap-3">
                           <span className="text-slate-500">{g.amount}</span>
                           <span className="text-slate-400">{g.period}</span>
@@ -2178,19 +2182,23 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                     <Sparkles className="h-5 w-5 text-purple-600" />
                     Opportunity Pipeline
                   </CardTitle>
-                  <CardDescription>Upcoming and pending grant opportunities matched to sustainability priorities</CardDescription>
+                  <CardDescription>Currently open grants matched to sustainability priorities — best fit first</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     {[
-                      { name: 'EPA Emerging Contaminants Grant', deadline: 'Apr 2026', amount: '$2M', match: 92, status: 'Drafting' },
-                      { name: 'USDA Water & Waste Disposal Grant', deadline: 'Jun 2026', amount: '$500K', match: 87, status: 'Identified' },
-                      { name: 'State Green Infrastructure Fund', deadline: 'Aug 2026', amount: '$1.2M', match: 78, status: 'Identified' },
-                      { name: 'DOE Industrial Water Efficiency', deadline: 'Oct 2026', amount: '$3M', match: 71, status: 'Evaluating' },
+                      { name: 'EPA Emerging Contaminants Grant', url: 'https://www.epa.gov/emerging-contaminants', deadline: 'Apr 2026', amount: '$2M', match: 92, status: 'Drafting' },
+                      { name: 'USDA Water & Waste Disposal Grant', url: 'https://www.rd.usda.gov/programs-services/water-environmental-programs/water-waste-disposal-loan-grant-program', deadline: 'Jun 2026', amount: '$500K', match: 87, status: 'Identified' },
+                      { name: 'State Green Infrastructure Fund', url: '', deadline: 'Aug 2026', amount: '$1.2M', match: 78, status: 'Identified' },
+                      { name: 'DOE Industrial Water Efficiency', url: 'https://www.energy.gov/eere/iedo/industrial-efficiency-and-decarbonization-office', deadline: 'Oct 2026', amount: '$3M', match: 71, status: 'Evaluating' },
                     ].map((o, i) => (
                       <div key={i} className="flex items-center justify-between text-xs border border-slate-200 rounded-lg px-3 py-2">
                         <div>
-                          <span className="text-slate-700 font-medium">{o.name}</span>
+                          {o.url ? (
+                            <a href={o.url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-blue-700 hover:text-blue-900 hover:underline">{o.name}</a>
+                          ) : (
+                            <span className="text-xs font-semibold text-slate-800">{o.name}</span>
+                          )}
                           <span className="text-slate-400 ml-2">Due {o.deadline}</span>
                         </div>
                         <div className="flex items-center gap-3">

@@ -2161,12 +2161,16 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                 <CardContent>
                   <div className="space-y-2">
                     {[
-                      { grant: 'NSF Water Systems Research', amount: '$380,000', period: '2024-2027', remaining: '$245,000', status: 'Active' },
-                      { grant: 'EPA STAR Fellowship', amount: '$120,000', period: '2025-2027', remaining: '$95,000', status: 'Active' },
-                      { grant: 'USGS 104(b) Research Grant', amount: '$85,000', period: '2025-2026', remaining: '$62,000', status: 'Active' },
+                      { grant: 'NSF Water Systems Research', url: 'https://www.nsf.gov/funding/opportunities', amount: '$380,000', period: '2024-2027', remaining: '$245,000', status: 'Active' },
+                      { grant: 'EPA STAR Fellowship', url: 'https://www.epa.gov/research-fellowships', amount: '$120,000', period: '2025-2027', remaining: '$95,000', status: 'Active' },
+                      { grant: 'USGS 104(b) Research Grant', url: 'https://www.usgs.gov/programs/national-research-program', amount: '$85,000', period: '2025-2026', remaining: '$62,000', status: 'Active' },
                     ].map((g, i) => (
                       <div key={i} className="flex items-center justify-between text-xs border border-slate-200 rounded-lg px-3 py-2">
-                        <span className="text-slate-700 font-medium">{g.grant}</span>
+                        {g.url ? (
+                          <a href={g.url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-blue-700 hover:text-blue-900 hover:underline">{g.grant}</a>
+                        ) : (
+                          <span className="text-xs font-semibold text-slate-800">{g.grant}</span>
+                        )}
                         <div className="flex items-center gap-3">
                           <span className="text-slate-500">{g.amount}</span>
                           <span className="text-slate-400">{g.period}</span>
@@ -2188,17 +2192,21 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                     <TrendingUp className="h-5 w-5 text-blue-600" />
                     Opportunity Pipeline
                   </CardTitle>
-                  <CardDescription>Upcoming grant opportunities and application pipeline.</CardDescription>
+                  <CardDescription>Currently open grants matched to your priorities — best fit first</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     {[
-                      { opportunity: 'NSF CBET Water Treatment', amount: 'Up to $500K', deadline: 'Jun 2026', status: 'Preparing' },
-                      { opportunity: 'EPA P3 Phase II', amount: '$75,000', deadline: 'Aug 2026', status: 'Eligible' },
-                      { opportunity: 'NOAA Sea Grant Research', amount: 'Up to $300K', deadline: 'Oct 2026', status: 'Researching' },
+                      { opportunity: 'NSF CBET Water Treatment', url: 'https://www.nsf.gov/funding/opportunities', amount: 'Up to $500K', deadline: 'Jun 2026', status: 'Preparing' },
+                      { opportunity: 'EPA P3 Phase II', url: 'https://www.epa.gov/P3', amount: '$75,000', deadline: 'Aug 2026', status: 'Eligible' },
+                      { opportunity: 'NOAA Sea Grant Research', url: 'https://seagrant.noaa.gov/funding/', amount: 'Up to $300K', deadline: 'Oct 2026', status: 'Researching' },
                     ].map((o, i) => (
                       <div key={i} className="flex items-center justify-between text-xs border border-slate-200 rounded-lg px-3 py-2">
-                        <span className="text-slate-700">{o.opportunity}</span>
+                        {o.url ? (
+                          <a href={o.url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-blue-700 hover:text-blue-900 hover:underline">{o.opportunity}</a>
+                        ) : (
+                          <span className="text-xs font-semibold text-slate-800">{o.opportunity}</span>
+                        )}
                         <div className="flex items-center gap-3">
                           <span className="text-slate-500">{o.amount}</span>
                           <span className="text-slate-400">Due: {o.deadline}</span>

@@ -2302,7 +2302,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
             case 'grants': return DS(isTeacher ? (
           <div id="section-grants" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <button onClick={() => onToggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-              <span className="text-sm font-bold text-slate-800">💰 K-12 Education Grant Opportunities — {stateName}</span>
+              <span className="text-sm font-bold text-slate-800">💰 K-12 Grants — Currently Open & Best Fit — {stateName}</span>
               <div className="flex items-center gap-1">
                 {isSectionOpen('grants') && <BrandedPrintBtn sectionId="grants" title={`K-12 Education Grants — ${stateName}`} />}
                 {isSectionOpen('grants') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}

@@ -95,6 +95,7 @@ import NationalMapSection from '@/components/federal/NationalMapSection';
 import { SectionLoader, isSectionExtracted } from '@/components/federal/sections';
 import { TriageQueueSection } from './TriageQueueSection';
 import CorrelationBreakthroughsPanel from '@/components/CorrelationBreakthroughsPanel';
+import { useDataSummaries } from '@/hooks/useDataSummaries';
 
 
 import hucNamesData from '@/data/huc8-names.json';
@@ -1335,6 +1336,7 @@ export function FederalManagementCenter(props: Props) {
   const liveSentinelSevereCount = sentinel.anomalyHucs.length + sentinel.criticalHucs.length;
   const floodForecast = useFloodForecast();
   const floodRisk = useFloodRiskOverview();
+  const { data: dataSummaries, isLoading: summariesLoading } = useDataSummaries();
   const amsSummary = useAlertSummary();
   const { audioEnabled, toggleAudio, playChime } = useSentinelAudio({ userRole: user?.role });
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -4465,11 +4467,11 @@ export function FederalManagementCenter(props: Props) {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base font-semibold">Funding & Grant Landscape</CardTitle>
-              <button className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm hover:bg-slate-50 transition-colors" title="Overview of federal water infrastructure funding programs, grant opportunities, and application deadlines.">
+              <button className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm hover:bg-slate-50 transition-colors" title="Overview of federal water infrastructure funding programs, currently open grants and best-fit funding, and application deadlines.">
                 <HelpCircle className="w-4 h-4 text-slate-400" />
               </button>
             </div>
-            <CardDescription>Federal water infrastructure funding, grant opportunities, and deadline tracking</CardDescription>
+            <CardDescription>Federal water infrastructure funding, currently open grants, best-fit funding, and deadline tracking</CardDescription>
           </CardHeader>
           <CardContent className="pt-0 space-y-3">
             {/* Funding KPI Strip */}
@@ -5901,391 +5903,352 @@ export function FederalManagementCenter(props: Props) {
         }
 
         case 'usgs-ogc-stations': {
+          const d = dataSummaries.usgsOgc;
           return (
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.totalStations.toLocaleString() : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Total Stations</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-green-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-green-600">{summariesLoading ? '...' : d.loaded ? d.siteTypes : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Site Types</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-purple-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-purple-600">{summariesLoading ? '...' : d.loaded ? d.agencies : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Agencies</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-orange-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-orange-600">{summariesLoading ? '...' : d.loaded ? d.states : '\u2014'}</div>
                   <div className="text-xs text-gray-500">States Covered</div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span>⏳</span>
-                <span>Awaiting data — USGS OGC Monitoring Locations API</span>
-                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
-              </div>
+              {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — USGS OGC Monitoring Locations API</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
             </div>
           );
         }
 
         case 'ngwmn-groundwater': {
+          const d = dataSummaries.ngwmn;
           return (
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.totalSites.toLocaleString() : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Total Sites</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-green-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-green-600">{summariesLoading ? '...' : d.loaded ? d.providers : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Agencies</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-yellow-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-yellow-600">{summariesLoading ? '...' : d.loaded ? d.qualityResults.toLocaleString() : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Quality Results</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-purple-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-purple-600">{summariesLoading ? '...' : d.loaded ? d.states : '\u2014'}</div>
                   <div className="text-xs text-gray-500">States Covered</div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span>⏳</span>
-                <span>Awaiting data — National Ground Water Monitoring Network</span>
-                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
-              </div>
+              {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — National Ground Water Monitoring Network</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
             </div>
           );
         }
 
         case 'flood-impact-analysis': {
+          const d = dataSummaries.floodImpact;
           return (
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-red-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-red-600">{summariesLoading ? '...' : d.loaded ? d.zones.toLocaleString() : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Zones Analyzed</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-orange-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-orange-600">{summariesLoading ? '...' : d.loaded ? d.highRisk.toLocaleString() : '\u2014'}</div>
                   <div className="text-xs text-gray-500">High Risk Zones</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-yellow-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-yellow-600">{summariesLoading ? '...' : d.loaded ? d.infraAtRisk.toLocaleString() : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Infrastructure at Risk</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-blue-600">&mdash;</div>
-                  <div className="text-xs text-gray-500">States Covered</div>
+                  <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.states : '\u2014'}</div>
+                  <div className="text-xs text-gray-500">Grid Cells</div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span>⏳</span>
-                <span>Awaiting data — NWPS + NWM + HEFS Flood Infrastructure Analysis</span>
-                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
-              </div>
+              {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — NWPS + NWM + HEFS Flood Infrastructure Analysis</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
             </div>
           );
         }
 
         case 'pfas-analytics-panel': {
+          const d = dataSummaries.epaPfas;
           return (
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-red-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-red-600">{summariesLoading ? '...' : d.loaded ? d.facilities.toLocaleString() : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Facilities with PFAS</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-orange-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-orange-600">{summariesLoading ? '...' : d.loaded ? d.exceedances.toLocaleString() : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Exceedances</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-purple-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-purple-600">{summariesLoading ? '...' : d.loaded ? d.nearMilitary : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Near Military</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.states : '\u2014'}</div>
                   <div className="text-xs text-gray-500">States Covered</div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span>⏳</span>
-                <span>Awaiting data — EPA ECHO PFAS Analytics + DoD PFAS Sites</span>
-                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
-              </div>
+              {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — EPA ECHO PFAS Analytics + DoD PFAS Sites</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
             </div>
           );
         }
 
         case 'nws-forecast-panel': {
+          const d = dataSummaries.nwsForecast;
           return (
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.locations.toLocaleString() : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Forecast Locations</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-red-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-red-600">{summariesLoading ? '...' : d.loaded ? d.highRisk : '\u2014'}</div>
                   <div className="text-xs text-gray-500">High Risk Forecasts</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-green-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-green-600">{summariesLoading ? '...' : d.loaded ? d.states : '\u2014'}</div>
                   <div className="text-xs text-gray-500">States Covered</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-gray-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-gray-600">6h</div>
                   <div className="text-xs text-gray-500">Update Frequency</div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span>⏳</span>
-                <span>Awaiting data — NWS 7-Day Forecast API (6h refresh)</span>
-                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
-              </div>
+              {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — NWS 7-Day Forecast API (6h refresh)</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
             </div>
           );
         }
 
         case 'water-availability': {
+          const d = dataSummaries.waterAvail;
           return (
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.huc8Indicators.toLocaleString() : '\u2014'}</div>
                   <div className="text-xs text-gray-500">HUC-8 Indicators</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-red-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-red-600">{summariesLoading ? '...' : d.loaded ? d.droughtHucs : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Drought HUCs</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-orange-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-orange-600">{summariesLoading ? '...' : d.loaded ? d.declining : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Declining Trend</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-green-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-green-600">{summariesLoading ? '...' : d.loaded ? d.states : '\u2014'}</div>
                   <div className="text-xs text-gray-500">States Covered</div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span>⏳</span>
-                <span>Awaiting data — USGS Water Availability + USDM Drought Overlay</span>
-                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
-              </div>
+              {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — USGS Water Availability + USDM Drought Overlay</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
             </div>
           );
         }
 
         case 'cyber-risk-panel': {
+          const d = dataSummaries.cyberRisk;
           return (
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.assessed.toLocaleString() : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Systems Assessed</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-red-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-red-600">{summariesLoading ? '...' : d.loaded ? d.highCritical : '\u2014'}</div>
                   <div className="text-xs text-gray-500">High/Critical Risk</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-purple-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-purple-600">{summariesLoading ? '...' : d.loaded ? d.nearMilitary : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Near Military</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-green-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-green-600">{summariesLoading ? '...' : d.loaded ? d.states : '\u2014'}</div>
                   <div className="text-xs text-gray-500">States Covered</div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span>⏳</span>
-                <span>Awaiting data — ECHO + SDWIS + FRS Cyber Risk Derivation</span>
-                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
-              </div>
+              {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — ECHO + SDWIS + FRS Cyber Risk Derivation</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
             </div>
           );
         }
 
         case 'global-water-quality': {
+          const d = dataSummaries.gemstat;
           return (
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.countries : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Countries</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-green-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-green-600">{summariesLoading ? '...' : d.loaded ? d.stations.toLocaleString() : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Stations Worldwide</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-purple-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-purple-600">{summariesLoading ? '...' : d.loaded && d.latestYear ? d.latestYear : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Latest Data Year</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-gray-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-gray-600">{d.loaded ? 'UNEP' : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Data Source</div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span>⏳</span>
-                <span>Awaiting data — GEMStat Global Freshwater Quality Database</span>
-                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
-              </div>
+              {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — GEMStat Global Freshwater Quality Database</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
             </div>
           );
         }
 
         case 'wqx-modern-results': {
+          const d = dataSummaries.wqxModern;
           return DS(
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.records.toLocaleString() : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Total Results</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-emerald-600">&mdash;</div>
-                  <div className="text-xs text-gray-500">Parameters</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-amber-600">&mdash;</div>
-                  <div className="text-xs text-gray-500">Stations</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-purple-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-emerald-600">{summariesLoading ? '...' : d.loaded ? d.states : '\u2014'}</div>
                   <div className="text-xs text-gray-500">States</div>
                 </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-amber-600">{d.loaded ? 'WQX 3.0' : '\u2014'}</div>
+                  <div className="text-xs text-gray-500">API Version</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-purple-600">{d.loaded ? 'EPA' : '\u2014'}</div>
+                  <div className="text-xs text-gray-500">Source</div>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span>⏳</span>
-                <span>Awaiting data — EPA WQX 3.0 Water Quality API</span>
-                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
-              </div>
+              {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — EPA WQX 3.0 Water Quality API</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
             </div>
           );
         }
 
         case 'flood-event-viewer': {
+          const d = dataSummaries.stnFlood;
           return DS(
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.events.toLocaleString() : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Active Events</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-emerald-600">&mdash;</div>
-                  <div className="text-xs text-gray-500">Peak Stages</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-amber-600">&mdash;</div>
-                  <div className="text-xs text-gray-500">HWMs Collected</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-purple-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-emerald-600">{summariesLoading ? '...' : d.loaded ? d.states : '\u2014'}</div>
                   <div className="text-xs text-gray-500">States</div>
                 </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-amber-600">{d.loaded ? 'USGS' : '\u2014'}</div>
+                  <div className="text-xs text-gray-500">Source</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-purple-600">{d.loaded ? 'STN' : '\u2014'}</div>
+                  <div className="text-xs text-gray-500">Network</div>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span>⏳</span>
-                <span>Awaiting data — USGS STN Flood Event Services</span>
-                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
-              </div>
+              {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — USGS STN Flood Event Services</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
             </div>
           );
         }
 
         case 'dmr-violations-panel': {
+          const d = dataSummaries.dmrViolations;
           return DS(
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.violations.toLocaleString() : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Violations</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-emerald-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-emerald-600">{summariesLoading ? '...' : d.loaded ? d.facilities.toLocaleString() : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Facilities</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-amber-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-amber-600">{summariesLoading ? '...' : d.loaded ? d.violations.toLocaleString() : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Exceedances</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-purple-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-purple-600">{summariesLoading ? '...' : d.loaded ? d.states : '\u2014'}</div>
                   <div className="text-xs text-gray-500">States</div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span>⏳</span>
-                <span>Awaiting data — EPA ECHO DMR Violations API</span>
-                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
-              </div>
+              {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — EPA ECHO DMR Violations API</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
             </div>
           );
         }
 
         case 'hab-forecast-panel': {
+          const d = dataSummaries.habForecast;
           return DS(
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.forecasts.toLocaleString() : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Active Forecasts</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-emerald-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-emerald-600">{summariesLoading ? '...' : d.loaded ? d.highRisk : '\u2014'}</div>
                   <div className="text-xs text-gray-500">High Risk</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-amber-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-amber-600">{summariesLoading ? '...' : d.loaded ? d.waterbodies : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Waterbodies</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-purple-600">&mdash;</div>
-                  <div className="text-xs text-gray-500">Regions</div>
+                  <div className="text-2xl font-bold text-purple-600">{d.loaded ? 'NCCOS' : '\u2014'}</div>
+                  <div className="text-xs text-gray-500">Source</div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span>⏳</span>
-                <span>Awaiting data — NOAA NCCOS HAB Forecast System</span>
-                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
-              </div>
+              {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — NOAA NCCOS HAB Forecast System</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
             </div>
           );
         }
 
         case 'cdc-places-health': {
+          const d = dataSummaries.cdcPlaces;
           return DS(
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.tracts.toLocaleString() : '\u2014'}</div>
                   <div className="text-xs text-gray-500">Census Tracts</div>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-emerald-600">&mdash;</div>
-                  <div className="text-xs text-gray-500">Conditions</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-amber-600">&mdash;</div>
-                  <div className="text-xs text-gray-500">High Prevalence</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-purple-600">&mdash;</div>
+                  <div className="text-2xl font-bold text-emerald-600">{summariesLoading ? '...' : d.loaded ? d.states : '\u2014'}</div>
                   <div className="text-xs text-gray-500">States</div>
                 </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-amber-600">{d.loaded ? 'CDC' : '\u2014'}</div>
+                  <div className="text-xs text-gray-500">Source</div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="text-2xl font-bold text-purple-600">{d.loaded ? 'PLACES' : '\u2014'}</div>
+                  <div className="text-xs text-gray-500">Program</div>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span>⏳</span>
-                <span>Awaiting data — CDC PLACES Local Health Data</span>
-                <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
-              </div>
+              {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — CDC PLACES Local Health Data</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
             </div>
           );
         }

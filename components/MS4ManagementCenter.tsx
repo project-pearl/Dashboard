@@ -3034,9 +3034,9 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
             case 'grants': return DS(
         <div id="section-grants" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
           <button onClick={() => onToggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-            <span className="text-sm font-bold text-slate-800">💰 Grant Opportunities — {stateName}</span>
+            <span className="text-sm font-bold text-slate-800">💰 Grants — Currently Open & Best Fit — {stateName}</span>
             <div className="flex items-center gap-1">
-              {isSectionOpen('grants') && <BrandedPrintBtn sectionId="grants" title={`Grant Opportunities — ${stateName}`} />}
+              {isSectionOpen('grants') && <BrandedPrintBtn sectionId="grants" title={`Grants — Currently Open & Best Fit — ${stateName}`} />}
               {isSectionOpen('grants') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
             </div>
           </button>

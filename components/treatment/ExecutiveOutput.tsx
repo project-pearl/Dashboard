@@ -509,7 +509,7 @@ export default function ExecutiveOutput({
         {/* ═══ 6. Grants ═══ */}
         {calc.grants.length > 0 && (
           <section className="exec-card bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-            <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Grant Opportunities</h2>
+            <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Grants — Currently Open & Best Fit</h2>
             <table className="w-full text-2xs">
               <thead>
                 <tr className="border-b-2 border-slate-200 text-left">

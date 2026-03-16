@@ -1809,7 +1809,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
             case 'fund-pipeline': return DS(
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
                 <h3 className="text-sm font-semibold text-slate-800 mb-1">Opportunity Pipeline</h3>
-                <p className="text-xs text-slate-500">Upcoming grant opportunities and application pipeline.</p>
+                <p className="text-xs text-slate-500">Currently open grants matched to your priorities — best fit first</p>
               </div>
             );
 

@@ -101,7 +101,7 @@ export const ROLE_TRAINING: Record<string, RoleTrainingData> = {
     },
     tips: [
       { title: 'Council meeting prep', body: 'Use the Political Briefing lens for ready-made talking points, constituent concerns, and agenda suggestions.' },
-      { title: 'Grant readiness', body: 'The Funding lens pre-matches your water quality challenges with active grant opportunities — keep it bookmarked.' },
+      { title: 'Grant readiness', body: 'The Funding lens shows currently open grants matched to your water quality challenges — best fit first.' },
     ],
   },
 
@@ -288,7 +288,7 @@ export const ROLE_TRAINING: Record<string, RoleTrainingData> = {
     },
     tips: [
       { title: 'Citizen science', body: 'Use the Citizen Reporting lens to integrate community-submitted water quality observations with official monitoring data.' },
-      { title: 'Grant applications', body: 'The Funding lens provides pre-matched grant opportunities — pair with Watershed Health data for compelling applications.' },
+      { title: 'Grant applications', body: 'The Funding lens shows currently open grants ranked by best fit — pair with Watershed Health data for compelling applications.' },
     ],
   },
 

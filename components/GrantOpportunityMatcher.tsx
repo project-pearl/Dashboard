@@ -1,8 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, ExternalLink } from 'lucide-react';
-import { getStateGrants, getLiveGrantOpportunities, STATE_AUTHORITIES } from '@/lib/stateWaterData';
+import { DollarSign, ExternalLink, CalendarClock } from 'lucide-react';
+import { getStateGrants, getLiveGrantOpportunities, getUpcomingGrantOpportunities, STATE_AUTHORITIES } from '@/lib/stateWaterData';
 import type { GrantOpportunity } from '@/lib/stateWaterData';
 import { usePearlFunding, type PearlGrant } from '@/lib/usePearlFunding';
 
@@ -14,6 +15,7 @@ interface Grant {
   fit: 'High' | 'Good' | 'Review';
   deadline: string;
   filing_date?: string;
+  openDate?: string;
   description: string;
   url: string;
   badge?: string;
@@ -112,7 +114,7 @@ const NATIONAL_MS4_GRANTS: Grant[] = [
     agency: 'Economic Development Administration / U.S. Dept of Commerce',
     amount: '$2M–$20M+ (construction awards)',
     amountMax: 20000000,
-    url: 'https://www.eda.gov/funding/programs/american-rescue-plan/build-back-better',
+    url: 'https://www.eda.gov/funding/programs/american-rescue-plan',
     fit: 'Good',
     deadline: 'Rolling until funds exhausted',
     description: 'Port and harbor water-quality infrastructure with workforce training around marine restoration technology. Requires a disaster-designation nexus and economic development case.',
@@ -123,7 +125,7 @@ const NATIONAL_MS4_GRANTS: Grant[] = [
     agency: 'National Science Foundation',
     amount: '$275K / $1.5M',
     amountMax: 1500000,
-    url: 'https://www.nsf.gov/eng/iip/sbir/',
+    url: 'https://seedfund.nsf.gov/',
     fit: 'High',
     deadline: 'Rolling',
     description: 'Technology innovation for water treatment. Three provisional patents and Milton FL pilot validation make this a strong match.',
@@ -134,7 +136,7 @@ const NATIONAL_MS4_GRANTS: Grant[] = [
     agency: 'NOAA Restoration Center',
     amount: '$100K–$5M',
     amountMax: 5000000,
-    url: 'https://www.fisheries.noaa.gov/grant/noaa-community-based-restoration-program',
+    url: 'https://www.fisheries.noaa.gov/grant/coastal-and-marine-habitat-restoration-grants',
     fit: 'High',
     deadline: 'Annual – varies',
     description: 'Coastal ecosystem restoration. Oyster integration strengthens the application. Nature-based solutions with monitoring data preferred.',
@@ -191,7 +193,7 @@ const NATIONAL_K12_GRANTS: Grant[] = [
     agency: 'National Science Foundation',
     amount: '$300K–$3M',
     amountMax: 3000000,
-    url: 'https://www.nsf.gov/funding/pgm_summ.jsp?pims_id=500047',
+    url: 'https://www.nsf.gov/funding/opportunities/discovery-research-prek-12-drk-12',
     fit: 'High',
     deadline: 'Annual – November',
     description: 'STEM education research using real environmental data and classroom-ready water quality datasets.',
@@ -246,7 +248,7 @@ const NATIONAL_COLLEGE_GRANTS: Grant[] = [
     agency: 'National Science Foundation',
     amount: 'Stipend + travel ($6K–$8K/student)',
     amountMax: 500000,
-    url: 'https://www.nsf.gov/funding/pgm_summ.jsp?pims_id=5517',
+    url: 'https://www.nsf.gov/funding/opportunities/research-experiences-undergraduates-reu',
     fit: 'High',
     deadline: 'Annual – February/October',
     description: 'Undergraduate research opportunities in environmental engineering and water quality with publishable student project datasets.',
@@ -268,7 +270,7 @@ const NATIONAL_COLLEGE_GRANTS: Grant[] = [
     agency: 'EPA Office of Research & Development',
     amount: '$50K/yr (up to 3 years)',
     amountMax: 150000,
-    url: 'https://www.epa.gov/research-fellowships/science-achieve-results-star',
+    url: 'https://www.epa.gov/research-fellowships',
     fit: 'High',
     deadline: 'Annual – varies',
     description: 'Graduate fellowships for environmental science research. Water quality monitoring technology and biofiltration are priority research areas.',
@@ -291,7 +293,7 @@ const NATIONAL_SCIENTIST_GRANTS: Grant[] = [
     agency: 'National Science Foundation',
     amount: '$300K–$500K (3 years)',
     amountMax: 500000,
-    url: 'https://new.nsf.gov/funding/opportunities/environmental-engineering',
+    url: 'https://www.nsf.gov/funding/opportunities/environmental-engineering',
     fit: 'High',
     deadline: 'Rolling (target dates Feb & Sept)',
     description: 'Core NSF funding for environmental engineering research. Biofiltration, water treatment innovation, and monitoring technology all within scope.',
@@ -332,7 +334,7 @@ const NATIONAL_SCIENTIST_GRANTS: Grant[] = [
     agency: 'National Science Foundation',
     amount: '$275K (Phase I) / $1.5M (Phase II)',
     amountMax: 1500000,
-    url: 'https://www.nsf.gov/eng/iip/sbir/',
+    url: 'https://seedfund.nsf.gov/',
     fit: 'High',
     deadline: 'Rolling',
     description: 'Technology commercialization support for water treatment innovation with strong Phase I/II pathways.',
@@ -357,7 +359,7 @@ const NATIONAL_CORPORATE_GRANTS: Grant[] = [
     agency: 'National Fish & Wildlife Foundation',
     amount: '$50K–$500K',
     amountMax: 500000,
-    url: 'https://www.nfwf.org/who-we-are/corporate-partners',
+    url: 'https://www.nfwf.org/partnerships/corporate-partners',
     fit: 'High',
     deadline: 'Ongoing partnership model',
     description: 'Corporate-funded conservation matching with sustainability reporting integration, biodiversity credits, and water quality impact metrics.',
@@ -393,7 +395,7 @@ const MD_SPECIFIC_GRANTS: Grant[] = [
     agency: 'Maryland TEDCO',
     amount: '$100K–$500K',
     amountMax: 500000,
-    url: 'https://www.tedcomd.com/funding/marylands-innovation-initiative',
+    url: 'https://www.tedcomd.com/funding/maryland-innovation-initiative',
     fit: 'High',
     deadline: 'Quarterly Application Cycles',
     description: 'Technology commercialization for Maryland companies. Water quality optimization, AI/ML deployment prediction.',
@@ -404,7 +406,7 @@ const MD_SPECIFIC_GRANTS: Grant[] = [
     agency: 'Chesapeake Bay Trust & Chesapeake Oyster Alliance',
     amount: '$50K–$150K',
     amountMax: 150000,
-    url: 'https://cbtrust.org/grants/chesapeake-oyster-innovation/',
+    url: 'https://cbtrust.org/grants/chesapeakeoyster/',
     fit: 'High',
     deadline: 'Annual',
     description: 'Innovation in oyster restoration technology with direct alignment to oyster reef establishment and monitoring outcomes.',
@@ -415,7 +417,7 @@ const MD_SPECIFIC_GRANTS: Grant[] = [
     agency: 'MARBIDCO',
     amount: '$10K–$100K',
     amountMax: 100000,
-    url: 'https://marbidco.maryland.gov/',
+    url: 'https://www.marbidco.org/',
     fit: 'Good',
     deadline: 'Rolling',
     description: 'Agricultural best management practices in rural Maryland counties, including nutrient tracking at ag-urban interfaces.',
@@ -634,6 +636,22 @@ export function GrantOpportunityMatcher({
   const goodFit = grants.filter(g => g.fit === 'Good').length;
   const totalValue = formatTotal(grants);
 
+  // Upcoming / not-yet-open grants
+  const upcomingRaw = getUpcomingGrantOpportunities();
+  const upcomingGrants: Grant[] = upcomingRaw.map(g => ({
+    ...mapStateGrant(g),
+    openDate: (g as any).openDate || undefined,
+  }));
+  // Sort upcoming by open date (soonest first), then by fit
+  upcomingGrants.sort((a, b) => {
+    if (a.openDate && b.openDate) return a.openDate.localeCompare(b.openDate);
+    if (a.openDate) return -1;
+    if (b.openDate) return 1;
+    return fitOrder[a.fit] - fitOrder[b.fit];
+  });
+
+  const [activeTab, setActiveTab] = useState<'open' | 'upcoming'>('open');
+
   const economicContext = getEconomicContext(stateAbbr);
 
   return (
@@ -641,7 +659,7 @@ export function GrantOpportunityMatcher({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-yellow-900">
           <DollarSign className="h-6 w-6 text-yellow-600" />
-          {stateName} Grant Opportunities
+          {stateName} Grants — Currently Open &amp; Best Fit
           <span className="ml-auto flex items-center gap-2">
             {totalValue && (
               <span className="text-sm font-bold text-yellow-700 bg-yellow-100 border border-yellow-300 px-2.5 py-0.5 rounded-full">
@@ -663,9 +681,104 @@ export function GrantOpportunityMatcher({
           <span className="flex items-center gap-1">🔵 {goodFit} Good Fit</span>
           <span className="flex items-center gap-1">📊 {grants.length} Total Programs</span>
         </div>
+        {/* Tab Switcher */}
+        <div className="flex gap-1 mt-3 bg-yellow-100/60 rounded-lg p-0.5 border border-yellow-200">
+          <button
+            onClick={() => setActiveTab('open')}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+              activeTab === 'open'
+                ? 'bg-white text-yellow-900 shadow-sm border border-yellow-300'
+                : 'text-yellow-700 hover:bg-yellow-50'
+            }`}
+          >
+            <DollarSign className="h-3.5 w-3.5" />
+            Currently Open ({grants.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('upcoming')}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+              activeTab === 'upcoming'
+                ? 'bg-white text-yellow-900 shadow-sm border border-yellow-300'
+                : 'text-yellow-700 hover:bg-yellow-50'
+            }`}
+          >
+            <CalendarClock className="h-3.5 w-3.5" />
+            Coming Soon ({upcomingGrants.length})
+          </button>
+        </div>
       </CardHeader>
 
       <CardContent className="space-y-3">
+        {/* ── Upcoming / Coming Soon Tab ── */}
+        {activeTab === 'upcoming' && (
+          <div className="space-y-3">
+            <div className="border-l-4 border-amber-400 pl-3 mb-2">
+              <div className="text-xs font-bold text-amber-700 uppercase tracking-wide flex items-center gap-2">
+                <span className="bg-amber-100 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded text-2xs">COMING SOON</span>
+                Forecasted & not-yet-open grants — ranked by best fit
+              </div>
+            </div>
+
+            {upcomingGrants.length === 0 ? (
+              <div className="text-center py-8 text-slate-500">
+                <CalendarClock className="h-8 w-8 mx-auto mb-2 text-slate-300" />
+                <p className="text-sm font-medium">No upcoming grants forecasted right now</p>
+                <p className="text-xs mt-1">Check back — Grants.gov data refreshes daily</p>
+              </div>
+            ) : (
+              upcomingGrants.map((grant) => (
+                <div key={grant.name} className="bg-white rounded-lg border border-amber-200 p-3 hover:border-amber-400 hover:shadow-sm transition-all">
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {grant.url ? (
+                        <a href={grant.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-sm text-blue-700 hover:text-blue-900 hover:underline flex items-center gap-1">
+                          {grant.name} <ExternalLink className="h-3 w-3 inline-block opacity-50" />
+                        </a>
+                      ) : (
+                        <span className="font-semibold text-sm text-slate-900">{grant.name}</span>
+                      )}
+                    </div>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold whitespace-nowrap shrink-0 ${FIT_COLORS[grant.fit]}`}>
+                      {grant.fit} Fit
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-slate-500 mb-1.5 flex-wrap">
+                    <span className="font-medium text-slate-700">{grant.agency}</span>
+                    <span>·</span>
+                    <span className="font-bold text-green-700">{grant.amount}</span>
+                    {grant.openDate && (
+                      <>
+                        <span>·</span>
+                        <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                          Opens: {grant.openDate}
+                        </span>
+                      </>
+                    )}
+                    {grant.deadline && grant.deadline !== 'Check source' && (
+                      <>
+                        <span>·</span>
+                        <span>Closes: {grant.deadline}</span>
+                      </>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed mb-1.5">{grant.description}</p>
+                  {grant.url && (
+                    <a href={grant.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline break-all">
+                      <ExternalLink className="h-3 w-3 shrink-0" /> {grant.url}
+                    </a>
+                  )}
+                </div>
+              ))
+            )}
+
+            <p className="text-xs text-slate-500 pt-1 border-t border-amber-200">
+              Forecasted grants from Grants.gov. Open dates are estimated — verify with the funding agency. Data refreshes daily.
+            </p>
+          </div>
+        )}
+
+        {/* ── Currently Open Tab ── */}
+        {activeTab === 'open' && <>
         {/* Economic Context Banner */}
         {economicContext && (userRole === 'MS4' || userRole === 'State' || userRole === 'NGO' || userRole === 'Researcher' || userRole === 'Federal') && (
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-lg p-4 mb-4">
@@ -699,7 +812,7 @@ export function GrantOpportunityMatcher({
               <span className="text-xl flex-shrink-0">🎓</span>
               <div>
                 <div className="text-sm font-semibold text-blue-900 mb-1">
-                  Grant Opportunities &amp; Funding Landscape
+                  Grants — Currently Open &amp; Best Fit
                 </div>
                 <div className="text-xs text-blue-700 leading-relaxed mb-2">
                   Learn about water quality funding sources in this field. Most grants require <b>faculty sponsorship</b> or institutional backing — discuss opportunities with your professor or advisor.
@@ -729,7 +842,13 @@ export function GrantOpportunityMatcher({
           >
             <div className="flex items-start justify-between gap-2 mb-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-sm text-slate-900">{grant.name}</span>
+                {grant.url ? (
+                  <a href={grant.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-sm text-blue-700 hover:text-blue-900 hover:underline flex items-center gap-1">
+                    {grant.name} <ExternalLink className="h-3 w-3 inline-block opacity-50" />
+                  </a>
+                ) : (
+                  <span className="font-semibold text-sm text-slate-900">{grant.name}</span>
+                )}
                 {grant.badge && (
                   <span className="text-xs bg-yellow-100 text-yellow-800 border border-yellow-200 px-1.5 py-0.5 rounded-full font-medium">
                     {grant.badge}
@@ -755,13 +874,12 @@ export function GrantOpportunityMatcher({
                 </>
               )}
             </div>
-            <p className="text-xs text-slate-600 leading-relaxed mb-2.5">{grant.description}</p>
-            <div className="flex items-center gap-2 flex-wrap">
-              <a href={grant.url} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 hover:border-blue-300 transition-all">
-                <ExternalLink className="h-3 w-3" /> View Grant
+            <p className="text-xs text-slate-600 leading-relaxed mb-1.5">{grant.description}</p>
+            {grant.url && (
+              <a href={grant.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline break-all">
+                <ExternalLink className="h-3 w-3 shrink-0" /> {grant.url}
               </a>
-            </div>
+            )}
           </div>
         ))}
 
@@ -782,7 +900,13 @@ export function GrantOpportunityMatcher({
           >
             <div className="flex items-start justify-between gap-2 mb-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-sm text-slate-900">{grant.name}</span>
+                {grant.url ? (
+                  <a href={grant.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-sm text-blue-700 hover:text-blue-900 hover:underline flex items-center gap-1">
+                    {grant.name} <ExternalLink className="h-3 w-3 inline-block opacity-50" />
+                  </a>
+                ) : (
+                  <span className="font-semibold text-sm text-slate-900">{grant.name}</span>
+                )}
                 {grant.badge && (
                   <span className="text-xs bg-yellow-100 text-yellow-800 border border-yellow-200 px-1.5 py-0.5 rounded-full font-medium">
                     {grant.badge}
@@ -800,13 +924,12 @@ export function GrantOpportunityMatcher({
               <span>·</span>
               <span>{grant.deadline}</span>
             </div>
-            <p className="text-xs text-slate-600 leading-relaxed mb-2.5">{grant.description}</p>
-            <div className="flex items-center gap-2 flex-wrap">
-              <a href={grant.url} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 hover:border-blue-300 transition-all">
-                <ExternalLink className="h-3 w-3" /> Learn More →
+            <p className="text-xs text-slate-600 leading-relaxed mb-1.5">{grant.description}</p>
+            {grant.url && (
+              <a href={grant.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline break-all">
+                <ExternalLink className="h-3 w-3 shrink-0" /> {grant.url}
               </a>
-            </div>
+            )}
           </div>
         ))}
 
@@ -828,6 +951,7 @@ export function GrantOpportunityMatcher({
         <p className="text-xs text-slate-500 pt-1 border-t border-yellow-200">
           Matched to your role for {stateName}. Deadlines are approximate. Verify program details and current eligibility directly with each agency before applying.
         </p>
+        </>}
       </CardContent>
     </Card>
   );

@@ -125,6 +125,25 @@ export function getGrantsGovOpen(): GrantsGovOpportunity[] {
   });
 }
 
+export function getGrantsGovForecasted(): GrantsGovOpportunity[] {
+  ensureDiskLoaded();
+  if (!_memCache) return [];
+  const now = new Date();
+  return Object.values(_memCache.opportunities).filter(o => {
+    // Forecasted grants (not yet open)
+    if (o.status === 'forecasted') return true;
+    // Posted grants whose open date is in the future
+    if (o.openDate) {
+      const parts = o.openDate.split('/');
+      if (parts.length === 3) {
+        const open = new Date(+parts[2], +parts[0] - 1, +parts[1]);
+        if (open > now) return true;
+      }
+    }
+    return false;
+  });
+}
+
 export async function setGrantsGovCache(
   opportunities: Record<string, GrantsGovOpportunity>,
   meta: GrantsGovCacheData['_meta'],
