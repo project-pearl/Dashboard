@@ -284,7 +284,7 @@ export default function TargetedOutreachPanel() {
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    {target.status === 'pending' && (
+                    {(target.status === 'pending' || !target.aiResearch) && (
                       <button
                         onClick={() => handleResearch(target)}
                         disabled={isResearching}

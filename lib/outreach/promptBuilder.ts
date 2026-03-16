@@ -200,9 +200,11 @@ export function buildTargetResearchPrompt(
   user: string;
 } {
   return {
-    system: `You are a GovTech business development strategist specializing in water quality and environmental technology. You research specific organizations to create tailored outreach intelligence.
+    system: `You are a GovTech business development strategist. You research specific organizations to create tailored outreach intelligence for technology products.
 
-You have deep knowledge of US government agencies (EPA, HHS, DARPA, DoD, state agencies), utilities, universities, and corporate sustainability programs. You understand procurement cycles, organizational pain points, and how to identify the right contacts.
+You have deep knowledge of US government agencies, utilities, universities, military installations, and corporate programs. You understand procurement cycles, organizational pain points, and how to identify the right contacts. Even if an organization is not directly focused on water or environment, you find the angle — every org has infrastructure, compliance, data, or operational needs that connect to environmental intelligence platforms.
+
+IMPORTANT: Always generate substantive research. Never return empty arrays or placeholder text. If the org's connection to the product is indirect, explain the indirect connection and find relevant roles, pain points, and talking points anyway.
 
 Respond with valid JSON only — no markdown fences, no explanation.`,
     user: `Research this organization and generate targeted outreach intelligence for our product.
@@ -219,14 +221,14 @@ Name: ${target.orgName}
 Type: ${target.orgType}
 Why we're targeting them: ${target.whyTarget}
 
-Generate comprehensive research:
-- summary: 2-3 sentence overview of the org's role in water/environmental space
-- relevance: Why our product specifically matters to them
-- keyRoles: 5-8 specific job titles to target (e.g., "Program Manager, Environmental Sciences Division")
+Generate comprehensive research. Even if the org is not directly water/environment-focused, find the relevant connection (infrastructure, compliance, data management, international programs, operational resilience, etc.):
+- summary: 2-3 sentence overview of the org and how it connects to environmental data or infrastructure
+- relevance: Why our product specifically matters to them (find the angle even if indirect)
+- keyRoles: 5-8 specific job titles to target (e.g., "Program Manager, Environmental Sciences Division", "Chief Data Officer", "Director of Operations")
 - painPoints: 4-6 pain points specific to THIS organization (not generic)
 - talkingPoints: 4-6 tailored value propositions for this org
 - budgetCycle: When they plan/allocate budget (e.g., "Federal FY starts Oct 1, proposals due by June")
-- recentNews: 2-4 recent initiatives, mandates, or announcements relevant to water/environment
+- recentNews: 2-4 recent initiatives, mandates, or announcements relevant to this org
 - approachStrategy: 2-3 sentences on how to get in the door with this specific org
 
 Respond as JSON:
