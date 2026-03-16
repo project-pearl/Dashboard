@@ -71,6 +71,7 @@ import { NUTRIENT_TRADING_STATES } from '@/lib/constants';
 import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
 import { TriageQueueSection } from './TriageQueueSection';
 import CorrelationBreakthroughsPanel from '@/components/CorrelationBreakthroughsPanel';
+import LensDataStory from '@/components/LensDataStory';
 import { daysUntil, deadlineStatus, daysLabel } from '@/lib/formatDate';
 
 // --- Types -------------------------------------------------------------------
@@ -115,14 +116,14 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'Jurisdiction dashboard - morning check for elected officials',
     sections: new Set([
       'local-identity', 'map-grid', 'local-kpi-strip', 'local-situation', 'local-quick-actions', 'ask-pin-universal', 'correlation-breakthroughs', 'disclaimer',
-    ]),
+    , 'lens-data-story'],)
   },
   briefing: {
     label: 'AI Briefing',
     description: 'AI-generated overnight summary and action items',
     sections: new Set([
       'briefing-actions', 'triage-queue', 'local-constituent-tldr', 'ask-pin-universal', 'correlation-breakthroughs', 'disclaimer',
-    ]),
+    , 'lens-data-story'],)
   },
   'political-briefing': {
     label: 'Political Briefing',
@@ -131,7 +132,7 @@ const LENS_CONFIG: Record<ViewLens, {
       'pol-talking-points', 'pol-constituent-concerns', 'pol-funding-wins', 'pol-funding-risks',
       'pol-regulatory-deadlines', 'pol-ej-exposure', 'pol-media-ready-grades',
       'pol-peer-comparison', 'pol-council-agenda', 'disclaimer',
-    ]),
+    , 'lens-data-story'],)
   },
   'water-quality': {
     label: 'Water Quality',
@@ -139,7 +140,7 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set([
       'local-wq-grade', 'detail', 'local-impairment-summary',
       'local-wq-trends', 'groundwater', 'contaminants-tracker', 'correlation-breakthroughs', 'disclaimer',
-    ]),
+    , 'lens-data-story'],)
   },
   infrastructure: {
     label: 'Infrastructure',
@@ -147,7 +148,7 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set([
       'local-infra-condition', 'local-cso-sso', 'infra-capital', 'infra-construction',
       'infra-green', 'local-asset-age', 'disclaimer',
-    ]),
+    , 'lens-data-story'],)
   },
   compliance: {
     label: 'Compliance',
@@ -155,7 +156,7 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set([
       'icis', 'sdwis', 'local-permit-status', 'local-violation-timeline',
       'local-enforcement-actions', 'fineavoidance', 'correlation-breakthroughs', 'disclaimer',
-    ]),
+    , 'lens-data-story'],)
   },
   stormwater: {
     label: 'Stormwater / MS4',
@@ -164,7 +165,7 @@ const LENS_CONFIG: Record<ViewLens, {
       'local-ms4-identity', 'bmp-inventory', 'bmp-analytics', 'bmp-maintenance',
       'mcm-dashboard', 'rw-profiles', 'rw-impairment',
       'nutrientcredits', 'tmdl', 'fineavoidance', 'mdeexport', 'disclaimer',
-    ]),
+    , 'lens-data-story'],)
   },
   'public-health': {
     label: 'Public Health',
@@ -172,7 +173,7 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set([
       'sdwis', 'ph-contaminants', 'local-dw-systems', 'local-pfas-proximity',
       'ph-advisories', 'correlation-breakthroughs', 'disclaimer',
-    ]),
+    , 'lens-data-story'],)
   },
   funding: {
     label: 'Funding & Grants',
@@ -180,7 +181,7 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set([
       'grants', 'local-usaspending', 'fund-active', 'fund-srf',
       'local-match-requirements', 'grant-outcomes', 'local-funding-timeline', 'disclaimer',
-    ]),
+    , 'lens-data-story'],)
   },
   'ej-equity': {
     label: 'EJ & Equity',
@@ -188,7 +189,7 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set([
       'local-ej-summary', 'local-ej-demographics', 'local-ej-burden-map',
       'local-ej-water-disparities', 'local-j40-tracker', 'local-ej-recommendations', 'correlation-breakthroughs', 'disclaimer',
-    ]),
+    , 'lens-data-story'],)
   },
   emergency: {
     label: 'Emergency',
@@ -196,7 +197,7 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set([
       'disaster-active', 'local-nws-alerts', 'local-sentinel-events',
       'disaster-response', 'disaster-prep', 'resolution-planner', 'correlation-breakthroughs', 'disclaimer',
-    ]),
+    , 'lens-data-story'],)
   },
   scorecard: {
     label: 'Scorecard',
@@ -204,7 +205,7 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set([
       'local-sc-overall', 'local-sc-categories', 'local-sc-trends',
       'local-sc-peer', 'local-sc-sla', 'disclaimer',
-    ]),
+    , 'lens-data-story'],)
   },
   reports: {
     label: 'Reports',
@@ -212,31 +213,31 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set([
       'exporthub', 'local-rpt-council', 'local-rpt-state-filing',
       'local-rpt-public-disclosure', 'local-rpt-annual', 'disclaimer',
-    ]),
+    , 'lens-data-story'],)
   },
   habitat: {
     label: 'Habitat & Ecology',
     description: 'Protected species and habitat sensitivity - relevant for development review',
-    sections: new Set(['hab-ecoscore', 'hab-wildlife', 'disclaimer']),
+    sections: new Set(['hab-ecoscore', 'hab-wildlife', 'disclaimer', 'lens-data-story']),
   },
   trends: {
     label: 'Trends & Forecasting',
     description: 'Long-term water quality trends, projections, and emerging contaminants',
     sections: new Set([
       'trends-dashboard', 'disclaimer',
-    ]),
+    , 'lens-data-story'],)
   },
   policy: {
     label: 'Policy & Regulatory',
     description: 'Federal and state regulatory actions, rule tracking, and compliance outlook',
     sections: new Set([
       'policy-tracker', 'disclaimer',
-    ]),
+    , 'lens-data-story'],)
   },
   wqt: {
     label: 'Water Quality Trading',
     description: 'Nutrient credit marketplace, sector breakdown, and program details',
-    sections: new Set(['wqt', 'nutrientcredits', 'disclaimer']),
+    sections: new Set(['wqt', 'nutrientcredits', 'disclaimer', 'lens-data-story']),
   },
   training: {
     label: 'Training', description: 'Deployment training and onboarding guide',
@@ -2346,6 +2347,10 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
 
         case 'correlation-breakthroughs': return DS(
           <CorrelationBreakthroughsPanel state={effectiveState} />
+        );
+
+        case 'lens-data-story': return DS(
+          <LensDataStory lens={viewLens} role="Local" state={effectiveState} />
         );
 
           default: return DS(

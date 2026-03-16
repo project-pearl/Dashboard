@@ -69,6 +69,7 @@ import { getInvitableRoles } from '@/lib/adminHierarchy';
 import { BriefingQACard } from '@/components/BriefingQACard';
 import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
 import CorrelationBreakthroughsPanel from '@/components/CorrelationBreakthroughsPanel';
+import LensDataStory from '@/components/LensDataStory';
 import { useDataSummaries } from '@/hooks/useDataSummaries';
 import { daysUntil, deadlineStatus, deadlineRowStyle, deadlineTextColor, daysLabel } from '@/lib/formatDate';
 
@@ -147,13 +148,13 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Overview',
     description: 'State operational dashboard — morning check before the day starts',
     defaultOverlay: 'risk',
-    sections: new Set(['regprofile', 'operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'briefing-actions', 'triage-queue', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'ask-pin-universal', 'correlation-breakthroughs']),
+    sections: new Set(['regprofile', 'operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'briefing-actions', 'triage-queue', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'ask-pin-universal', 'correlation-breakthroughs', 'lens-data-story']),
   },
   briefing: {
     label: 'AI Briefing',
     description: 'AI-generated overnight summary and action items',
     defaultOverlay: 'risk',
-    sections: new Set(['insights', 'briefing-actions', 'triage-queue', 'briefing-qa', 'ask-pin-universal']),
+    sections: new Set(['insights', 'briefing-actions', 'triage-queue', 'briefing-qa', 'ask-pin-universal', 'lens-data-story']),
   },
   'political-briefing': {
     label: 'Political Briefing',
@@ -163,103 +164,103 @@ const LENS_CONFIG: Record<ViewLens, {
       'pol-talking-points', 'pol-constituent-concerns', 'pol-funding-wins', 'pol-funding-risks',
       'pol-regulatory-deadlines', 'pol-ej-exposure', 'pol-media-ready-grades',
       'pol-peer-comparison', 'pol-council-agenda', 'disclaimer',
-    ]),
+    , 'lens-data-story']),
   },
   trends: {
     label: 'Trends & Projections',
     description: 'Long-term water quality trends, TMDL progress, and outlook',
     defaultOverlay: 'risk',
-    sections: new Set(['trends-dashboard', 'disclaimer']),
+    sections: new Set(['trends-dashboard', 'disclaimer', 'lens-data-story']),
   },
   policy: {
     label: 'Policy Tracker',
     description: 'Federal, state, and EPA regulatory action tracking',
     defaultOverlay: 'risk',
-    sections: new Set(['policy-federal', 'policy-state', 'policy-epa', 'disclaimer']),
+    sections: new Set(['policy-federal', 'policy-state', 'policy-epa', 'disclaimer', 'lens-data-story']),
   },
   compliance: {
     label: 'Compliance',
     description: 'Impairment severity, permits, enforcement, and drinking water',
     defaultOverlay: 'risk',
-    sections: new Set(['icis', 'sdwis', 'ms4jurisdictions', 'compliance-assessment', 'compliance-analytics', 'cyber-risk-panel', 'dmr-violations-panel', 'correlation-breakthroughs', 'disclaimer']),
+    sections: new Set(['icis', 'sdwis', 'ms4jurisdictions', 'compliance-assessment', 'compliance-analytics', 'cyber-risk-panel', 'dmr-violations-panel', 'correlation-breakthroughs', 'disclaimer', 'lens-data-story']),
   },
   'water-quality': {
     label: 'Water Quality',
     description: 'Standards, assessment, station data, and field integration',
     defaultOverlay: 'risk',
-    sections: new Set(['regprofile', 'local-panel', 'groundwater', 'wq-standards', 'wq-assessment', 'wq-stations', 'usgs-ogc-stations', 'ngwmn-groundwater', 'water-availability', 'wqx-modern-results', 'dmr-violations-panel', 'correlation-breakthroughs', 'disclaimer']),
+    sections: new Set(['regprofile', 'local-panel', 'groundwater', 'wq-standards', 'wq-assessment', 'wq-stations', 'usgs-ogc-stations', 'ngwmn-groundwater', 'water-availability', 'wqx-modern-results', 'dmr-violations-panel', 'correlation-breakthroughs', 'disclaimer', 'lens-data-story']),
   },
   'public-health': {
     label: 'Public Health & Contaminants',
     description: 'Contaminant tracking, health coordination, and lab capacity',
     defaultOverlay: 'risk',
-    sections: new Set(['sdwis', 'ph-contaminants', 'ph-health-coord', 'ph-lab-capacity', 'ph-mortality-context', 'ph-healthcare-access', 'ph-outbreak-tracker', 'ph-env-health-corr', 'pfas-analytics-panel', 'cdc-places-health', 'correlation-breakthroughs', 'disclaimer']),
+    sections: new Set(['sdwis', 'ph-contaminants', 'ph-health-coord', 'ph-lab-capacity', 'ph-mortality-context', 'ph-healthcare-access', 'ph-outbreak-tracker', 'ph-env-health-corr', 'pfas-analytics-panel', 'cdc-places-health', 'correlation-breakthroughs', 'disclaimer', 'lens-data-story']),
   },
   habitat: {
     label: 'Habitat & Ecology',
     description: 'Ecological sensitivity, bioassessment, habitat impairment, T&E species, and 401 certification',
     defaultOverlay: 'risk',
-    sections: new Set(['hab-ecoscore', 'hab-attainment', 'hab-bioassessment', 'hab-impairment-causes', 'hab-wildlife', 'hab-401cert', 'disclaimer']),
+    sections: new Set(['hab-ecoscore', 'hab-attainment', 'hab-bioassessment', 'hab-impairment-causes', 'hab-wildlife', 'hab-401cert', 'disclaimer', 'lens-data-story']),
   },
   agriculture: {
     label: 'Agricultural & Nonpoint Source',
     description: '319 program, watershed plans, and nutrient reduction',
     defaultOverlay: 'risk',
-    sections: new Set(['ag-319', 'ag-partners', 'ag-nps-breakdown', 'ag-nps-tmdl', 'ag-nps-funding', 'disclaimer']),
+    sections: new Set(['ag-319', 'ag-partners', 'ag-nps-breakdown', 'ag-nps-tmdl', 'ag-nps-funding', 'disclaimer', 'lens-data-story']),
   },
   infrastructure: {
     label: 'Infrastructure',
     description: 'SRF administration, capital planning, and green infrastructure',
     defaultOverlay: 'risk',
-    sections: new Set(['infra-srf', 'infra-capital', 'infra-construction', 'infra-green', 'ag-bmp-effectiveness', 'ag-nutrient', 'ag-wbp', 'flood-impact-analysis', 'cyber-risk-panel', 'disclaimer']),
+    sections: new Set(['infra-srf', 'infra-capital', 'infra-construction', 'infra-green', 'ag-bmp-effectiveness', 'ag-nutrient', 'ag-wbp', 'flood-impact-analysis', 'cyber-risk-panel', 'disclaimer', 'lens-data-story']),
   },
   monitoring: {
     label: 'Monitoring',
     description: 'State monitoring network, data management, and optimization',
     defaultOverlay: 'coverage',
-    sections: new Set(['groundwater', 'mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'mon-air-quality', 'mon-latency', 'mon-report-card', 'mon-source-health', 'flood-status', 'flood-risk-summary', 'weather-alerts', 'usgs-ogc-stations', 'ngwmn-groundwater', 'nws-forecast-panel', 'water-availability', 'wqx-modern-results', 'hab-forecast-panel', 'nexrad-precip-panel', 'severe-weather-panel', 'correlation-breakthroughs', 'disclaimer']),
+    sections: new Set(['groundwater', 'mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'mon-air-quality', 'mon-latency', 'mon-report-card', 'mon-source-health', 'flood-status', 'flood-risk-summary', 'weather-alerts', 'usgs-ogc-stations', 'ngwmn-groundwater', 'nws-forecast-panel', 'water-availability', 'wqx-modern-results', 'hab-forecast-panel', 'nexrad-precip-panel', 'severe-weather-panel', 'correlation-breakthroughs', 'disclaimer', 'lens-data-story']),
   },
   disaster: {
     label: 'Disaster & Emergency Response',
     description: 'Active incidents, spill reporting, and preparedness — redirects to merged planner view',
     defaultOverlay: 'risk',
-    sections: new Set(['alertfeed', 'disaster-active', 'disaster-response', 'disaster-spill', 'disaster-prep', 'disaster-cascade', 'flood-forecast', 'flood-risk-overview', 'resolution-planner', 'flood-impact-analysis', 'nws-forecast-panel', 'flood-event-viewer', 'severe-weather-panel', 'correlation-breakthroughs', 'disclaimer']),
+    sections: new Set(['alertfeed', 'disaster-active', 'disaster-response', 'disaster-spill', 'disaster-prep', 'disaster-cascade', 'flood-forecast', 'flood-risk-overview', 'resolution-planner', 'flood-impact-analysis', 'nws-forecast-panel', 'flood-event-viewer', 'severe-weather-panel', 'correlation-breakthroughs', 'disclaimer', 'lens-data-story']),
   },
   tmdl: {
     label: 'TMDL & Restoration',
     description: 'TMDL program status, 303(d) management, and watershed restoration',
     defaultOverlay: 'risk',
-    sections: new Set(['tmdl-status', 'tmdl-303d', 'tmdl-workspace', 'tmdl-implementation', 'tmdl-restoration', 'tmdl-epa', 'tmdl-completion-trend', 'tmdl-cause-breakdown', 'tmdl-delisting-stories', 'disclaimer']),
+    sections: new Set(['tmdl-status', 'tmdl-303d', 'tmdl-workspace', 'tmdl-implementation', 'tmdl-restoration', 'tmdl-epa', 'tmdl-completion-trend', 'tmdl-cause-breakdown', 'tmdl-delisting-stories', 'disclaimer', 'lens-data-story']),
   },
   scorecard: {
     label: 'Scorecard',
     description: 'Self-assessment, watershed scorecards, and peer comparison',
     defaultOverlay: 'risk',
-    sections: new Set(['sc-self-assessment', 'sc-watershed', 'sc-peer', 'sc-epa-ppa', 'correlation-breakthroughs', 'disclaimer']),
+    sections: new Set(['sc-self-assessment', 'sc-watershed', 'sc-peer', 'sc-epa-ppa', 'correlation-breakthroughs', 'disclaimer', 'lens-data-story']),
   },
   reports: {
     label: 'Reports',
     description: 'Integrated reports, regulatory filings, and data export',
     defaultOverlay: 'risk',
-    sections: new Set(['exporthub', 'rpt-ir-workspace', 'rpt-regulatory', 'rpt-adhoc', 'global-water-quality', 'congress-legislation', 'disclaimer']),
+    sections: new Set(['exporthub', 'rpt-ir-workspace', 'rpt-regulatory', 'rpt-adhoc', 'global-water-quality', 'congress-legislation', 'disclaimer', 'lens-data-story']),
   },
   permits: {
     label: 'Permits & Enforcement',
     description: 'Permitting operations, inventory, DMR monitoring, and enforcement',
     defaultOverlay: 'risk',
-    sections: new Set(['icis', 'perm-status', 'perm-inventory', 'perm-pipeline', 'perm-dmr', 'perm-inspection', 'perm-enforcement', 'perm-general', 'perm-snc', 'perm-waterbody', 'perm-expiring', 'perm-dmr-trends', 'disclaimer']),
+    sections: new Set(['icis', 'perm-status', 'perm-inventory', 'perm-pipeline', 'perm-dmr', 'perm-inspection', 'perm-enforcement', 'perm-general', 'perm-snc', 'perm-waterbody', 'perm-expiring', 'perm-dmr-trends', 'disclaimer', 'lens-data-story']),
   },
   funding: {
     label: 'Funding & Grants',
     description: 'Active grants, SRF management, and financial analytics',
     defaultOverlay: 'risk',
-    sections: new Set(['grants', 'fund-active', 'fund-srf', 'infra-capital', 'infra-construction', 'fund-pipeline', 'fund-passthrough', 'fund-analytics', 'fund-bil', 'fund-j40', 'fund-srf-pipeline', 'fund-grant-compliance', 'fund-trend', 'fund-match', 'grant-outcomes', 'disclaimer']),
+    sections: new Set(['grants', 'fund-active', 'fund-srf', 'infra-capital', 'infra-construction', 'fund-pipeline', 'fund-passthrough', 'fund-analytics', 'fund-bil', 'fund-j40', 'fund-srf-pipeline', 'fund-grant-compliance', 'fund-trend', 'fund-match', 'grant-outcomes', 'disclaimer', 'lens-data-story']),
   },
   wqt: {
     label: 'Water Quality Trading',
     description: 'Nutrient credit trading program — all sectors, marketplace, compliance',
     defaultOverlay: 'risk',
-    sections: new Set(['wqt', 'disclaimer']),
+    sections: new Set(['wqt', 'disclaimer', 'lens-data-story']),
   },
   training: {
     label: 'Training', description: 'Deployment training and onboarding guide',
@@ -6868,6 +6869,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
 
             case 'correlation-breakthroughs': return DS(
               <CorrelationBreakthroughsPanel state={stateAbbr} />
+            );
+
+            case 'lens-data-story': return DS(
+              <LensDataStory lens={viewLens} role="State" state={stateAbbr} />
             );
 
             default: return null;
