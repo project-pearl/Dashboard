@@ -5,9 +5,6 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -21,8 +18,11 @@ const nextConfig = {
       exclude: ['warn', 'error'],
     },
   },
-  experimental: {
-    instrumentationHook: true,
+  turbopack: {
+    resolveAlias: {
+      fs: { browser: './lib/stubs/empty.js' },
+      path: { browser: './lib/stubs/empty.js' },
+    },
   },
   async headers() {
     return [{
