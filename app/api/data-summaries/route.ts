@@ -20,6 +20,9 @@ import { getStnFloodCacheStatus, ensureWarmed as warmStnFlood } from '@/lib/stnF
 import { getDmrViolationsCacheStatus, ensureWarmed as warmDmrViolations } from '@/lib/echoDmrViolationsCache';
 import { getHabForecastCacheStatus, ensureWarmed as warmHabForecast } from '@/lib/habForecastCache';
 import { getCdcPlacesCacheStatus, ensureWarmed as warmCdcPlaces } from '@/lib/cdcPlacesCache';
+import { getSwdiCacheStatus, ensureWarmed as warmSwdi } from '@/lib/swdiCache';
+import { getNexradQpeCacheStatus, ensureWarmed as warmNexradQpe } from '@/lib/nexradQpeCache';
+import { getCongressCacheStatus, ensureWarmed as warmCongress } from '@/lib/congressCache';
 
 export async function GET(_req: NextRequest) {
   // Warm all caches in parallel
@@ -27,7 +30,7 @@ export async function GET(_req: NextRequest) {
     warmUsgsOgc(), warmNgwmn(), warmFloodImpact(), warmEpaPfas(),
     warmNwsForecast(), warmWaterAvail(), warmCyberRisk(), warmGemStat(),
     warmWqxModern(), warmStnFlood(), warmDmrViolations(), warmHabForecast(),
-    warmCdcPlaces(),
+    warmCdcPlaces(), warmSwdi(), warmNexradQpe(), warmCongress(),
   ]);
 
   // ── USGS OGC ────────────────────────────────────────────────────────────
@@ -98,6 +101,15 @@ export async function GET(_req: NextRequest) {
 
   // ── CDC PLACES ──────────────────────────────────────────────────────────
   const cdcStatus = getCdcPlacesCacheStatus();
+
+  // ── SWDI Severe Weather ───────────────────────────────────────────────
+  const swdiStatus = getSwdiCacheStatus();
+
+  // ── NEXRAD QPE ────────────────────────────────────────────────────────
+  const nexradStatus = getNexradQpeCacheStatus();
+
+  // ── Congress ──────────────────────────────────────────────────────────
+  const congressStatus = getCongressCacheStatus();
 
   return NextResponse.json({
     usgsOgc: {
@@ -180,6 +192,24 @@ export async function GET(_req: NextRequest) {
       loaded: cdcStatus.loaded,
       tracts: cdcStatus.loaded ? (cdcStatus as any).tractCount ?? 0 : 0,
       states: cdcStatus.loaded ? (cdcStatus as any).stateCount ?? 0 : 0,
+    },
+    swdi: {
+      loaded: swdiStatus.loaded,
+      events: swdiStatus.loaded ? (swdiStatus as any).eventCount ?? 0 : 0,
+      severe: swdiStatus.loaded ? (swdiStatus as any).severeCount ?? 0 : 0,
+      states: swdiStatus.loaded ? (swdiStatus as any).stateCount ?? 0 : 0,
+    },
+    nexradQpe: {
+      loaded: nexradStatus.loaded,
+      cells: nexradStatus.loaded ? (nexradStatus as any).cellCount ?? 0 : 0,
+      maxPrecipMm: nexradStatus.loaded ? (nexradStatus as any).maxPrecipMm ?? 0 : 0,
+      flashFloodHigh: nexradStatus.loaded ? (nexradStatus as any).flashFloodHighCount ?? 0 : 0,
+    },
+    congress: {
+      loaded: congressStatus.loaded,
+      bills: congressStatus.loaded ? (congressStatus as any).billCount ?? 0 : 0,
+      active: congressStatus.loaded ? (congressStatus as any).activeCount ?? 0 : 0,
+      enacted: congressStatus.loaded ? (congressStatus as any).enactedCount ?? 0 : 0,
     },
   });
 }

@@ -16,6 +16,9 @@ export interface DataSummaries {
   dmrViolations: { loaded: boolean; violations: number; facilities: number; states: number };
   habForecast: { loaded: boolean; forecasts: number; highRisk: number; waterbodies: number };
   cdcPlaces: { loaded: boolean; tracts: number; states: number };
+  swdi: { loaded: boolean; events: number; severe: number; states: number };
+  nexradQpe: { loaded: boolean; cells: number; maxPrecipMm: number; flashFloodHigh: number };
+  congress: { loaded: boolean; bills: number; active: number; enacted: number };
 }
 
 const EMPTY: DataSummaries = {
@@ -32,6 +35,9 @@ const EMPTY: DataSummaries = {
   dmrViolations: { loaded: false, violations: 0, facilities: 0, states: 0 },
   habForecast: { loaded: false, forecasts: 0, highRisk: 0, waterbodies: 0 },
   cdcPlaces: { loaded: false, tracts: 0, states: 0 },
+  swdi: { loaded: false, events: 0, severe: 0, states: 0 },
+  nexradQpe: { loaded: false, cells: 0, maxPrecipMm: 0, flashFloodHigh: 0 },
+  congress: { loaded: false, bills: 0, active: 0, enacted: 0 },
 };
 
 export function useDataSummaries() {

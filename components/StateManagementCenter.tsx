@@ -6781,91 +6781,82 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             }
 
             case 'severe-weather-panel': {
+              const d = dataSummaries.swdi;
               return DS(
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                      <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.events.toLocaleString() : '\u2014'}</div>
                       <div className="text-xs text-gray-500">Events (7d)</div>
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <div className="text-2xl font-bold text-emerald-600">&mdash;</div>
+                      <div className="text-2xl font-bold text-emerald-600">{summariesLoading ? '...' : d.loaded ? d.severe.toLocaleString() : '\u2014'}</div>
                       <div className="text-xs text-gray-500">Severe Events</div>
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <div className="text-2xl font-bold text-amber-600">&mdash;</div>
-                      <div className="text-xs text-gray-500">Flash Floods</div>
+                      <div className="text-2xl font-bold text-amber-600">{d.loaded ? 'SWDI' : '\u2014'}</div>
+                      <div className="text-xs text-gray-500">Source</div>
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <div className="text-2xl font-bold text-purple-600">&mdash;</div>
+                      <div className="text-2xl font-bold text-purple-600">{summariesLoading ? '...' : d.loaded ? d.states : '\u2014'}</div>
                       <div className="text-xs text-gray-500">States</div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-500">
-                    <span>⏳</span>
-                    <span>Awaiting data — NOAA SWDI Severe Weather Data</span>
-                    <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
-                  </div>
+                  {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — NOAA SWDI Severe Weather Data</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
                 </div>
               );
             }
 
             case 'nexrad-precip-panel': {
+              const d = dataSummaries.nexradQpe;
               return DS(
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                      <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.cells.toLocaleString() : '\u2014'}</div>
                       <div className="text-xs text-gray-500">Radar Cells</div>
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <div className="text-2xl font-bold text-emerald-600">&mdash;</div>
+                      <div className="text-2xl font-bold text-emerald-600">{summariesLoading ? '...' : d.loaded ? d.maxPrecipMm.toFixed(1) : '\u2014'}</div>
                       <div className="text-xs text-gray-500">Max Precip (mm)</div>
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <div className="text-2xl font-bold text-amber-600">&mdash;</div>
+                      <div className="text-2xl font-bold text-amber-600">{summariesLoading ? '...' : d.loaded ? d.flashFloodHigh.toLocaleString() : '\u2014'}</div>
                       <div className="text-xs text-gray-500">Flash Flood Risk</div>
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <div className="text-2xl font-bold text-purple-600">&mdash;</div>
-                      <div className="text-xs text-gray-500">Stations</div>
+                      <div className="text-2xl font-bold text-purple-600">{d.loaded ? 'IEM' : '\u2014'}</div>
+                      <div className="text-xs text-gray-500">Source</div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-500">
-                    <span>⏳</span>
-                    <span>Awaiting data — IEM NEXRAD Radar QPE (15-min)</span>
-                    <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
-                  </div>
+                  {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — IEM NEXRAD Radar QPE (15-min)</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
                 </div>
               );
             }
 
             case 'congress-legislation': {
+              const d = dataSummaries.congress;
               return DS(
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <div className="text-2xl font-bold text-blue-600">&mdash;</div>
+                      <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.bills.toLocaleString() : '\u2014'}</div>
                       <div className="text-xs text-gray-500">Active Bills</div>
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <div className="text-2xl font-bold text-emerald-600">&mdash;</div>
-                      <div className="text-xs text-gray-500">Committees</div>
+                      <div className="text-2xl font-bold text-emerald-600">{summariesLoading ? '...' : d.loaded ? d.active.toLocaleString() : '\u2014'}</div>
+                      <div className="text-xs text-gray-500">In Committee+</div>
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <div className="text-2xl font-bold text-amber-600">&mdash;</div>
+                      <div className="text-2xl font-bold text-amber-600">{summariesLoading ? '...' : d.loaded ? d.enacted.toLocaleString() : '\u2014'}</div>
                       <div className="text-xs text-gray-500">Enacted</div>
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <div className="text-2xl font-bold text-purple-600">&mdash;</div>
-                      <div className="text-xs text-gray-500">Sponsors</div>
+                      <div className="text-2xl font-bold text-purple-600">{d.loaded ? 'Congress.gov' : '\u2014'}</div>
+                      <div className="text-xs text-gray-500">Source</div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-500">
-                    <span>⏳</span>
-                    <span>Awaiting data — Congress.gov Water Legislation API</span>
-                    <Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge>
-                  </div>
+                  {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — Congress.gov Water Legislation API</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
                 </div>
               );
             }
