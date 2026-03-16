@@ -96,6 +96,7 @@ import { SectionLoader, isSectionExtracted } from '@/components/federal/sections
 import { TriageQueueSection } from './TriageQueueSection';
 import CorrelationBreakthroughsPanel from '@/components/CorrelationBreakthroughsPanel';
 import { useDataSummaries } from '@/hooks/useDataSummaries';
+import { daysUntil, deadlineStatus, deadlineRowStyle, deadlineTextColor, daysLabel } from '@/lib/formatDate';
 
 
 import hucNamesData from '@/data/huc8-names.json';
@@ -5735,21 +5736,27 @@ export function FederalManagementCenter(props: Props) {
               <CardDescription>Major national rulemaking, compliance milestones, and emergency actions</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              {[
-                { deadline: 'ACTIVE', item: 'Potomac River Emergency Order — EPA Region 3 On-Scene Coordinator directing containment. Daily WQ sampling at 6 downstream stations. Emergency drinking water advisories for 2 jurisdictions.', daysLeft: -1, urgent: true },
-                { deadline: 'Mar 7, 2026', item: 'CISA Binding Operational Directive — all federal water facilities must complete ICS/SCADA vulnerability scan and report findings within 72 hours of elevated threat designation', daysLeft: 6, urgent: true },
-                { deadline: 'Apr 2026', item: 'CWA 303(d) Integrated Report Cycle — states submit impaired waters lists to EPA', daysLeft: 31, urgent: true },
-                { deadline: 'Oct 16, 2027', item: 'LCRI: All systems must complete updated lead service line inventories', daysLeft: 595, urgent: false },
-                { deadline: 'Jun 2029', item: 'PFAS NPDWR: Large systems (>10K pop) begin compliance monitoring', daysLeft: 1187, urgent: false },
-              ].map(d => (
-                <div key={d.item} className={`flex items-center justify-between rounded-lg px-4 py-2.5 ${d.daysLeft < 0 ? 'bg-red-50 border-2 border-red-300' : 'bg-white border border-slate-200'}`}>
+              {([
+                { deadline: 'ACTIVE', date: null, item: 'Potomac River Emergency Order — EPA Region 3 On-Scene Coordinator directing containment. Daily WQ sampling at 6 downstream stations. Emergency drinking water advisories for 2 jurisdictions.', isEmergency: true },
+                { deadline: 'Mar 7, 2026', date: '2026-03-07', item: 'CISA Binding Operational Directive — all federal water facilities must complete ICS/SCADA vulnerability scan and report findings within 72 hours of elevated threat designation', isEmergency: false },
+                { deadline: 'Apr 1, 2026', date: '2026-04-01', item: 'CWA 303(d) Integrated Report Cycle — states submit impaired waters lists to EPA', isEmergency: false },
+                { deadline: 'Oct 16, 2027', date: '2027-10-16', item: 'LCRI: All systems must complete updated lead service line inventories', isEmergency: false },
+                { deadline: 'Jun 1, 2029', date: '2029-06-01', item: 'PFAS NPDWR: Large systems (>10K pop) begin compliance monitoring', isEmergency: false },
+              ] as const).map(d => {
+                const days = d.date ? daysUntil(d.date) : -1;
+                const badge = d.isEmergency
+                  ? { label: 'Emergency', className: 'bg-red-200 text-red-900' }
+                  : deadlineStatus(days);
+                return (
+                <div key={d.item} className={`flex items-center justify-between rounded-lg px-4 py-2.5 ${d.isEmergency ? 'bg-red-50 border-2 border-red-300' : deadlineRowStyle(days)}`}>
                   <div>
-                    <p className={`text-sm font-medium ${d.daysLeft < 0 ? 'text-red-800' : 'text-slate-800'}`}>{d.deadline}{d.daysLeft > 0 ? ` — ${d.daysLeft} days` : d.daysLeft === 0 ? ' — Effective' : ''}</p>
-                    <p className={`text-xs ${d.daysLeft < 0 ? 'text-red-700' : 'text-slate-500'}`}>{d.item}</p>
+                    <p className={`text-sm font-medium ${d.isEmergency ? 'text-red-800' : deadlineTextColor(days)}`}>{d.deadline}{d.date ? ` — ${daysLabel(days)}` : ''}</p>
+                    <p className={`text-xs ${d.isEmergency || days < 0 ? 'text-red-700' : 'text-slate-500'}`}>{d.item}</p>
                   </div>
-                  <Badge className={d.daysLeft < 0 ? 'bg-red-200 text-red-900' : d.urgent ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}>{d.daysLeft < 0 ? 'Emergency' : d.urgent ? 'Soon' : 'On Track'}</Badge>
+                  <Badge className={badge.className}>{badge.label}</Badge>
                 </div>
-              ))}
+                );
+              })}
             </CardContent>
           </Card>
         );

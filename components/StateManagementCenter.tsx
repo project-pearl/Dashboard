@@ -70,6 +70,7 @@ import { BriefingQACard } from '@/components/BriefingQACard';
 import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
 import CorrelationBreakthroughsPanel from '@/components/CorrelationBreakthroughsPanel';
 import { useDataSummaries } from '@/hooks/useDataSummaries';
+import { daysUntil, deadlineStatus, deadlineRowStyle, deadlineTextColor, daysLabel } from '@/lib/formatDate';
 
 
 const GrantOpportunityMatcher = dynamic(
@@ -2297,20 +2298,24 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {[
-                    { deadline: 'Apr 1, 2026', item: `${stateAbbr} CWA 303(d)/305(b) Integrated Report due to EPA Region`, daysLeft: 31, urgent: true },
-                    { deadline: 'Jun 30, 2026', item: 'Annual NPDES permit program report to EPA — state-administered program review', daysLeft: 122, urgent: false },
-                    { deadline: 'Sep 1, 2026', item: 'MS4 permit cycle renewal — 4 Phase II permits expiring, draft renewals due for public notice', daysLeft: 184, urgent: false },
-                    { deadline: 'Oct 16, 2027', item: 'LCRI: Ensure all PWSs in state complete updated lead service line inventories', daysLeft: 595, urgent: false },
-                    { deadline: 'Dec 31, 2026', item: `TMDL development milestones — 3 of 8 priority TMDLs due to EPA for approval`, daysLeft: 306, urgent: true },
-                  ].map(d => (
-                    <div key={d.item} className="flex items-center justify-between border border-slate-200 rounded-lg px-4 py-2.5 bg-white">
+                    { deadline: 'Apr 1, 2026', date: '2026-04-01', item: `${stateAbbr} CWA 303(d)/305(b) Integrated Report due to EPA Region` },
+                    { deadline: 'Jun 30, 2026', date: '2026-06-30', item: 'Annual NPDES permit program report to EPA — state-administered program review' },
+                    { deadline: 'Sep 1, 2026', date: '2026-09-01', item: 'MS4 permit cycle renewal — 4 Phase II permits expiring, draft renewals due for public notice' },
+                    { deadline: 'Oct 16, 2027', date: '2027-10-16', item: 'LCRI: Ensure all PWSs in state complete updated lead service line inventories' },
+                    { deadline: 'Dec 31, 2026', date: '2026-12-31', item: `TMDL development milestones — 3 of 8 priority TMDLs due to EPA for approval` },
+                  ].map(d => {
+                    const days = daysUntil(d.date);
+                    const badge = deadlineStatus(days);
+                    return (
+                    <div key={d.item} className={`flex items-center justify-between rounded-lg px-4 py-2.5 ${deadlineRowStyle(days)}`}>
                       <div>
-                        <p className="text-sm font-medium text-slate-800">{d.deadline} — {d.daysLeft} days</p>
-                        <p className="text-xs text-slate-500">{d.item}</p>
+                        <p className={`text-sm font-medium ${deadlineTextColor(days)}`}>{d.deadline} — {daysLabel(days)}</p>
+                        <p className={`text-xs ${days < 0 ? 'text-red-700' : 'text-slate-500'}`}>{d.item}</p>
                       </div>
-                      <Badge className={d.urgent ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}>{d.urgent ? 'Soon' : 'On Track'}</Badge>
+                      <Badge className={badge.className}>{badge.label}</Badge>
                     </div>
-                  ))}
+                    );
+                  })}
                 </CardContent>
               </Card>
             );

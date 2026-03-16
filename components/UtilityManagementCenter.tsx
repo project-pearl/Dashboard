@@ -37,6 +37,7 @@ import { getInvitableRoles } from '@/lib/adminHierarchy';
 import { useAuth } from '@/lib/authContext';
 import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
 import { TriageQueueSection } from './TriageQueueSection';
+import { daysUntil, deadlineStatus, deadlineRowStyle, deadlineTextColor, daysLabel } from '@/lib/formatDate';
 
 // ─── View Lens ──────────────────────────────────────────────────────────────
 
@@ -1964,19 +1965,23 @@ export default function UtilityManagementCenter({ systemId }: Props) {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {[
-                    { deadline: 'Mar 15, 2026', item: 'MS4 Annual Report due to state', daysLeft: 15, urgent: true },
-                    { deadline: 'Jun 30, 2026', item: 'Lead Service Line Inventory submission', daysLeft: 122, urgent: false },
-                    { deadline: 'Oct 1, 2026', item: 'PFAS monitoring results due to EPA', daysLeft: 215, urgent: false },
-                    { deadline: 'Dec 31, 2026', item: 'ARPA fund obligation deadline', daysLeft: 306, urgent: true },
-                  ].map(d => (
-                    <div key={d.item} className="flex items-center justify-between border border-slate-200 rounded-lg px-4 py-2.5 bg-white">
+                    { deadline: 'Mar 15, 2026', date: '2026-03-15', item: 'MS4 Annual Report due to state' },
+                    { deadline: 'Jun 30, 2026', date: '2026-06-30', item: 'Lead Service Line Inventory submission' },
+                    { deadline: 'Oct 1, 2026', date: '2026-10-01', item: 'PFAS monitoring results due to EPA' },
+                    { deadline: 'Dec 31, 2026', date: '2026-12-31', item: 'ARPA fund obligation deadline' },
+                  ].map(d => {
+                    const days = daysUntil(d.date);
+                    const badge = deadlineStatus(days);
+                    return (
+                    <div key={d.item} className={`flex items-center justify-between rounded-lg px-4 py-2.5 ${deadlineRowStyle(days)}`}>
                       <div>
-                        <p className="text-sm font-medium text-slate-800">{d.deadline} — {d.daysLeft} days</p>
-                        <p className="text-xs text-slate-500">{d.item}</p>
+                        <p className={`text-sm font-medium ${deadlineTextColor(days)}`}>{d.deadline} — {daysLabel(days)}</p>
+                        <p className={`text-xs ${days < 0 ? 'text-red-700' : 'text-slate-500'}`}>{d.item}</p>
                       </div>
-                      <Badge className={d.urgent ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}>{d.urgent ? 'Soon' : 'On Track'}</Badge>
+                      <Badge className={badge.className}>{badge.label}</Badge>
                     </div>
-                  ))}
+                    );
+                  })}
                 </CardContent>
               </Card>
             );

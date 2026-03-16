@@ -46,3 +46,43 @@ export function timeWithZone(isoDate: string | Date): string {
     timeZoneName: 'short',
   });
 }
+
+/**
+ * Calculate the number of days from today until a target date.
+ * Positive = future, negative = past/overdue, 0 = today.
+ * Accepts YYYY-MM-DD, "Mon DD, YYYY", "Mon YYYY", or Date objects.
+ */
+export function daysUntil(dateStr: string | Date): number {
+  const target = new Date(dateStr);
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  target.setHours(0, 0, 0, 0);
+  return Math.round((target.getTime() - now.getTime()) / 86_400_000);
+}
+
+/** Deadline status badge: overdue / soon / upcoming / on-track. */
+export function deadlineStatus(days: number): { label: string; className: string } {
+  if (days < 0) return { label: 'Overdue', className: 'bg-red-200 text-red-900' };
+  if (days <= 30) return { label: 'Soon', className: 'bg-amber-100 text-amber-800' };
+  if (days <= 180) return { label: 'Upcoming', className: 'bg-blue-100 text-blue-800' };
+  return { label: 'On Track', className: 'bg-emerald-100 text-emerald-800' };
+}
+
+/** Row styling for deadline cards based on days remaining. */
+export function deadlineRowStyle(days: number): string {
+  if (days < 0) return 'bg-red-50 border-2 border-red-300';
+  return 'bg-white border border-slate-200';
+}
+
+/** Text color for deadline labels based on days remaining. */
+export function deadlineTextColor(days: number): string {
+  if (days < 0) return 'text-red-800';
+  return 'text-slate-800';
+}
+
+/** Format days remaining as display text. */
+export function daysLabel(days: number): string {
+  if (days < 0) return `${Math.abs(days)}d overdue`;
+  if (days === 0) return 'Today';
+  return `${days} days`;
+}

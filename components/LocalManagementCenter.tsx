@@ -71,6 +71,7 @@ import { NUTRIENT_TRADING_STATES } from '@/lib/constants';
 import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
 import { TriageQueueSection } from './TriageQueueSection';
 import CorrelationBreakthroughsPanel from '@/components/CorrelationBreakthroughsPanel';
+import { daysUntil, deadlineStatus, daysLabel } from '@/lib/formatDate';
 
 // --- Types -------------------------------------------------------------------
 
@@ -749,13 +750,15 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             <PlaceholderSection title="Regulatory Deadlines" subtitle="Upcoming compliance milestones" icon={<Clock size={15} />} accent="amber">
               <div className="space-y-2">
                 {[
-                  { deadline: 'Mar 15, 2026', item: 'MS4 Annual Report due to state', daysLeft: 15, status: 'warning' as const },
-                  { deadline: 'Jun 30, 2026', item: 'Lead Service Line Inventory submission', daysLeft: 122, status: 'good' as const },
-                  { deadline: 'Oct 1, 2026', item: 'PFAS monitoring results due to EPA', daysLeft: 215, status: 'good' as const },
-                  { deadline: 'Dec 31, 2026', item: 'ARPA fund obligation deadline', daysLeft: 306, status: 'warning' as const },
-                ].map(d => (
-                  <StatusCard key={d.item} title={`${d.deadline} - ${d.daysLeft} days`} description={d.item} status={d.status} />
-                ))}
+                  { deadline: 'Mar 15, 2026', date: '2026-03-15', item: 'MS4 Annual Report due to state' },
+                  { deadline: 'Jun 30, 2026', date: '2026-06-30', item: 'Lead Service Line Inventory submission' },
+                  { deadline: 'Oct 1, 2026', date: '2026-10-01', item: 'PFAS monitoring results due to EPA' },
+                  { deadline: 'Dec 31, 2026', date: '2026-12-31', item: 'ARPA fund obligation deadline' },
+                ].map(d => {
+                  const days = daysUntil(d.date);
+                  const status = days < 0 ? 'critical' as const : days <= 90 ? 'warning' as const : 'good' as const;
+                  return <StatusCard key={d.item} title={`${d.deadline} — ${daysLabel(days)}`} description={d.item} status={status} />;
+                })}
               </div>
             </PlaceholderSection>
           );
