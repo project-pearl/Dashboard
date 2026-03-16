@@ -115,10 +115,30 @@ function safeParse(text: string): any {
 
 // ── Sub-cron 1: ECHO DMR Violations ─────────────────────────────────────────
 
+function parseCsvLine(line: string): string[] {
+  const fields: string[] = [];
+  let cur = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+      else if (ch === '"') { inQuotes = false; }
+      else { cur += ch; }
+    } else {
+      if (ch === '"') { inQuotes = true; }
+      else if (ch === ',') { fields.push(cur); cur = ''; }
+      else { cur += ch; }
+    }
+  }
+  fields.push(cur);
+  return fields;
+}
+
 async function fetchDmrForState(st: string): Promise<DmrViolation[]> {
-  // EPA DMR REST services are deprecated; use CWA facility info with violation filters.
-  // Step 1: Get QID for CWA facilities with violations in last 4 quarters
-  const qidUrl = `https://echodata.epa.gov/echo/cwa_rest_services.get_facility_info?p_st=${st}&p_qiv=SNC&output=JSON&responseset=500`;
+  // EPA DMR REST services are deprecated; use CWA facility info → CSV download.
+  // Step 1: Get QID for CWA facilities with SNC violations
+  const qidUrl = `https://echodata.epa.gov/echo/cwa_rest_services.get_facility_info?p_st=${st}&p_qiv=SNC&p_act=Y&output=JSON`;
   const qidResp = await fetch(qidUrl, { signal: AbortSignal.timeout(REQUEST_TIMEOUT) });
   if (!qidResp.ok) throw new Error(`CWA QID HTTP ${qidResp.status}`);
   const qidJson = await qidResp.json();
@@ -126,37 +146,45 @@ async function fetchDmrForState(st: string): Promise<DmrViolation[]> {
   const queryRows = parseInt(qidJson?.Results?.QueryRows || '0', 10);
   if (!qid || queryRows === 0) return [];
 
-  // Step 2: Get facility details
-  const resUrl = `https://echodata.epa.gov/echo/cwa_rest_services.get_facilities?qid=${qid}&output=JSON&responseset=500`;
-  const resResp = await fetch(resUrl, { signal: AbortSignal.timeout(REQUEST_TIMEOUT) });
-  if (!resResp.ok) throw new Error(`CWA Results HTTP ${resResp.status}`);
-  const resJson = await resResp.json();
-  const facilities = resJson?.Results?.Facilities || [];
+  // Step 2: Download facility CSV (get_facilities returns "too many rows" for JSON)
+  // Columns: 1=CWPName, 2=SourceID, 14=FacStdCountyName, 23=CWPNAICSCodes, 24=FacLat, 25=FacLong
+  const dlUrl = `https://echodata.epa.gov/echo/cwa_rest_services.get_download?qid=${qid}&output=CSV&qcolumns=1,2,3,14,23,24,25,26`;
+  const dlResp = await fetch(dlUrl, { signal: AbortSignal.timeout(REQUEST_TIMEOUT) });
+  if (!dlResp.ok) throw new Error(`CWA Download HTTP ${dlResp.status}`);
+  const csvText = await dlResp.text();
+  const lines = csvText.split('\n').filter(l => l.trim());
+  if (lines.length < 2) return [];
+
+  const headers = parseCsvLine(lines[0]);
+  const col = (name: string) => headers.indexOf(name);
+  const iName = col('CWPName');
+  const iId = col('SourceID');
+  const iCounty = col('FacStdCountyName');
+  const iLat = col('FacLat');
+  const iLng = col('FacLong');
 
   const violations: DmrViolation[] = [];
-  for (const fac of facilities) {
-    const lat = parseFloat(fac.FacLat || fac.Lat || '0');
-    const lng = parseFloat(fac.FacLong || fac.Lng || '0');
+  for (let i = 1; i < lines.length; i++) {
+    const fields = parseCsvLine(lines[i]);
+    const lat = parseFloat(fields[iLat] || '0');
+    const lng = parseFloat(fields[iLng] || '0');
     if (!lat || !lng) continue;
 
-    // CWA facility info includes violation summary fields
-    const qtrsInViol = parseInt(fac.CWPQtrsInNC || fac.QtrsInViolation || '0', 10);
-    if (qtrsInViol === 0) continue;
-
+    const sourceId = fields[iId] || '';
     violations.push({
-      permitId: fac.CWPPermitStatusDesc ? fac.SourceID || '' : fac.SourceID || fac.CWPNpdesIds || '',
-      facilityName: fac.CWPName || fac.FacName || '',
+      permitId: sourceId,
+      facilityName: fields[iName] || '',
       facilityLat: lat,
       facilityLng: lng,
       state: st,
-      parameter: fac.CWPCurrentSNCStatus || 'DMR Non-Report/Effluent Violation',
+      parameter: 'CWA SNC Violation',
       limitValue: null,
       dmrValue: null,
       exceedancePct: null,
-      violationCategory: fac.CWPSNCStatus || fac.CWPCurrentSNCStatus || 'SNC',
-      reportingPeriod: `Last ${qtrsInViol} quarters`,
-      reportDate: fac.CWPDateLastInspection || '',
-      sourceId: `ECHO-CWA-${fac.SourceID || fac.RegistryID || ''}`,
+      violationCategory: 'SNC',
+      reportingPeriod: '',
+      reportDate: '',
+      sourceId: `ECHO-CWA-${sourceId}`,
     });
   }
   return violations;
