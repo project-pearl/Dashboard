@@ -16,7 +16,6 @@ import { getNwisGwCacheStatus, ensureWarmed as warmNwisGw } from '@/lib/nwisGwCa
 import { getEchoCacheStatus, ensureWarmed as warmEcho } from '@/lib/echoCache';
 import { getFrsCacheStatus, ensureWarmed as warmFrs } from '@/lib/frsCache';
 import { getPfasCacheStatus, ensureWarmed as warmPfas } from '@/lib/pfasCache';
-import { getCacheStatus as getInsightsCacheStatus, ensureWarmed as warmInsights } from '@/lib/insightsCache';
 import { getStateReportStatus, ensureWarmed as warmStateReports } from '@/lib/stateReportCache';
 import { getBwbCacheStatus, ensureWarmed as warmBwb } from '@/lib/bwbCache';
 import { getCdcNwssCacheStatus, ensureWarmed as warmCdcNwss } from '@/lib/cdcNwssCache';
@@ -133,7 +132,7 @@ export async function GET(request: NextRequest) {
   // Warm caches from blob storage in batches of 6 (avoid overwhelming network)
   const warmBatches = [
     [warmWqp, warmAttains, warmCeden, warmIcis, warmSdwis, warmNwisGw],
-    [warmEcho, warmFrs, warmPfas, warmInsights, warmStateReports, warmBwb],
+    [warmEcho, warmFrs, warmPfas, warmStateReports, warmBwb],
     [warmCdcNwss, warmNdbc, warmNasaCmr, warmNars, warmDataGov, warmUsace],
     [warmNwisIv, warmUsgsAlerts, warmNwsAlerts, warmNwps, warmCoops, warmSnotel],
     [warmTri, warmUSAs, warmGrantsGov, warmSam, warmSentinelHealth, warmSentinelQueue, warmSentinelScores],
@@ -164,7 +163,6 @@ export async function GET(request: NextRequest) {
   const echo = getEchoCacheStatus();
   const frs = getFrsCacheStatus();
   const pfas = getPfasCacheStatus();
-  const insights = getInsightsCacheStatus();
   const stateReports = getStateReportStatus();
   const bwb = getBwbCacheStatus();
   const cdcNwss = getCdcNwssCacheStatus();
@@ -303,10 +301,6 @@ export async function GET(request: NextRequest) {
     pfas: {
       ...pfas,
       ...staleness(pfas.loaded ? (pfas as any).built : null),
-    },
-    insights: {
-      ...insights,
-      ...staleness(insights.lastFullBuild),
     },
     stateReports: {
       ...stateReports,

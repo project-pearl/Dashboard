@@ -24,7 +24,6 @@ const GrantOpportunityMatcher = dynamic(
 );
 import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
 import { ecoScoreStyle } from '@/lib/scoringUtils';
-import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
@@ -1811,9 +1810,6 @@ export default function UtilityManagementCenter({ systemId }: Props) {
             // SHARED PANELS
             // ══════════════════════════════════════════════════════════════
 
-            case 'insights': return DS(
-              <AIInsightsEngine key={systemId} role="Utility" stateAbbr={systemId} regionData={[] as any} />
-            );
 
             case 'alertfeed': return DS(
               <Card>

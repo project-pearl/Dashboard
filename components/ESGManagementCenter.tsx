@@ -43,7 +43,6 @@ import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
 import { BrandedPrintBtn } from '@/lib/brandedPrint';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 
-import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
@@ -1283,9 +1282,6 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               </Card>
             );
 
-            case 'insights': return DS(
-              <AIInsightsEngine key="US" role="Corporate" stateAbbr="US" regionData={facilitiesData as any} />
-            );
 
             case 'impact': return DS(
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">

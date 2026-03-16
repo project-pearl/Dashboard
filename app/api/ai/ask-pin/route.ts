@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { callOpenAI, ROLE_TONE, type Role } from '@/lib/llmHelpers';
+import { callOpenAI, UNIVERSAL_QA_TONE, type UniversalQARole } from '@/lib/llmHelpers';
 import { askPinSchema } from '@/lib/schemas';
 import { parseBody } from '@/lib/validateRequest';
 import { checkRateLimit } from '@/lib/rateLimit';
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
   const { sectionId, label, question, role, kbContext } = parsed.data;
 
   // Build system prompt
-  const roleTone = ROLE_TONE[(role || 'Federal') as Role] || ROLE_TONE.Federal;
+  const roleTone = UNIVERSAL_QA_TONE[(role || 'Federal') as UniversalQARole] || UNIVERSAL_QA_TONE.Federal;
   const systemPrompt = [
     'You are a water quality dashboard assistant for the PEARL Intelligence Network (PIN).',
     label ? `Answer the user\'s question about the "${label}" card.` : 'Answer the user\'s question about the dashboard.',

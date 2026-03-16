@@ -39,7 +39,6 @@ import { getRegionById } from '@/lib/regionsConfig';
 import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 
-import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
@@ -1557,9 +1556,6 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
 
             // ─── SHARED PANELS ──────────────────────────────────────────────
 
-            case 'insights': return DS(
-              <AIInsightsEngine key="US" role="Investor" stateAbbr="US" regionData={companiesData as any} />
-            );
 
             case 'groundwater': return DS(
               <div id="section-groundwater">

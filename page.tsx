@@ -20,7 +20,6 @@ import { Download, Droplets, GitCompare, MapPin, CloudRain, FileText, Eye, EyeOf
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertsBanner } from '@/components/AlertsBanner';
 import { TrendsChart } from '@/components/TrendsChart';
-import { AIInsights } from '@/components/AIInsights';
 import { RemovalSummaryCard } from '@/components/RemovalSummaryCard';
 import { calculateRemovalDisplay } from '@/lib/removalCalculations';
 import { regionsConfig, getRegionById, isChesapeakeBayRegion } from '@/lib/regionsConfig';
@@ -186,10 +185,6 @@ export default function Home() {
   };
 
   const shouldShowEJImpact = () => {
-    return userRole !== 'K-12 Student / Teacher';
-  };
-
-  const shouldShowAIInsights = () => {
     return userRole !== 'K-12 Student / Teacher';
   };
 
@@ -1756,30 +1751,6 @@ export default function Home() {
             </Card>
           )}
 
-          {!isPublicView && !showNutrientCredits && !showESG && !showManuscript && shouldShowAIInsights() && (
-            <Card className="border-2">
-              <CardHeader>
-                <CardTitle className="text-xl flex items-center gap-2">
-                  <span className="text-2xl">🤖</span> AI Trends & Predictions
-                </CardTitle>
-                <CardDescription>
-                  Automated analysis based on current readings and recent trends
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AIInsights
-                data={dataMode === 'storm-event' ? selectedStormEvent.effluent : data}
-                dataMode={dataMode}
-                removalEfficiencies={dataMode === 'storm-event' ? selectedStormEvent.removalEfficiencies : removalEfficiencies}
-                stormEventName={dataMode === 'storm-event' ? selectedStormEvent.name : undefined}
-                stormRainfall={dataMode === 'storm-event' ? selectedStormEvent.rainfall : undefined}
-                detectedStormEvent={detectedStormEvent}
-                alerts={waterQualityAlerts}
-                dataSource={selectedRegion?.dataSource}
-              />
-            </CardContent>
-          </Card>
-          )}
 
           {!isPublicView && dataMode === 'ambient' && !showNutrientCredits && !showESG && !showManuscript && (
             <div suppressHydrationWarning>

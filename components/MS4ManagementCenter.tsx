@@ -31,7 +31,6 @@ import { getRegionMockData, calculateRemovalEfficiency, calculateOverallScore } 
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 
 import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
-import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
 import BoundaryAlertsDashboard from '@/components/BoundaryAlertsDashboard';
@@ -90,7 +89,6 @@ import { MS4FineAvoidanceCalculator } from '@/components/MS4FineAvoidanceCalcula
 import { BayImpactCounter } from '@/components/BayImpactCounter';
 import { ForecastChart } from '@/components/ForecastChart';
 import { TrendsChart } from '@/components/TrendsChart';
-import { AIInsights } from '@/components/AIInsights';
 import { RemovalSummaryCard } from '@/components/RemovalSummaryCard';
 import { StormEventTable } from '@/components/StormEventTable';
 import { TriageQueueSection } from './TriageQueueSection';
@@ -1416,9 +1414,6 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
         );
         })());
 
-            case 'insights': return DS(
-              <AIInsightsEngine key={stateAbbr} role="MS4" stateAbbr={stateAbbr} regionData={scopedRegionData as any} />
-            );
 
             case 'quickactions': return DS(
         <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-3">

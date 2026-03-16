@@ -42,7 +42,6 @@ import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
 import { BrandedPrintBtn } from '@/lib/brandedPrint';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 
-import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
@@ -1658,9 +1657,6 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
 
             // ─── SHARED PANELS ──────────────────────────────────────────────
 
-            case 'insights': return DS(
-              <AIInsightsEngine key="US" role={"Biotech" as any} stateAbbr="US" regionData={facilitiesData as any} />
-            );
 
             case 'groundwater': return DS(
               <div id="section-groundwater">

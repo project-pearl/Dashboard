@@ -228,12 +228,6 @@ export const resolutionPlanSchema = z.object({
   prompt: z.string().min(1, 'prompt is required'),
 });
 
-/** Schema for raw AI insight generation (system prompt + user message). */
-export const aiInsightsSchema = z.object({
-  systemPrompt: z.string().min(1, 'systemPrompt is required'),
-  userMessage: z.string().min(1, 'userMessage is required'),
-});
-
 /** Schema for AI-powered categorization of a named entity. */
 export const aiCategorizeSchema = z.object({
   type: z.string().min(1, 'type is required'),

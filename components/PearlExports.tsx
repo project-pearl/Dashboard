@@ -52,26 +52,6 @@ function formatEfficiencies(eff: any): string {
 
 // ─── 1. AI Insights Report ───────────────────────────────────────────────────
 
-export function exportAIInsightsReport(data: any, regionName: string, userRole: string) {
-  const report =
-    header('AI-POWERED WATER QUALITY INSIGHTS REPORT', regionName) +
-    `User Role: ${userRole}\n\n` +
-    `CURRENT PARAMETER READINGS\n${'-'.repeat(40)}\n${formatParams(data)}\n\n` +
-    `AI ANALYSIS SUMMARY\n${'-'.repeat(40)}\n` +
-    `Overall Water Quality: ${data?.parameters?.DO?.value >= 5 ? 'Acceptable' : 'Needs Attention'}\n` +
-    `Dissolved Oxygen: ${data?.parameters?.DO?.value?.toFixed(2)} mg/L — ${data?.parameters?.DO?.value >= 6 ? 'Healthy for aquatic life' : data?.parameters?.DO?.value >= 4 ? 'Marginal — monitor closely' : 'Critical — hypoxic conditions'}\n` +
-    `Nutrient Loading: TN ${data?.parameters?.TN?.value?.toFixed(2)} mg/L, TP ${data?.parameters?.TP?.value?.toFixed(3)} mg/L\n` +
-    `Sediment: TSS ${data?.parameters?.TSS?.value?.toFixed(1)} mg/L, Turbidity ${data?.parameters?.turbidity?.value?.toFixed(1)} NTU\n\n` +
-    `RECOMMENDATIONS\n${'-'.repeat(40)}\n` +
-    `• Continue PIN biofiltration monitoring at current deployment\n` +
-    `• ${data?.parameters?.TN?.value > 1.0 ? 'Elevated nitrogen — consider upstream source investigation' : 'Nitrogen within acceptable range'}\n` +
-    `• ${data?.parameters?.TSS?.value > 25 ? 'Elevated TSS — review storm event capture capacity' : 'TSS within target range'}\n` +
-    `• Next recommended sampling window: ${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}\n` +
-    PEARL_FOOTER(new Date().getFullYear());
-
-  downloadText(report, `PIN-AI-Insights-${regionName.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.txt`);
-}
-
 // ─── 2. ESG Report ───────────────────────────────────────────────────────────
 
 export function exportESGReport(data: any, removalEfficiencies: any, regionName: string) {

@@ -26,7 +26,6 @@ import { STATE_AUTHORITIES } from '@/lib/stateWaterData';
 import { useAuth } from '@/lib/authContext';
 import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
-import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
@@ -879,9 +878,6 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
         })()
             );
 
-            case 'insights': return DS(
-              <AIInsightsEngine key={stateAbbr} role="NGO" stateAbbr={stateAbbr} regionData={regionData as any} />
-            );
 
             case 'alertfeed': return DS(
         (() => {

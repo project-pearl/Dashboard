@@ -15,10 +15,6 @@ function SectionSkeleton() {
 // Lazy-loaded section components
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sections = {
-  'ai-water-intelligence': dynamic<any>(() =>
-    import('./AIWaterIntelligenceSection').then(m => ({ default: m.AIWaterIntelligenceSection as any })),
-    { loading: SectionSkeleton }
-  ),
   'national-briefing': dynamic<any>(() =>
     import('./NationalBriefingSection').then(m => ({ default: m.NationalBriefingSection as any })),
     { loading: SectionSkeleton }

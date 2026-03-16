@@ -28,7 +28,6 @@ import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 import { WildlifeImpactDisclaimer } from '@/components/WildlifeImpactDisclaimer';
 import { K12EducationalHub } from '@/components/K12EducationalHub';
 import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
-import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { exportK12FieldReport } from '@/components/PearlExports';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
 import { EmergingContaminantsTracker } from '@/components/EmergingContaminantsTracker';
@@ -851,9 +850,6 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
           );
         })());
 
-            case 'insights': return DS(
-              <AIInsightsEngine key={stateAbbr} role="K12" stateAbbr={stateAbbr} regionData={regionData as any} />
-            );
 
             case 'alertfeed': return DS((() => {
           const alertRegions = regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium');

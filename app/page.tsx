@@ -27,7 +27,6 @@ import { Download, Droplets, GitCompare, MapPin, CloudRain, FileText, Coins, Bar
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertsBanner } from '@/components/AlertsBanner';
 import { TrendsChart } from '@/components/TrendsChart';
-import { AIInsights } from '@/components/AIInsights';
 import { RemovalSummaryCard } from '@/components/RemovalSummaryCard';
 import { calculateRemovalDisplay } from '@/lib/removalCalculations';
 import { regionsConfig, getRegionById, isChesapeakeBayRegion } from '@/lib/regionsConfig';
@@ -109,7 +108,6 @@ import { LiveESGScore } from '@/components/LiveESGScore';
 import { ChevronDown, ChevronUp, Minus } from 'lucide-react';
 import {
   exportESGReport,
-  exportAIInsightsReport,
   exportEJReport,
   exportBayImpactReport,
   exportForecastReport,
@@ -538,11 +536,6 @@ export default function Home() {
   };
 
   const shouldShowEJImpact = () => {
-    // Hide from K12 only
-    return userRole !== 'K12';
-  };
-
-  const shouldShowAIInsights = () => {
     // Hide from K12 only
     return userRole !== 'K12';
   };
@@ -2042,39 +2035,6 @@ export default function Home() {
             </CollapsibleSection>
           )}
 
-          {/* ── AI INSIGHTS ───────────────────────────────────────────── */}
-          {!showNutrientCredits && !showESG && !showManuscript && shouldShowAIInsights() && (
-            <CollapsibleSection id="ai" title="AI Trends & Predictions" icon="🤖" collapsed={isCollapsed('ai')} onToggle={toggleSection}>
-            <Card className="border-2">
-              <CardHeader>
-                <CardTitle className="text-xl flex items-center gap-2">
-                  <span className="text-2xl">🤖</span> AI Trends & Predictions
-                </CardTitle>
-                <CardDescription>
-                  Automated analysis based on current readings and recent trends
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AIInsights
-                  data={dataMode === 'storm-event' ? selectedStormEvent.effluent : displayData}
-                  dataMode={dataMode}
-                  regionId={selectedRegionId}
-                />
-              </CardContent>
-              {userRole !== 'K12' && (
-                <div className="flex justify-end px-6 pb-4">
-                  <button
-                    onClick={() => exportAIInsightsReport(displayData, selectedRegion?.name || 'Unknown', userRole)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
-                  >
-                    <FileText className="h-3.5 w-3.5 text-blue-500" />
-                    Export AI Insights PDF
-                  </button>
-                </div>
-              )}
-            </Card>
-            </CollapsibleSection>
-          )}
 
           {dataMode === 'influent-effluent' && !showNutrientCredits && !showESG && !showManuscript && (
             <div className="space-y-6">

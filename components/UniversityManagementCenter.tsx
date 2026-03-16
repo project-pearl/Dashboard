@@ -25,7 +25,6 @@ import { useAuth } from '@/lib/authContext';
 import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 
 import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
-import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
@@ -901,9 +900,6 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
           );
         })());
 
-            case 'insights': return DS(
-              <AIInsightsEngine key={stateAbbr} role={userRole === 'College' ? 'College' : 'Researcher'} stateAbbr={stateAbbr} regionData={regionData as any} />
-            );
 
             case 'map-grid': return DS(
         <div className="space-y-4">

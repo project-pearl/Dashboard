@@ -44,7 +44,6 @@ vi.mock('@/lib/national-summary', () => ({}));
 
 // Child components
 const N = () => null;
-vi.mock('@/components/AIInsightsEngine', () => ({ AIInsightsEngine: N }));
 vi.mock('@/components/StateWaterbodyCard', () => ({ default: N }));
 vi.mock('@/components/ResolutionPlanner', () => ({ default: N }));
 vi.mock('@/components/RestorationPlanner', () => ({ default: N }));

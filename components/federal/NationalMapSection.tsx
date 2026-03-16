@@ -8,7 +8,6 @@ import { BrandedPrintBtn } from '@/lib/brandedPrint';
 import { STATE_ABBR_TO_NAME } from '@/lib/adminStateContext';
 import { SentinelStatusBadge } from '@/components/SentinelStatusBadge';
 import { StateDataReportCard } from '@/components/StateDataReportCard';
-import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { getRegionById } from '@/lib/regionsConfig';
 import { computeRestorationPlan, resolveAttainsCategory, mergeAttainsCauses } from '@/lib/restorationEngine';
 
@@ -751,11 +750,6 @@ export default function NationalMapSection(props: NationalMapSectionProps) {
               )}
             </CardContent>
           </Card>
-        )}
-
-        {/* ── AI INSIGHTS — hidden in overview & monitoring lenses ── */}
-        {viewLens !== 'monitoring' && viewLens !== 'overview' && (
-          <AIInsightsEngine key={selectedState} role="Federal" stateAbbr={selectedState} regionData={selectedStateRegions as any} />
         )}
 
         {/* ── MS4 & REGULATORY — Compact vertical card ────── */}
