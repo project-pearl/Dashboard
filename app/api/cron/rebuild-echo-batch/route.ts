@@ -116,48 +116,48 @@ function safeParse(text: string): any {
 // ── Sub-cron 1: ECHO DMR Violations ─────────────────────────────────────────
 
 async function fetchDmrForState(st: string): Promise<DmrViolation[]> {
-  // Step 1: Get QID
-  const qidUrl = `https://echo.epa.gov/api/dmr_rest_services.get_qid?p_st=${st}&output=JSON`;
+  // EPA DMR REST services are deprecated; use CWA facility info with violation filters.
+  // Step 1: Get QID for CWA facilities with violations in last 4 quarters
+  const qidUrl = `https://echodata.epa.gov/echo/cwa_rest_services.get_facility_info?p_st=${st}&p_qiv=SNC&output=JSON&responseset=500`;
   const qidResp = await fetch(qidUrl, { signal: AbortSignal.timeout(REQUEST_TIMEOUT) });
-  if (!qidResp.ok) throw new Error(`QID HTTP ${qidResp.status}`);
+  if (!qidResp.ok) throw new Error(`CWA QID HTTP ${qidResp.status}`);
   const qidJson = await qidResp.json();
   const qid = qidJson?.Results?.QueryID;
-  if (!qid) return [];
+  const queryRows = parseInt(qidJson?.Results?.QueryRows || '0', 10);
+  if (!qid || queryRows === 0) return [];
 
-  // Step 2: Get results
-  const resUrl = `https://echo.epa.gov/api/dmr_rest_services.get_results?qid=${qid}&output=JSON`;
+  // Step 2: Get facility details
+  const resUrl = `https://echodata.epa.gov/echo/cwa_rest_services.get_facilities?qid=${qid}&output=JSON&responseset=500`;
   const resResp = await fetch(resUrl, { signal: AbortSignal.timeout(REQUEST_TIMEOUT) });
-  if (!resResp.ok) throw new Error(`Results HTTP ${resResp.status}`);
+  if (!resResp.ok) throw new Error(`CWA Results HTTP ${resResp.status}`);
   const resJson = await resResp.json();
   const facilities = resJson?.Results?.Facilities || [];
 
   const violations: DmrViolation[] = [];
   for (const fac of facilities) {
-    const lat = parseFloat(fac.Lat || fac.FacLat || '0');
-    const lng = parseFloat(fac.Lng || fac.FacLong || '0');
+    const lat = parseFloat(fac.FacLat || fac.Lat || '0');
+    const lng = parseFloat(fac.FacLong || fac.Lng || '0');
     if (!lat || !lng) continue;
 
-    const permits = fac.Permits || [];
-    for (const permit of permits) {
-      const violations_arr = permit.Violations || [];
-      for (const v of violations_arr) {
-        violations.push({
-          permitId: permit.NPDesID || permit.PermitID || '',
-          facilityName: fac.FacName || fac.CWPName || '',
-          facilityLat: lat,
-          facilityLng: lng,
-          state: st,
-          parameter: v.ParameterDesc || v.MonitoringLocationDesc || '',
-          limitValue: v.LimitValue != null ? parseFloat(v.LimitValue) : null,
-          dmrValue: v.DMRValue != null ? parseFloat(v.DMRValue) : null,
-          exceedancePct: v.ExceedancePct != null ? parseFloat(v.ExceedancePct) : null,
-          violationCategory: v.ViolationCategory || v.NonCompCategory || '',
-          reportingPeriod: v.MonitoringPeriod || '',
-          reportDate: v.DMREventDate || '',
-          sourceId: `ECHO-DMR-${permit.NPDesID || ''}-${v.ParameterCode || ''}`,
-        });
-      }
-    }
+    // CWA facility info includes violation summary fields
+    const qtrsInViol = parseInt(fac.CWPQtrsInNC || fac.QtrsInViolation || '0', 10);
+    if (qtrsInViol === 0) continue;
+
+    violations.push({
+      permitId: fac.CWPPermitStatusDesc ? fac.SourceID || '' : fac.SourceID || fac.CWPNpdesIds || '',
+      facilityName: fac.CWPName || fac.FacName || '',
+      facilityLat: lat,
+      facilityLng: lng,
+      state: st,
+      parameter: fac.CWPCurrentSNCStatus || 'DMR Non-Report/Effluent Violation',
+      limitValue: null,
+      dmrValue: null,
+      exceedancePct: null,
+      violationCategory: fac.CWPSNCStatus || fac.CWPCurrentSNCStatus || 'SNC',
+      reportingPeriod: `Last ${qtrsInViol} quarters`,
+      reportDate: fac.CWPDateLastInspection || '',
+      sourceId: `ECHO-CWA-${fac.SourceID || fac.RegistryID || ''}`,
+    });
   }
   return violations;
 }

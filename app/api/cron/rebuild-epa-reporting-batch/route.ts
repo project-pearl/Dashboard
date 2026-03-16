@@ -241,60 +241,81 @@ async function buildSwdi(): Promise<SubCronResult> {
     let severeCount = 0;
     const statesWithData = new Set<string>();
 
-    // Use current year range for SWDI query
+    // NCDC migrated to NCEI; max date range is 744 hours (~31 days).
+    // Query last 30 days in a single chunk; no per-state filter available in new API.
     const now = new Date();
-    const yearStart = `${now.getFullYear()}0101`;
-    const yearEnd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+    const end = new Date(now);
+    const start30 = new Date(now);
+    start30.setDate(start30.getDate() - 30);
+    const fmt = (d: Date) =>
+      `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
 
-    for (const state of PRIORITY_STATES) {
-      try {
-        const res = await fetch(
-          `https://www.ncdc.noaa.gov/swdiws/json/nx3structure/${yearStart}:${yearEnd}?stat=state:${state}`,
-          { signal: AbortSignal.timeout(30_000) },
-        );
-        if (!res.ok) continue;
+    let allSwdiResults: any[] = [];
+    try {
+      const res = await fetch(
+        `https://www.ncei.noaa.gov/swdiws/json/nx3structure/${fmt(start30)}:${fmt(end)}`,
+        { signal: AbortSignal.timeout(60_000), redirect: 'follow' },
+      );
+      if (res.ok) {
         const data = await res.json();
-        const results = data?.result || data?.results || [];
+        const rawResults = data?.swdiJsonResponse?.result || data?.result || data?.results || [];
+        allSwdiResults = rawResults;
+        console.log(`[EPA Reporting Batch] SWDI: fetched ${allSwdiResults.length} raw events`);
+      } else {
+        console.warn(`[EPA Reporting Batch] SWDI: HTTP ${res.status}`);
+      }
+    } catch (fetchErr: any) {
+      console.warn(`[EPA Reporting Batch] SWDI fetch failed: ${fetchErr.message}`);
+    }
 
-        for (const evt of results) {
-          const lat = parseFloat(evt.lat || evt.BEGIN_LAT || '0');
-          const lng = parseFloat(evt.lon || evt.lng || evt.BEGIN_LON || '0');
-          if (!lat || !lng) continue;
-
-          const eventType = (evt.event_type || evt.EVENT_TYPE || 'thunderstorm').toLowerCase();
-          const severity = evt.severity || (
-            eventType === 'tornado' ? 'severe'
-            : eventType === 'hail' ? 'moderate'
-            : 'minor'
-          );
-          if (severity === 'severe' || severity === 'extreme') severeCount++;
-
-          const event = {
-            eventId: evt.id || evt.WSR_ID || `${state}-${totalEvents}`,
-            eventType: eventType.includes('hail') ? 'hail'
-              : eventType.includes('tornado') ? 'tornado'
-              : eventType.includes('wind') ? 'wind'
-              : eventType.includes('flood') ? 'flood'
-              : 'thunderstorm',
-            severity,
-            lat,
-            lng,
-            state,
-            county: evt.county || evt.CZ_NAME || '',
-            eventDate: evt.date || evt.BEGIN_DATE || '',
-            magnitude: parseFloat(evt.magnitude || evt.MAGNITUDE || '0') || null,
-            magnitudeUnit: evt.magnitude_unit || evt.MAGNITUDE_TYPE || null,
-            source: 'NOAA SWDI',
-          };
-
-          const key = gridKey(lat, lng);
-          if (!grid[key]) grid[key] = [];
-          grid[key].push(event);
-          totalEvents++;
-          statesWithData.add(state);
+    for (const evt of allSwdiResults) {
+      try {
+        // Parse lat/lng from SHAPE field: "POINT (lng lat)"
+        let lat = 0, lng = 0;
+        const shape = evt.SHAPE || '';
+        const pointMatch = shape.match(/POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)/);
+        if (pointMatch) {
+          lng = parseFloat(pointMatch[1]);
+          lat = parseFloat(pointMatch[2]);
+        } else {
+          lat = parseFloat(evt.lat || evt.BEGIN_LAT || '0');
+          lng = parseFloat(evt.lon || evt.lng || evt.BEGIN_LON || '0');
         }
-      } catch (stateErr: any) {
-        console.warn(`[EPA Reporting Batch] SWDI: ${state} failed: ${stateErr.message}`);
+        if (!lat || !lng) continue;
+
+        // Derive severity from max reflectivity (dBZ)
+        const maxReflect = parseFloat(evt.MAX_REFLECT || '0');
+        const severity = maxReflect >= 60 ? 'severe'
+          : maxReflect >= 50 ? 'moderate'
+          : 'minor';
+        if (severity === 'severe') severeCount++;
+
+        // Determine state from radar station (first 4 chars = WSR_ID like KCLE)
+        const wsrId = evt.WSR_ID || '';
+        // Use lat/lng to approximate state — accept all CONUS events
+        const state = wsrId.slice(0, 1) === 'K' ? 'US' : 'US'; // all tagged as national
+
+        const event = {
+          eventId: `${wsrId}-${evt.CELL_ID || ''}-${totalEvents}`,
+          eventType: maxReflect >= 55 ? 'thunderstorm' : 'convective',
+          severity,
+          lat,
+          lng,
+          state: 'US',
+          county: '',
+          eventDate: evt.ZTIME || evt.date || '',
+          magnitude: maxReflect || null,
+          magnitudeUnit: 'dBZ',
+          source: 'NOAA SWDI',
+        };
+
+        const key = gridKey(lat, lng);
+        if (!grid[key]) grid[key] = [];
+        grid[key].push(event);
+        totalEvents++;
+        statesWithData.add('US');
+      } catch (evtErr: any) {
+        // skip individual event parse errors
       }
     }
 

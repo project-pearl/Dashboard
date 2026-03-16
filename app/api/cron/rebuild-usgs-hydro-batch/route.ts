@@ -95,48 +95,75 @@ async function forEachStateConcurrent<T>(
 
 // ── Sub-cron 1: WQX Modern ─────────────────────────────────────────────────
 
+function parseCsvLine(line: string): string[] {
+  const fields: string[] = [];
+  let cur = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+      else if (ch === '"') { inQuotes = false; }
+      else { cur += ch; }
+    } else {
+      if (ch === '"') { inQuotes = true; }
+      else if (ch === ',') { fields.push(cur); cur = ''; }
+      else { cur += ch; }
+    }
+  }
+  fields.push(cur);
+  return fields;
+}
+
 async function fetchWqxForState(stFips: [string, string]): Promise<WqxResult[]> {
   const [st, fips] = stFips;
-  const url = `https://www.waterqualitydata.us/data/Result/search?mimeType=json&zip=no&statecode=US:${fips}&startDateLo=01-01-2024&dataProfile=resultPhysChem&providers=NWIS&providers=STORET`;
+  // WQP no longer accepts mimeType=json (returns 406); use CSV
+  const url = `https://www.waterqualitydata.us/data/Result/search?mimeType=csv&zip=no&statecode=US:${fips}&startDateLo=01-01-2024&dataProfile=resultPhysChem&providers=NWIS&providers=STORET`;
   const resp = await fetch(url, {
     signal: AbortSignal.timeout(REQUEST_TIMEOUT),
-    headers: { Accept: 'application/json' },
   });
   if (!resp.ok) throw new Error(`WQP HTTP ${resp.status}`);
 
-  let records: any[];
-  const contentType = resp.headers.get('content-type') || '';
-  if (contentType.includes('application/json')) {
-    const json = await resp.json();
-    records = Array.isArray(json) ? json : json?.results || json?.data || [];
-  } else {
-    // WQP sometimes returns CSV or other formats; skip
-    return [];
-  }
+  const text = await resp.text();
+  const lines = text.split('\n').filter(l => l.trim());
+  if (lines.length < 2) return [];
+
+  // Parse CSV header to build column index
+  const headers = parseCsvLine(lines[0]);
+  const col = (name: string) => headers.indexOf(name);
+  const iLat = col('ActivityLocation/LatitudeMeasure');
+  const iLng = col('ActivityLocation/LongitudeMeasure');
+  const iOrgId = col('OrganizationIdentifier');
+  const iOrgName = col('OrganizationFormalName');
+  const iActId = col('ActivityIdentifier');
+  const iChar = col('CharacteristicName');
+  const iVal = col('ResultMeasureValue');
+  const iUnit = col('ResultMeasure/MeasureUnitCode');
+  const iMethod = col('ResultAnalyticalMethod/MethodName');
+  const iMonId = col('MonitoringLocationIdentifier');
+  const iMonType = col('MonitoringLocationTypeName');
+  const iDate = col('ActivityStartDate');
 
   const results: WqxResult[] = [];
-  for (const r of records) {
-    const lat = parseFloat(r.ActivityLocation?.LatitudeMeasure || r.LatitudeMeasure || '0');
-    const lng = parseFloat(r.ActivityLocation?.LongitudeMeasure || r.LongitudeMeasure || '0');
+  for (let i = 1; i < lines.length; i++) {
+    const fields = parseCsvLine(lines[i]);
+    const lat = parseFloat(fields[iLat] || '0');
+    const lng = parseFloat(fields[iLng] || '0');
     if (!lat || !lng) continue;
 
     results.push({
-      organizationId: r.OrganizationIdentifier || '',
-      organizationName: r.OrganizationFormalName || '',
-      activityId: r.ActivityIdentifier || '',
-      characteristicName: r.CharacteristicName || '',
-      resultValue: r.ResultMeasure?.ResultMeasureValue != null
-        ? parseFloat(r.ResultMeasure.ResultMeasureValue)
-        : r.ResultMeasureValue != null
-          ? parseFloat(r.ResultMeasureValue)
-          : null,
-      resultUnit: r.ResultMeasure?.MeasureUnitCode || r.MeasureUnitCode || '',
-      resultAnalyticalMethod: r.ResultAnalyticalMethod?.MethodName || r.AnalyticalMethodName || '',
-      monitoringLocationId: r.MonitoringLocationIdentifier || '',
-      monitoringLocationType: r.MonitoringLocationTypeName || '',
+      organizationId: fields[iOrgId] || '',
+      organizationName: fields[iOrgName] || '',
+      activityId: fields[iActId] || '',
+      characteristicName: fields[iChar] || '',
+      resultValue: fields[iVal] ? parseFloat(fields[iVal]) : null,
+      resultUnit: fields[iUnit] || '',
+      resultAnalyticalMethod: fields[iMethod] || '',
+      monitoringLocationId: fields[iMonId] || '',
+      monitoringLocationType: fields[iMonType] || '',
       lat,
       lng,
-      activityStartDate: r.ActivityStartDate || '',
+      activityStartDate: fields[iDate] || '',
       state: st,
     });
   }
