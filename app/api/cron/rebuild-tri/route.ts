@@ -2,6 +2,7 @@
 // Cron endpoint — fetches EPA TRI (Toxics Release Inventory) facility data
 // from ENVIROFACTS REST API for all 50 states + DC.
 // Schedule: daily at 6 PM UTC via Vercel cron.
+// Fixed: EPA API field mappings (trifd, st, "facility name", etc.) - 2026-03-17
 
 export const maxDuration = 300;
 
