@@ -65,7 +65,7 @@ const LENS_DOMAINS: Record<string, DomainKey[]> = {
   'agricultural-nps':     ['attains', 'wqp'],
   'agriculture':          ['attains', 'wqp'],
   'scorecard':            ['sdwis', 'echo', 'attains', 'dam', 'usdm', 'fema', 'airQuality'],
-  'overview':             ['sdwis', 'echo', 'attains', 'fema', 'usdm'],
+  'overview':             ['echo', 'attains', 'fema', 'usdm'],
   'briefing':             ['sdwis', 'echo', 'attains', 'fema', 'usdm'],
   'stormwater':           ['echo', 'nwisIv'],
   'funding':              ['sdwis', 'echo'],
