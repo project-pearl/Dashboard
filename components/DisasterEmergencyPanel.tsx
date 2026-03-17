@@ -193,6 +193,7 @@ export function DisasterEmergencyPanel({
 
   const [triCarcinogenOnly, setTriCarcinogenOnly] = useState(false);
   const [triSearch, setTriSearch] = useState('');
+  const [gwSearch, setGwSearch] = useState('');
 
   useEffect(() => {
     async function fetchAll() {
@@ -264,6 +265,16 @@ export function DisasterEmergencyPanel({
         state: siteStateMap[t.siteNumber] || 'Unknown',
       }));
   }, [trends, sites]);
+
+  const filteredTrends = useMemo(() => {
+    if (!gwSearch) return criticalTrends;
+    const q = gwSearch.toLowerCase();
+    return criticalTrends.filter(t =>
+      (t.siteName || '').toLowerCase().includes(q) ||
+      t.siteNumber.toLowerCase().includes(q) ||
+      t.state.toLowerCase().includes(q)
+    );
+  }, [criticalTrends, gwSearch]);
 
   // ── Filtered NWS alerts ───────────────────────────────────────────────
   const filteredAlerts = useMemo(() => {
@@ -555,15 +566,29 @@ export function DisasterEmergencyPanel({
       {/* Section 2: Critical Groundwater Trends */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <TrendingDown size={16} className="text-red-600" />
-            Critical Groundwater Trends
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <TrendingDown size={16} className="text-red-600" />
+              Critical Groundwater Trends
+              {criticalTrends.length > 0 && (
+                <Badge className="ml-1 text-2xs bg-red-100 text-red-700">
+                  {criticalTrends.length} sites declining
+                </Badge>
+              )}
+            </CardTitle>
             {criticalTrends.length > 0 && (
-              <Badge className="ml-1 text-2xs bg-red-100 text-red-700">
-                {criticalTrends.length} sites declining
-              </Badge>
+              <div className="relative">
+                <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={gwSearch}
+                  onChange={e => setGwSearch(e.target.value)}
+                  placeholder="Search sites..."
+                  className="pl-6 pr-2 py-1 text-xs rounded border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-700 dark:text-slate-200 w-44 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                />
+              </div>
             )}
-          </CardTitle>
+          </div>
           <CardDescription>
             Sites with the fastest declining groundwater levels — potential emergency watch areas
           </CardDescription>
@@ -577,16 +602,16 @@ export function DisasterEmergencyPanel({
               </span>
             </div>
           ) : (
-            <div className="space-y-2">
-              {criticalTrends.map((t, i) => (
+            <div className={`space-y-2 ${filteredTrends.length > 5 ? 'max-h-[340px] overflow-y-auto pr-1' : ''}`}>
+              {filteredTrends.map((t, i) => (
                 <div
                   key={`${t.siteNumber}-${i}`}
                   className={`rounded-lg border p-3 transition-colors ${
                     t.trendMagnitude > 2
-                      ? 'border-red-200 bg-red-50'
+                      ? 'border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-950/30'
                       : t.trendMagnitude > 1
-                        ? 'border-orange-200 bg-orange-50'
-                        : 'border-amber-200 bg-amber-50'
+                        ? 'border-orange-200 bg-orange-50 dark:border-orange-900/50 dark:bg-orange-950/30'
+                        : 'border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/30'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1">
@@ -601,7 +626,7 @@ export function DisasterEmergencyPanel({
                               : 'text-amber-600 shrink-0'
                         }
                       />
-                      <span className="text-xs font-semibold text-slate-800 truncate">
+                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
                         {t.siteName || t.siteNumber}
                       </span>
                       <Badge variant="secondary" className="text-2xs shrink-0">
@@ -611,26 +636,36 @@ export function DisasterEmergencyPanel({
                     <span
                       className={`text-xs font-bold tabular-nums shrink-0 ml-2 ${
                         t.trendMagnitude > 2
-                          ? 'text-red-700'
+                          ? 'text-red-700 dark:text-red-400'
                           : t.trendMagnitude > 1
-                            ? 'text-orange-700'
-                            : 'text-amber-700'
+                            ? 'text-orange-700 dark:text-orange-400'
+                            : 'text-amber-700 dark:text-amber-400'
                       }`}
                     >
                       -{t.trendMagnitude.toFixed(2)} ft/mo
                     </span>
                   </div>
-                  <div className="flex items-center gap-4 text-2xs text-slate-500 ml-5">
+                  <div className="flex items-center gap-4 text-2xs text-slate-500 dark:text-slate-400 ml-5">
                     <span>
-                      Latest: <span className="font-medium text-slate-700">{formatDepth(t.latestLevel)}</span>
+                      Latest: <span className="font-medium text-slate-700 dark:text-slate-300">{formatDepth(t.latestLevel)}</span>
                     </span>
                     <span>
-                      Date: <span className="font-medium text-slate-700">{formatDate(t.latestDate)}</span>
+                      Date: <span className="font-medium text-slate-700 dark:text-slate-300">{formatDate(t.latestDate)}</span>
                     </span>
                     <span className="font-mono text-slate-400">{t.siteNumber}</span>
                   </div>
                 </div>
               ))}
+              {filteredTrends.length === 0 && gwSearch && (
+                <div className="text-center py-4 text-xs text-slate-400">
+                  No sites match &ldquo;{gwSearch}&rdquo;
+                </div>
+              )}
+              {filteredTrends.length > 5 && !gwSearch && (
+                <p className="text-2xs text-center text-slate-400 mt-1 sticky bottom-0 bg-white dark:bg-gray-900 py-1">
+                  Scroll to see all {filteredTrends.length} sites
+                </p>
+              )}
               <p className="text-2xs text-slate-400 mt-2 flex items-center gap-1">
                 <Info size={10} />
                 Showing top {criticalTrends.length} sites by decline rate (ft/month).

@@ -4,7 +4,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -13,6 +13,7 @@ import {
   Clock,
   Zap,
   Activity,
+  Search,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -195,8 +196,21 @@ function EscalationRow({
 
 /* ── Main Component ── */
 
+const VISIBLE_ROWS = 5;
+
 export default function EscalationSummary({ hucNames }: EscalationSummaryProps) {
   const { indicators, isLoading, error } = useEscalationIndicators();
+  const [search, setSearch] = useState('');
+
+  const filtered = useMemo(() => {
+    if (!search) return indicators;
+    const q = search.toLowerCase();
+    return indicators.filter(ind => {
+      const name = (hucNames[ind.huc8] ?? ind.huc8).toLowerCase();
+      return name.includes(q) || ind.stateAbbr.toLowerCase().includes(q) || ind.huc8.includes(q)
+        || ind.level.toLowerCase().includes(q) || ind.escalationClass.includes(q);
+    });
+  }, [indicators, search, hucNames]);
 
   if (error && indicators.length === 0) {
     return (
@@ -226,28 +240,41 @@ export default function EscalationSummary({ hucNames }: EscalationSummaryProps) 
 
   const rapidCount = indicators.filter(i => i.escalationClass === 'rapid').length;
   const urgentCount = indicators.filter(i => i.estimatedHoursToNext != null && i.estimatedHoursToNext < 3).length;
+  const hasMore = filtered.length > VISIBLE_ROWS;
 
   return (
     <div className="flex flex-col gap-2.5">
-      {/* Summary strip */}
-      <div className="flex flex-wrap gap-3 text-pin-xs text-pin-text-secondary">
-        <span><Activity size={12} className="inline mr-0.5" /><strong>{indicators.length}</strong> active HUCs</span>
-        {rapidCount > 0 && (
-          <span className="text-pin-critical">
-            <Zap size={12} className="inline mr-0.5" /><strong>{rapidCount}</strong> rapid
-          </span>
-        )}
-        {urgentCount > 0 && (
-          <span className="text-pin-critical">
-            <Clock size={12} className="inline mr-0.5" /><strong>{urgentCount}</strong> {'<'}3h to next level
-          </span>
-        )}
+      {/* Summary strip + search */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap gap-3 text-pin-xs text-pin-text-secondary">
+          <span><Activity size={12} className="inline mr-0.5" /><strong>{indicators.length}</strong> active HUCs</span>
+          {rapidCount > 0 && (
+            <span className="text-pin-critical">
+              <Zap size={12} className="inline mr-0.5" /><strong>{rapidCount}</strong> rapid
+            </span>
+          )}
+          {urgentCount > 0 && (
+            <span className="text-pin-critical">
+              <Clock size={12} className="inline mr-0.5" /><strong>{urgentCount}</strong> {'<'}3h to next level
+            </span>
+          )}
+        </div>
+        <div className="relative">
+          <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search HUCs..."
+            className="pl-6 pr-2 py-1 text-xs rounded border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-700 dark:text-slate-200 w-44 focus:outline-none focus:ring-1 focus:ring-blue-400"
+          />
+        </div>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
+      {/* Table with top-5 visible + scroll for rest */}
+      <div className={cn('overflow-x-auto', hasMore && 'max-h-[280px] overflow-y-auto')}>
         <table className="w-full border-collapse text-pin-sm">
-          <thead>
+          <thead className="sticky top-0 z-10 bg-white dark:bg-gray-900">
             <tr className="pin-table-header">
               <th className="px-2 py-1.5 text-left">HUC</th>
               <th className="px-2 py-1.5 text-center">Level</th>
@@ -260,7 +287,7 @@ export default function EscalationSummary({ hucNames }: EscalationSummaryProps) 
             </tr>
           </thead>
           <tbody>
-            {indicators.map((ind, i) => (
+            {filtered.map((ind, i) => (
               <EscalationRow
                 key={ind.huc8}
                 ind={ind}
@@ -268,9 +295,17 @@ export default function EscalationSummary({ hucNames }: EscalationSummaryProps) 
                 rank={i}
               />
             ))}
+            {filtered.length === 0 && (
+              <tr><td colSpan={8} className="text-center py-4 text-pin-xs text-pin-text-secondary">No HUCs match &ldquo;{search}&rdquo;</td></tr>
+            )}
           </tbody>
         </table>
       </div>
+      {hasMore && !search && (
+        <div className="text-2xs text-center text-slate-400">
+          Scroll to see all {filtered.length} HUCs
+        </div>
+      )}
     </div>
   );
 }
