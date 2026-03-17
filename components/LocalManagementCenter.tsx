@@ -526,6 +526,9 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
       {/* -- HERO BANNER -- */}
       <HeroBanner role="local" onDoubleClick={() => onToggleDevMode?.()} />
 
+      {/* ── LENS BRIEFING — always first card below hero ── */}
+      <LensDataStory lens={viewLens} role="Local" state={effectiveState} />
+
       {/* -- ADMIN JURISDICTION / MS4 SWITCHER -- */}
       {(isAdmin || user?.role === 'Pearl') && (
         <div className="bg-white border border-purple-200 rounded-xl p-4 space-y-3">
@@ -2349,9 +2352,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
           <CorrelationBreakthroughsPanel state={effectiveState} />
         );
 
-        case 'lens-data-story': return DS(
-          <LensDataStory lens={viewLens} role="Local" state={effectiveState} />
-        );
+        case 'lens-data-story': return null; // rendered above hero
 
           default: return DS(
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">

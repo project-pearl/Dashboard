@@ -76,7 +76,6 @@ import { UserManagementPanel } from './UserManagementPanel';
 import { getInvitableRoles } from '@/lib/adminHierarchy';
 import type { AlertEvent as EngineAlertEvent } from '@/lib/alerts/types';
 import { BriefingQACard } from '@/components/BriefingQACard';
-import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
 import { FireDetectionCard } from '@/components/FireDetectionCard';
 import { FireAirQualityIntelPanel } from '@/components/FireAirQualityIntelPanel';
 import { AqiTrendChart } from '@/components/AqiTrendChart';
@@ -215,7 +214,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['usmap', 'pol-constituent-concerns', 'ask-pin-universal', 'triage-queue', 'wqx-modern-results', 'flood-event-viewer', 'dmr-violations-panel', 'hab-forecast-panel', 'cdc-places-health', 'severe-weather-panel', 'nexrad-precip-panel', 'congress-legislation', 'correlation-breakthroughs', 'lens-data-story']),
+    sections: new Set(['usmap', 'pol-constituent-concerns', 'triage-queue', 'wqx-modern-results', 'flood-event-viewer', 'dmr-violations-panel', 'hab-forecast-panel', 'cdc-places-health', 'severe-weather-panel', 'nexrad-precip-panel', 'congress-legislation', 'correlation-breakthroughs', 'lens-data-story']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -225,7 +224,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: true,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['ai-water-intelligence', 'briefing-actions', 'triage-queue', 'briefing-qa', 'ask-pin-universal', 'correlation-breakthroughs', 'lens-data-story']),
+    sections: new Set(['ai-water-intelligence', 'briefing-actions', 'triage-queue', 'briefing-qa', 'correlation-breakthroughs', 'lens-data-story']),
   },
   'political-briefing': {
     label: 'Political Briefing',
@@ -2988,6 +2987,12 @@ export function FederalManagementCenter(props: Props) {
             )}
         </HeroBanner>
 
+        {/* ── LENS BRIEFING — always first card below hero ── */}
+        <LensDataStory lens={viewLens} role="Federal" state={selectedState} />
+
+        {/* ── COMMANDER THREAT BRIEF — military-installations lens only ── */}
+        {viewLens === 'military-installations' && <ThreatFusionCard />}
+
         {/* ── LAYOUT EDITOR WRAPPER ── */}
         <LayoutEditor ccKey="FMC">
         {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
@@ -5183,7 +5188,7 @@ export function FederalManagementCenter(props: Props) {
 
         case 'installation-supply-chain': return DS(<InstallationSupplyChain />);
 
-        case 'threat-fusion': return DS(<ThreatFusionCard />);
+        case 'threat-fusion': return null; // rendered above hero for military-installations lens
 
         case 'air-quality-briefing': return DS(
           <AirQualityMonitoringCard
@@ -5509,10 +5514,6 @@ export function FederalManagementCenter(props: Props) {
 
         case 'briefing-qa': return DS(
           <BriefingQACard role="Federal" isMilitary={viewLens === 'military-installations'} />
-        );
-
-        case 'ask-pin-universal': return DS(
-          <AskPinUniversalCard role="Federal" isMilitary={viewLens === 'military-installations'} />
         );
 
         case 'delta-changelog': return DS(<DeltaChangelog />);
@@ -6263,9 +6264,7 @@ export function FederalManagementCenter(props: Props) {
           <CorrelationBreakthroughsPanel state={selectedState} />
         );
 
-        case 'lens-data-story': return DS(
-          <LensDataStory lens={viewLens} role="Federal" state={selectedState} />
-        );
+        case 'lens-data-story': return null; // rendered above hero
 
         default: return null;
         } {/* end switch */}

@@ -865,6 +865,9 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
         {/* ── HERO BANNER ── */}
         <HeroBanner role="state" onDoubleClick={() => onToggleDevMode?.()} />
 
+        {/* ── LENS BRIEFING — always first card below hero ── */}
+        <LensDataStory lens={viewLens} role="State" state={stateAbbr} />
+
         <LayoutEditor ccKey="State">
         {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
           const isSectionOpen = (id: string) => !collapsedSections[id];
@@ -6793,9 +6796,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               <CorrelationBreakthroughsPanel state={stateAbbr} />
             );
 
-            case 'lens-data-story': return DS(
-              <LensDataStory lens={viewLens} role="State" state={stateAbbr} />
-            );
+            case 'lens-data-story': return null; // rendered above hero
 
             default: return null;
           }
