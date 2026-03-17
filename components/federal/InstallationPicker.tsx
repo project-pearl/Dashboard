@@ -69,6 +69,7 @@ export default function InstallationPicker({ selected, onSelect, conusOnly = tru
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
       <Building2 size={16} style={{ color: 'var(--text-secondary)' }} />
+      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>Installation:</span>
       <select
         value={selected ?? ''}
         onChange={e => onSelect(e.target.value)}

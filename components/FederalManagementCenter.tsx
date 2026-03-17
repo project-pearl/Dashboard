@@ -214,7 +214,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['usmap', 'pol-constituent-concerns', 'ask-pin-universal', 'triage-queue', 'wqx-modern-results', 'flood-event-viewer', 'dmr-violations-panel', 'hab-forecast-panel', 'cdc-places-health', 'severe-weather-panel', 'nexrad-precip-panel', 'congress-legislation', 'correlation-breakthroughs', 'lens-data-story', 'sentinel-intel-feed', 'threat-fusion']),
+    sections: new Set(['usmap', 'pol-constituent-concerns', 'ask-pin-universal', 'triage-queue', 'wqx-modern-results', 'flood-event-viewer', 'dmr-violations-panel', 'hab-forecast-panel', 'cdc-places-health', 'severe-weather-panel', 'nexrad-precip-panel', 'congress-legislation', 'correlation-breakthroughs', 'lens-data-story']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -269,7 +269,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: true, showNationalImpact: true, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'groundwater', 'waterfront-exposure', 'infra-green', 'infra-capital', 'infra-construction', 'flood-impact-analysis', 'cyber-risk-panel', 'flood-event-viewer', 'severe-weather-panel', 'lens-data-story', 'installation-supply-chain']),
+    sections: new Set(['networkhealth', 'groundwater', 'waterfront-exposure', 'infra-green', 'infra-capital', 'infra-construction', 'flood-impact-analysis', 'cyber-risk-panel', 'flood-event-viewer', 'severe-weather-panel', 'lens-data-story']),
   },
   monitoring: {
     label: 'Monitoring',

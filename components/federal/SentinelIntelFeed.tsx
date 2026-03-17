@@ -72,6 +72,16 @@ const TIME_RANGES = [
 
 const LEVELS: ScoreLevel[] = ['ANOMALY', 'CRITICAL', 'WATCH', 'ADVISORY'];
 
+const LEVEL_PRIORITY: Record<string, number> = {
+  ANOMALY: 0,
+  CRITICAL: 1,
+  WATCH: 2,
+  ADVISORY: 3,
+  NOMINAL: 4,
+};
+
+const INITIAL_VISIBLE = 5;
+
 /* ── Helpers ── */
 
 function formatTime(iso: string): string {
@@ -136,25 +146,56 @@ function CbrnBadge({ ind }: { ind: CbrnIndicator }) {
   );
 }
 
+function classificationSummary(entry: SentinelFeedEntry): string {
+  const parts: string[] = [];
+  const boosts = entry.reasoning.filter(r => r.effect === 'boost');
+  if (boosts.length > 0) {
+    const topBoost = boosts.sort((a, b) => b.magnitude - a.magnitude)[0];
+    parts.push(topBoost.rule);
+  }
+  if (entry.coordination) {
+    parts.push(`${entry.coordination.memberHucs.length} correlated HUCs`);
+  }
+  if (entry.cbrnIndicators.length > 0) {
+    const top = entry.cbrnIndicators.sort((a, b) => b.confidence - a.confidence)[0];
+    parts.push(`${top.category} indicator ${(top.confidence * 100).toFixed(0)}%`);
+  }
+  const confMatched = entry.confounders.filter(c => c.matched).length;
+  const confTotal = entry.confounders.length;
+  if (confTotal > 0 && confMatched < confTotal) {
+    parts.push(`${confTotal - confMatched}/${confTotal} confounders ruled out`);
+  }
+  return parts.length > 0 ? parts.join(' · ') : '';
+}
+
 function EntryCard({ entry, hucName }: { entry: SentinelFeedEntry; hucName: string }) {
   const [expanded, setExpanded] = useState(false);
   const border = LEVEL_BORDER[entry.hucLevel] ?? 'var(--border-default)';
   const bg = LEVEL_BG[entry.hucLevel] ?? 'transparent';
   const classBadge = CLASSIFICATION_BADGE[entry.classification] ?? CLASSIFICATION_BADGE.insufficient_data;
+  const showClassContext = entry.classification === 'likely_attack' || entry.classification === 'possible_attack';
+  const classSummary = showClassContext ? classificationSummary(entry) : '';
 
   return (
     <div style={{ border: `1px solid ${border}`, borderLeft: `3px solid ${border}`, borderRadius: 6, background: bg, marginBottom: 6, overflow: 'hidden' }}>
       {/* Collapsed header */}
       <button
         onClick={() => setExpanded(!expanded)}
-        style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', fontSize: 13 }}
+        style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', fontSize: 13, flexWrap: 'wrap' }}
       >
-        {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-        <span style={{ color: 'var(--text-secondary)', minWidth: 50, fontSize: 11 }}>{formatTimeSince(entry.detectedAt)}</span>
-        <span style={{ fontWeight: 600, flex: 1 }}>{hucName}</span>
-        <span style={{ background: 'var(--bg-secondary)', borderRadius: 3, padding: '1px 6px', fontSize: 11 }}>{SOURCE_LABELS[entry.source] ?? entry.source}</span>
-        <span style={{ background: classBadge.bg, color: classBadge.text, borderRadius: 3, padding: '1px 6px', fontSize: 11 }}>{entry.classification.replace(/_/g, ' ')}</span>
-        <span style={{ fontWeight: 600, fontSize: 12, minWidth: 40, textAlign: 'right' }}>{entry.hucScore.toFixed(0)}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+          {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          <span style={{ color: 'var(--text-secondary)', minWidth: 50, fontSize: 11 }}>{formatTimeSince(entry.detectedAt)}</span>
+          <span style={{ fontWeight: 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{hucName}</span>
+          <span style={{ background: 'var(--bg-secondary)', borderRadius: 3, padding: '1px 6px', fontSize: 11 }}>{SOURCE_LABELS[entry.source] ?? entry.source}</span>
+          <span style={{ background: classBadge.bg, color: classBadge.text, borderRadius: 3, padding: '1px 6px', fontSize: 11 }}>{entry.classification.replace(/_/g, ' ')}</span>
+          <span style={{ fontWeight: 600, fontSize: 12, minWidth: 40, textAlign: 'right' }}>{entry.hucScore.toFixed(0)}</span>
+        </div>
+        {showClassContext && classSummary && (
+          <div style={{ width: '100%', paddingLeft: 28, fontSize: 11, color: classBadge.bg, opacity: 0.85 }}>
+            {classSummary}
+          </div>
+        )}
       </button>
 
       {/* Expanded details */}
@@ -250,6 +291,7 @@ function EntryCard({ entry, hucName }: { entry: SentinelFeedEntry; hucName: stri
 export default function SentinelIntelFeed({ hucNames }: SentinelIntelFeedProps) {
   const [activeLevels, setActiveLevels] = useState<ScoreLevel[]>([]);
   const [activeHours, setActiveHours] = useState(48);
+  const [showAll, setShowAll] = useState(false);
 
   const filters: SentinelFeedFilters = useMemo(() => ({
     levels: activeLevels.length > 0 ? activeLevels : undefined,
@@ -257,6 +299,19 @@ export default function SentinelIntelFeed({ hucNames }: SentinelIntelFeedProps) 
   }), [activeLevels, activeHours]);
 
   const { entries, summary, isLoading, error, lastFetched, refetch } = useSentinelFeed(filters);
+
+  // Sort by threat level priority, then by threatScore descending
+  const sortedEntries = useMemo(() =>
+    [...entries].sort((a, b) => {
+      const levelDiff = (LEVEL_PRIORITY[a.hucLevel] ?? 4) - (LEVEL_PRIORITY[b.hucLevel] ?? 4);
+      if (levelDiff !== 0) return levelDiff;
+      return b.threatScore - a.threatScore;
+    }),
+    [entries],
+  );
+
+  const visibleEntries = showAll ? sortedEntries : sortedEntries.slice(0, INITIAL_VISIBLE);
+  const hiddenCount = sortedEntries.length - INITIAL_VISIBLE;
 
   const toggleLevel = (l: ScoreLevel) => {
     setActiveLevels(prev => prev.includes(l) ? prev.filter(x => x !== l) : [...prev, l]);
@@ -343,13 +398,39 @@ export default function SentinelIntelFeed({ hucNames }: SentinelIntelFeedProps) 
         </div>
       ) : (
         <div>
-          {entries.map(entry => (
+          {visibleEntries.map(entry => (
             <EntryCard
               key={entry.eventId}
               entry={entry}
               hucName={hucNames[entry.huc8] ?? entry.huc8}
             />
           ))}
+          {!showAll && hiddenCount > 0 && (
+            <button
+              onClick={() => setShowAll(true)}
+              style={{
+                width: '100%', padding: '8px 0', marginTop: 4,
+                border: '1px solid var(--border-default)', borderRadius: 6,
+                background: 'var(--bg-secondary)', cursor: 'pointer',
+                fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)',
+              }}
+            >
+              Show {hiddenCount} more event{hiddenCount !== 1 ? 's' : ''}
+            </button>
+          )}
+          {showAll && sortedEntries.length > INITIAL_VISIBLE && (
+            <button
+              onClick={() => setShowAll(false)}
+              style={{
+                width: '100%', padding: '8px 0', marginTop: 4,
+                border: '1px solid var(--border-default)', borderRadius: 6,
+                background: 'var(--bg-secondary)', cursor: 'pointer',
+                fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)',
+              }}
+            >
+              Show fewer
+            </button>
+          )}
         </div>
       )}
     </div>
