@@ -6,14 +6,15 @@
 import type { AdapterResult, ChangeEvent, SeverityHint, SentinelSourceState } from '../types';
 
 const SOURCE = 'FEMA_DISASTER' as const;
-const FEMA_API = 'https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries';
+// v1 FemaWebDisasterDeclarations has more complete data than v2 Summaries
+const FEMA_API = 'https://www.fema.gov/api/open/v1/FemaWebDisasterDeclarations';
 const FETCH_TIMEOUT = 20_000;
 
 /** Incident types relevant to water quality */
 const WATER_INCIDENT_TYPES = new Set([
-  'Flood', 'Hurricane', 'Severe Storm(s)', 'Typhoon',
+  'Flood', 'Hurricane', 'Severe Storm(s)', 'Severe Storm', 'Typhoon',
   'Coastal Storm', 'Dam/Levee Break', 'Tornado',
-  'Tropical Storm', 'Severe Ice Storm',
+  'Tropical Storm', 'Severe Ice Storm', 'Winter Storm',
 ]);
 
 function mapSeverity(incidentType: string, programDeclared: number): SeverityHint {
@@ -21,6 +22,7 @@ function mapSeverity(incidentType: string, programDeclared: number): SeverityHin
   if (incidentType === 'Dam/Levee Break') return 'CRITICAL';
   if (incidentType === 'Flood' && programDeclared >= 3) return 'HIGH';
   if (incidentType === 'Flood') return 'MODERATE';
+  if (incidentType === 'Winter Storm') return 'MODERATE';
   return 'MODERATE';
 }
 
@@ -33,7 +35,7 @@ export async function pollFema(prevState: SentinelSourceState): Promise<AdapterR
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     const params = new URLSearchParams({
       '$filter': `declarationDate ge '${thirtyDaysAgo}'`,
-      '$select': 'disasterNumber,state,declarationDate,incidentType,declarationTitle,designatedArea,fipsStateCode,fipsCountyCode',
+      '$select': 'disasterNumber,stateCode,declarationDate,incidentType,disasterName,declarationType',
       '$orderby': 'declarationDate desc',
       '$top': '100',
     });
@@ -48,7 +50,7 @@ export async function pollFema(prevState: SentinelSourceState): Promise<AdapterR
     }
 
     const data = await res.json();
-    const declarations = (data?.DisasterDeclarationsSummaries ?? []) as any[];
+    const declarations = (data?.FemaWebDisasterDeclarations ?? []) as any[];
     const previousIds = new Set(prevState.knownIds);
     const currentIds: string[] = [];
 
@@ -56,7 +58,8 @@ export async function pollFema(prevState: SentinelSourceState): Promise<AdapterR
       const incidentType = d.incidentType ?? '';
       if (!WATER_INCIDENT_TYPES.has(incidentType)) continue;
 
-      const declId = `${d.disasterNumber}-${d.state}-${d.designatedArea ?? ''}`;
+      const stateCode = d.stateCode ?? '';
+      const declId = `${d.disasterNumber}-${stateCode}`;
       currentIds.push(declId);
 
       if (!previousIds.has(declId)) {
@@ -67,15 +70,15 @@ export async function pollFema(prevState: SentinelSourceState): Promise<AdapterR
           sourceTimestamp: d.declarationDate ?? null,
           changeType: 'NEW_RECORD',
           geography: {
-            stateAbbr: d.state,
+            stateAbbr: stateCode,
           },
           severityHint: mapSeverity(incidentType, declarations.filter((x: any) => x.disasterNumber === d.disasterNumber).length),
           payload: {
             disasterNumber: d.disasterNumber,
             incidentType,
-            title: d.declarationTitle,
-            designatedArea: d.designatedArea,
-            fipsCounty: d.fipsCountyCode,
+            title: d.disasterName,
+            designatedArea: '',
+            fipsCounty: '',
           },
           metadata: {
             sourceRecordId: declId,

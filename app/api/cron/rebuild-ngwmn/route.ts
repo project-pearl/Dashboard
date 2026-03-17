@@ -1,7 +1,7 @@
 // app/api/cron/rebuild-ngwmn/route.ts
-// Cron endpoint — fetches site catalogs from the USGS/CIDA NGWMN REST API
-// (National Ground Water Monitoring Network) and builds a grid-indexed
-// spatial cache with byState lookup.
+// Cron endpoint — fetches groundwater monitoring sites from the USGS Water
+// Services API (replacing the retired cida.usgs.gov/ngwmn REST API) and
+// builds a grid-indexed spatial cache with byState lookup.
 // Schedule: daily via Vercel cron or manual trigger.
 
 export const maxDuration = 300;
@@ -12,6 +12,7 @@ import {
   isNgwmnBuildInProgress, setNgwmnBuildInProgress,
   type NgwmnSite,
 } from '@/lib/ngwmnCache';
+import { ALL_STATES } from '@/lib/constants';
 import { gridKey } from '@/lib/cacheUtils';
 import { isCronAuthorized } from '@/lib/apiAuth';
 import * as Sentry from '@sentry/nextjs';
@@ -20,60 +21,10 @@ import { recordCronRun } from '@/lib/cronHealth';
 
 // -- Config -------------------------------------------------------------------
 
-const NGWMN_BASE = 'https://cida.usgs.gov/ngwmn';
+const NWIS_SITE_URL = 'https://waterservices.usgs.gov/nwis/site/';
 const BATCH_SIZE = 4;
-const DELAY_MS = 500;
-const FETCH_TIMEOUT_MS = 30_000;
-
-// -- Types --------------------------------------------------------------------
-
-interface NgwmnProvider {
-  id: string;
-  name: string;
-}
-
-interface RawSite {
-  agencyCd?: string;
-  agency_cd?: string;
-  siteNo?: string;
-  site_no?: string;
-  siteName?: string;
-  site_name?: string;
-  site_nm?: string;
-  stateCd?: string;
-  state_cd?: string;
-  countyNm?: string;
-  county_nm?: string;
-  aquiferName?: string;
-  aquifer_name?: string;
-  wellDepthVa?: string | number | null;
-  well_depth_va?: string | number | null;
-  decLatVa?: string | number;
-  dec_lat_va?: string | number;
-  lat?: string | number;
-  latitude?: string | number;
-  decLongVa?: string | number;
-  dec_long_va?: string | number;
-  lng?: string | number;
-  longitude?: string | number;
-  [key: string]: any;
-}
-
-// -- US State codes for mapping FIPS back to abbreviation ---------------------
-
-const FIPS_TO_STATE: Record<string, string> = {
-  '01': 'AL', '02': 'AK', '04': 'AZ', '05': 'AR', '06': 'CA',
-  '08': 'CO', '09': 'CT', '10': 'DE', '11': 'DC', '12': 'FL',
-  '13': 'GA', '15': 'HI', '16': 'ID', '17': 'IL', '18': 'IN',
-  '19': 'IA', '20': 'KS', '21': 'KY', '22': 'LA', '23': 'ME',
-  '24': 'MD', '25': 'MA', '26': 'MI', '27': 'MN', '28': 'MS',
-  '29': 'MO', '30': 'MT', '31': 'NE', '32': 'NV', '33': 'NH',
-  '34': 'NJ', '35': 'NM', '36': 'NY', '37': 'NC', '38': 'ND',
-  '39': 'OH', '40': 'OK', '41': 'OR', '42': 'PA', '44': 'RI',
-  '45': 'SC', '46': 'SD', '47': 'TN', '48': 'TX', '49': 'UT',
-  '50': 'VT', '51': 'VA', '53': 'WA', '54': 'WV', '55': 'WI',
-  '56': 'WY',
-};
+const DELAY_MS = 1000;
+const FETCH_TIMEOUT_MS = 45_000;
 
 // -- Helpers ------------------------------------------------------------------
 
@@ -82,117 +33,118 @@ function delay(ms: number): Promise<void> {
 }
 
 /**
- * Resolve a state code from potentially numeric FIPS or 2-letter abbreviation.
+ * Parse USGS RDB (tab-delimited) response into an array of row objects.
+ * RDB format: comment lines start with #, first non-comment line is headers,
+ * second non-comment line is column widths (e.g. "5s\t15s"), then data rows.
  */
-function resolveState(raw: string | undefined): string {
-  if (!raw) return '';
-  const trimmed = raw.trim();
-  // Already a 2-letter code
-  if (/^[A-Z]{2}$/i.test(trimmed)) return trimmed.toUpperCase();
-  // FIPS code
-  const padded = trimmed.padStart(2, '0');
-  return FIPS_TO_STATE[padded] || trimmed.toUpperCase();
-}
+function parseRdb(text: string): Record<string, string>[] {
+  const lines = text.split('\n');
+  const dataLines: string[] = [];
 
-/**
- * Fetch provider list from the NGWMN REST API.
- */
-async function fetchProviders(): Promise<NgwmnProvider[]> {
-  try {
-    const res = await fetch(`${NGWMN_BASE}/provider/`, {
-      headers: { 'Accept': 'application/json' },
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    });
-
-    if (!res.ok) {
-      console.warn(`[NGWMN Cron] Providers fetch: HTTP ${res.status}`);
-      return [];
-    }
-
-    const data = await res.json();
-
-    // API might return an array of provider objects or an object with a list
-    if (Array.isArray(data)) {
-      return data.map((p: any) => ({
-        id: p.id || p.providerId || p.agency_cd || '',
-        name: p.name || p.providerName || p.agency_nm || '',
-      })).filter((p: NgwmnProvider) => p.id);
-    }
-
-    if (data?.providers && Array.isArray(data.providers)) {
-      return data.providers.map((p: any) => ({
-        id: p.id || p.providerId || '',
-        name: p.name || p.providerName || '',
-      })).filter((p: NgwmnProvider) => p.id);
-    }
-
-    console.warn('[NGWMN Cron] Unexpected providers response shape');
-    return [];
-  } catch (e) {
-    console.warn(`[NGWMN Cron] Providers fetch error: ${e instanceof Error ? e.message : e}`);
-    return [];
+  for (const line of lines) {
+    // Skip comment lines and empty lines
+    if (line.startsWith('#') || line.trim() === '') continue;
+    dataLines.push(line);
   }
+
+  if (dataLines.length < 3) return []; // Need header + type line + at least one data row
+
+  const headers = dataLines[0].split('\t');
+  // dataLines[1] is the column-width descriptor line (e.g. "5s\t15s\t...")
+  const rows: Record<string, string>[] = [];
+
+  for (let i = 2; i < dataLines.length; i++) {
+    const values = dataLines[i].split('\t');
+    const row: Record<string, string> = {};
+    for (let j = 0; j < headers.length; j++) {
+      row[headers[j]] = values[j] ?? '';
+    }
+    rows.push(row);
+  }
+
+  return rows;
 }
 
 /**
- * Fetch all sites for a given provider.
+ * Fetch all active groundwater monitoring sites for a state from USGS Water Services.
+ * Uses the expanded site output RDB format.
  */
-async function fetchProviderSites(providerId: string): Promise<NgwmnSite[]> {
+async function fetchStateSites(state: string): Promise<NgwmnSite[]> {
   const sites: NgwmnSite[] = [];
 
   try {
-    const res = await fetch(`${NGWMN_BASE}/provider/${providerId}/sites`, {
-      headers: { 'Accept': 'application/json' },
+    const params = new URLSearchParams({
+      stateCd: state,
+      siteType: 'GW',
+      siteStatus: 'active',
+      hasDataTypeCd: 'gw',
+      format: 'rdb',
+      siteOutput: 'expanded',
+    });
+
+    const res = await fetch(`${NWIS_SITE_URL}?${params}`, {
+      headers: { 'User-Agent': 'PEARL-Platform/1.0' },
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
 
+    if (res.status === 429) {
+      console.warn(`[NGWMN Cron] ${state} rate-limited, waiting 5s...`);
+      await delay(5000);
+      // Retry once
+      const retry = await fetch(`${NWIS_SITE_URL}?${params}`, {
+        headers: { 'User-Agent': 'PEARL-Platform/1.0' },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+      if (!retry.ok) return sites;
+      const text = await retry.text();
+      return parseSiteRows(text, state);
+    }
+
     if (!res.ok) {
-      console.warn(`[NGWMN Cron] Provider ${providerId}: HTTP ${res.status}`);
+      console.warn(`[NGWMN Cron] ${state}: HTTP ${res.status}`);
       return sites;
     }
 
-    const data = await res.json();
-    const rawSites: RawSite[] = Array.isArray(data)
-      ? data
-      : (data?.sites || data?.features || []);
-
-    for (const r of rawSites) {
-      const latRaw = r.decLatVa ?? r.dec_lat_va ?? r.lat ?? r.latitude;
-      const lngRaw = r.decLongVa ?? r.dec_long_va ?? r.lng ?? r.longitude;
-      const lat = typeof latRaw === 'number' ? latRaw : parseFloat(String(latRaw));
-      const lng = typeof lngRaw === 'number' ? lngRaw : parseFloat(String(lngRaw));
-
-      if (isNaN(lat) || isNaN(lng) || lat === 0) continue;
-
-      const agencyCd = r.agencyCd || r.agency_cd || providerId;
-      const siteNo = r.siteNo || r.site_no || '';
-      const siteName = r.siteName || r.site_name || r.site_nm || '';
-      const stateCd = r.stateCd || r.state_cd || '';
-      const county = r.countyNm || r.county_nm || '';
-      const aquifer = r.aquiferName || r.aquifer_name || '';
-      const depthRaw = r.wellDepthVa ?? r.well_depth_va;
-      const wellDepth = depthRaw != null ? parseFloat(String(depthRaw)) : null;
-      const state = resolveState(stateCd);
-
-      sites.push({
-        id: `${agencyCd}-${siteNo}`,
-        agencyCd,
-        siteNo,
-        siteName,
-        state,
-        county,
-        aquiferName: aquifer,
-        wellDepth: wellDepth !== null && !isNaN(wellDepth) ? wellDepth : null,
-        lat: Math.round(lat * 100000) / 100000,
-        lng: Math.round(lng * 100000) / 100000,
-        waterLevels: [],
-        waterQuality: [],
-      });
-    }
+    const text = await res.text();
+    return parseSiteRows(text, state);
   } catch (e) {
     console.warn(
-      `[NGWMN Cron] Provider ${providerId} error: ${e instanceof Error ? e.message : e}`,
+      `[NGWMN Cron] ${state} error: ${e instanceof Error ? e.message : e}`,
     );
+    return sites;
+  }
+}
+
+/** Parse RDB text into NgwmnSite[] */
+function parseSiteRows(text: string, fallbackState: string): NgwmnSite[] {
+  const rows = parseRdb(text);
+  const sites: NgwmnSite[] = [];
+
+  for (const r of rows) {
+    const lat = parseFloat(r.dec_lat_va);
+    const lng = parseFloat(r.dec_long_va);
+    if (isNaN(lat) || isNaN(lng) || lat === 0) continue;
+
+    const agencyCd = r.agency_cd || 'USGS';
+    const siteNo = r.site_no || '';
+    if (!siteNo) continue;
+
+    const wellDepthRaw = r.well_depth_va ? parseFloat(r.well_depth_va) : null;
+
+    sites.push({
+      id: `${agencyCd}-${siteNo}`,
+      agencyCd,
+      siteNo,
+      siteName: (r.station_nm || '').trim(),
+      state: fallbackState,
+      county: '', // RDB gives county_cd (FIPS), not name
+      aquiferName: r.aqfr_cd || r.nat_aqfr_cd || '',
+      wellDepth: wellDepthRaw !== null && !isNaN(wellDepthRaw) ? wellDepthRaw : null,
+      lat: Math.round(lat * 100000) / 100000,
+      lng: Math.round(lng * 100000) / 100000,
+      waterLevels: [],
+      waterQuality: [],
+    });
   }
 
   return sites;
@@ -218,99 +170,80 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    // Step 1: Fetch provider list
-    console.log('[NGWMN Cron] Fetching provider list...');
-    const providers = await fetchProviders();
-    console.log(`[NGWMN Cron] Found ${providers.length} providers`);
+    console.log('[NGWMN Cron] Fetching groundwater sites via USGS Water Services...');
 
-    if (providers.length === 0) {
-      // Fallback: use known USGS provider directly
-      console.warn('[NGWMN Cron] No providers found, using fallback USGS provider');
-      providers.push({ id: 'USGS', name: 'U.S. Geological Survey' });
-    }
-
-    // Step 2: Fetch sites for all providers in batches
     const grid: Record<string, { sites: NgwmnSite[] }> = {};
     const stateIndex: Record<string, NgwmnSite[]> = {};
     let totalSites = 0;
-    const providerResults: string[] = [];
-    const failedProviders: string[] = [];
+    const stateResults: string[] = [];
+    const failedStates: string[] = [];
 
-    for (let i = 0; i < providers.length; i += BATCH_SIZE) {
-      const batch = providers.slice(i, i + BATCH_SIZE);
+    // Fetch states in parallel batches
+    for (let i = 0; i < ALL_STATES.length; i += BATCH_SIZE) {
+      const batch = ALL_STATES.slice(i, i + BATCH_SIZE);
 
       const results = await Promise.allSettled(
-        batch.map(async (provider) => {
-          console.log(`[NGWMN Cron] Fetching sites for provider ${provider.id} (${provider.name})...`);
-          const sites = await fetchProviderSites(provider.id);
-          return { provider, sites };
+        batch.map(async (state) => {
+          console.log(`[NGWMN Cron] Fetching ${state}...`);
+          const sites = await fetchStateSites(state);
+          return { state, sites };
         }),
       );
 
       for (let j = 0; j < results.length; j++) {
         const result = results[j];
         if (result.status === 'fulfilled') {
-          const { provider, sites } = result.value;
+          const { state, sites } = result.value;
           if (sites.length > 0) {
+            stateIndex[state] = sites;
+
             for (const site of sites) {
-              // Grid index
               const key = gridKey(site.lat, site.lng);
               if (!grid[key]) grid[key] = { sites: [] };
               grid[key].sites.push(site);
-
-              // stateIndex
-              if (site.state) {
-                const st = site.state.toUpperCase();
-                if (!stateIndex[st]) stateIndex[st] = [];
-                stateIndex[st].push(site);
-              }
             }
 
             totalSites += sites.length;
-            providerResults.push(`${provider.id}:${sites.length}`);
-            console.log(`[NGWMN Cron] ${provider.id}: ${sites.length} sites`);
+            stateResults.push(`${state}:${sites.length}`);
+            console.log(`[NGWMN Cron] ${state}: ${sites.length} sites`);
           } else {
-            providerResults.push(`${provider.id}:0`);
+            stateResults.push(`${state}:0`);
           }
         } else {
-          const provider = batch[j];
-          console.error(`[NGWMN Cron] ${provider.id} failed:`, result.reason);
-          failedProviders.push(provider.id);
+          const state = batch[j];
+          console.error(`[NGWMN Cron] ${state} failed:`, result.reason);
+          failedStates.push(state);
         }
       }
 
       // Delay between batches
-      if (i + BATCH_SIZE < providers.length) {
+      if (i + BATCH_SIZE < ALL_STATES.length) {
         await delay(DELAY_MS);
       }
     }
 
-    // Retry failed providers once
-    if (failedProviders.length > 0) {
-      console.log(`[NGWMN Cron] Retrying ${failedProviders.length} failed providers...`);
+    // Retry failed states once with longer timeout
+    if (failedStates.length > 0) {
+      console.log(`[NGWMN Cron] Retrying ${failedStates.length} failed states...`);
       await delay(5000);
 
-      for (const providerId of failedProviders) {
+      for (const state of failedStates) {
         try {
-          const sites = await fetchProviderSites(providerId);
+          const sites = await fetchStateSites(state);
           if (sites.length > 0) {
+            stateIndex[state] = sites;
+
             for (const site of sites) {
               const key = gridKey(site.lat, site.lng);
               if (!grid[key]) grid[key] = { sites: [] };
               grid[key].sites.push(site);
-
-              if (site.state) {
-                const st = site.state.toUpperCase();
-                if (!stateIndex[st]) stateIndex[st] = [];
-                stateIndex[st].push(site);
-              }
             }
 
             totalSites += sites.length;
-            console.log(`[NGWMN Cron] ${providerId} retry succeeded: ${sites.length} sites`);
+            console.log(`[NGWMN Cron] ${state} retry succeeded: ${sites.length} sites`);
           }
         } catch (e) {
-          console.error(`[NGWMN Cron] ${providerId} retry failed:`, e);
+          console.error(`[NGWMN Cron] ${state} retry failed:`, e);
         }
         await delay(1000);
       }
@@ -332,7 +265,7 @@ export async function GET(request: NextRequest) {
       _meta: {
         built: new Date().toISOString(),
         siteCount: totalSites,
-        providerCount: providers.length,
+        providerCount: 1, // Single source: USGS Water Services
         gridCells: Object.keys(grid).length,
       },
       grid,
@@ -343,7 +276,7 @@ export async function GET(request: NextRequest) {
     console.log(
       `[NGWMN Cron] Build complete in ${elapsed}s — ` +
       `${totalSites} sites, ${Object.keys(stateIndex).length} states, ` +
-      `${providers.length} providers, ${Object.keys(grid).length} cells`,
+      `${Object.keys(grid).length} cells`,
     );
 
     recordCronRun('rebuild-ngwmn', 'success', Date.now() - startTime);
@@ -353,9 +286,8 @@ export async function GET(request: NextRequest) {
       duration: `${elapsed}s`,
       siteCount: totalSites,
       stateCount: Object.keys(stateIndex).length,
-      providerCount: providers.length,
       gridCells: Object.keys(grid).length,
-      providerBreakdown: providerResults,
+      stateBreakdown: stateResults,
       cache: getNgwmnCacheStatus(),
     });
 

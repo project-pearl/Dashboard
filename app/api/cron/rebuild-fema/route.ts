@@ -15,16 +15,19 @@ import {
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
-const FEMA_API = 'https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries';
+// v1 FemaWebDisasterDeclarations is disaster-level (more reliable and complete
+// than v2 DisasterDeclarationsSummaries which has persistent data gaps for
+// non-fire events). Trade-off: no county-level designatedArea field.
+const FEMA_API = 'https://www.fema.gov/api/open/v1/FemaWebDisasterDeclarations';
 const NFIP_API = 'https://www.fema.gov/api/open/v2/NfipCommunityStatusBook';
 const FETCH_TIMEOUT_MS = 30_000;
 const NFIP_CONCURRENCY = 6;
 
 /** Incident types relevant to water quality (from sentinel femaAdapter) */
 const WATER_INCIDENT_TYPES = new Set([
-  'Flood', 'Hurricane', 'Severe Storm(s)', 'Typhoon',
+  'Flood', 'Hurricane', 'Severe Storm(s)', 'Severe Storm', 'Typhoon',
   'Coastal Storm', 'Dam/Levee Break', 'Tornado',
-  'Tropical Storm', 'Severe Ice Storm',
+  'Tropical Storm', 'Severe Ice Storm', 'Winter Storm',
 ]);
 
 import { ALL_STATES } from '@/lib/constants';
@@ -135,7 +138,7 @@ export async function GET(request: NextRequest) {
 
     const params = new URLSearchParams({
       '$filter': `declarationDate ge '${filterDate}'`,
-      '$select': 'disasterNumber,state,declarationDate,incidentType,declarationTitle,declarationType,designatedArea,fipsStateCode,fipsCountyCode',
+      '$select': 'disasterNumber,stateCode,declarationDate,incidentType,disasterName,declarationType',
       '$orderby': 'declarationDate desc',
       '$top': '1000',
     });
@@ -150,9 +153,10 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await res.json();
-    const rawDeclarations = (data?.DisasterDeclarationsSummaries ?? []) as any[];
+    const rawDeclarations = (data?.FemaWebDisasterDeclarations ?? []) as any[];
 
     // Filter to water-relevant types and map to FemaDeclaration
+    // v1 uses stateCode/disasterName instead of v2's state/declarationTitle
     const declarations: FemaDeclaration[] = [];
     for (const d of rawDeclarations) {
       const incidentType = d.incidentType ?? '';
@@ -160,14 +164,14 @@ export async function GET(request: NextRequest) {
 
       declarations.push({
         disasterNumber: d.disasterNumber ?? 0,
-        state: d.state ?? '',
+        state: d.stateCode ?? '',
         declarationDate: d.declarationDate ?? '',
         incidentType,
-        declarationTitle: d.declarationTitle ?? '',
+        declarationTitle: d.disasterName ?? '',
         declarationType: d.declarationType ?? '',
-        designatedArea: d.designatedArea ?? '',
-        fipsStateCode: d.fipsStateCode ?? '',
-        fipsCountyCode: d.fipsCountyCode ?? '',
+        designatedArea: '',       // v1 is disaster-level (no county detail)
+        fipsStateCode: '',
+        fipsCountyCode: '',
       });
     }
 

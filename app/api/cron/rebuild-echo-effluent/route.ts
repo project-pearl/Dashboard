@@ -164,14 +164,22 @@ export async function GET(request: NextRequest) {
       next();
     });
 
-    // Empty-data guard — only skip if ECHO cache was also empty
-    if (totalRecords === 0 && sncFacilities.length === 0) {
+    // When ECHO cache is empty (no SNC facilities), save empty effluent cache
+    // with a valid timestamp so downstream consumers know the cron ran.
+    if (sncFacilities.length === 0) {
+      await setEchoEffluentCache(effluentByState);
+
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      console.warn(`[ECHO Effluent Cron] No SNC facilities in ECHO cache — skipping`);
+      console.warn(`[ECHO Effluent Cron] No SNC facilities in ECHO cache — saved empty cache in ${elapsed}s`);
+
+      recordCronRun('rebuild-echo-effluent', 'success', Date.now() - startTime);
+
       return NextResponse.json({
-        status: 'empty',
+        status: 'complete',
         duration: `${elapsed}s`,
-        reason: 'No SNC facilities in ECHO cache',
+        note: 'No SNC facilities in ECHO cache — saved empty effluent cache',
+        sncFacilitiesQueried: 0,
+        totalRecords: 0,
         cache: getEchoEffluentCacheStatus(),
       });
     }

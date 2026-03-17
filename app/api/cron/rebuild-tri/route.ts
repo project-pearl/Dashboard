@@ -35,21 +35,21 @@ function parseNum(v: any): number | null {
 }
 
 interface RawTriRow {
-  TRI_FACILITY_ID?: string;
-  FACILITY_NAME?: string;
-  ST_ABBR?: string;
-  CITY_NAME?: string;
-  COUNTY_NAME?: string;
-  LATITUDE?: string | number;
-  LONGITUDE?: string | number;
-  CHEMICAL?: string;
-  CARCINOGEN?: string;
-  TOTAL_RELEASES?: string | number;
-  ON_SITE_RELEASE_TOTAL?: string | number;
-  OFF_SITE_RELEASE_TOTAL?: string | number;
-  SIC_CODE?: string;
-  NAICS_CODE?: string;
-  REPORTING_YEAR?: string | number;
+  trifd?: string;
+  "facility name"?: string;
+  st?: string;
+  city?: string;
+  county?: string;
+  latitude?: string | number;
+  longitude?: string | number;
+  chemical?: string;
+  carcinogen?: string;
+  "total releases"?: string | number;
+  "on-site release total"?: string | number;
+  "off-site release total"?: string | number;
+  "primary sic"?: string;
+  "primary naics"?: string;
+  year?: string | number;
   [key: string]: any;
 }
 
@@ -64,7 +64,7 @@ async function fetchStateTRI(state: string): Promise<TriFacility[]> {
   let hasMore = true;
 
   while (hasMore) {
-    const url = `${ENVIROFACTS_URL}/REPORTING_YEAR/=/${TRI_YEAR}/ST_ABBR/=/${state}/rows/${offset}:${offset + PAGE_SIZE - 1}/JSON`;
+    const url = `${ENVIROFACTS_URL}/year/=/${TRI_YEAR}/st/=/${state}/rows/${offset}:${offset + PAGE_SIZE - 1}/JSON`;
     try {
       const res = await fetch(url, {
         headers: { 'User-Agent': 'PEARL-Platform/1.0', 'Accept': 'application/json' },
@@ -82,30 +82,30 @@ async function fetchStateTRI(state: string): Promise<TriFacility[]> {
       }
 
       for (const row of rows) {
-        const id = row.TRI_FACILITY_ID || '';
+        const id = row.trifd || '';
         if (!id) continue;
 
-        const lat = parseNum(row.LATITUDE);
-        const lng = parseNum(row.LONGITUDE);
+        const lat = parseNum(row.latitude);
+        const lng = parseNum(row.longitude);
         if (lat === null || lng === null) continue;
 
-        const release = (parseNum(row.ON_SITE_RELEASE_TOTAL) || 0) + (parseNum(row.OFF_SITE_RELEASE_TOTAL) || 0);
-        const chemical = row.CHEMICAL || '';
-        const isCarcinogen = (row.CARCINOGEN || '').toUpperCase() === 'YES';
+        const release = (parseNum(row["on-site release total"]) || 0) + (parseNum(row["off-site release total"]) || 0);
+        const chemical = row.chemical || '';
+        const isCarcinogen = (row.carcinogen || '').toUpperCase() === 'YES';
 
         if (!facilities.has(id)) {
           facilities.set(id, {
             triId: id,
-            facilityName: row.FACILITY_NAME || '',
+            facilityName: row["facility name"] || '',
             state: state,
-            city: row.CITY_NAME || '',
-            county: row.COUNTY_NAME || '',
+            city: row.city || '',
+            county: row.county || '',
             lat,
             lng,
             totalReleases: 0,
             carcinogenReleases: 0,
             chemicals: new Set<string>(),
-            industryCode: row.NAICS_CODE || row.SIC_CODE || '',
+            industryCode: row["primary naics"] || row["primary sic"] || '',
           });
         }
 

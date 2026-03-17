@@ -2273,7 +2273,7 @@ export async function GET(request: NextRequest) {
         // 6. FEMA Disaster Declarations — recent declarations affecting water infrastructure
         try {
           const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-          const femaUrl = `https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?$filter=state eq '${stateFilter}' and declarationDate gt '${thirtyDaysAgo}'&$top=5&$orderby=declarationDate desc`;
+          const femaUrl = `https://www.fema.gov/api/open/v1/FemaWebDisasterDeclarations?$filter=stateCode eq '${stateFilter}' and declarationDate gt '${thirtyDaysAgo}'&$top=5&$orderby=declarationDate desc`;
           const femaRes = await fetch(femaUrl, {
             headers: { 'Accept': 'application/json' },
             signal: AbortSignal.timeout(10_000),
@@ -2281,7 +2281,7 @@ export async function GET(request: NextRequest) {
           });
           if (femaRes.ok) {
             const femaData = await femaRes.json();
-            const declarations = femaData?.DisasterDeclarationsSummaries || [];
+            const declarations = femaData?.FemaWebDisasterDeclarations || [];
 
             const femaWqImpact: Record<string, string> = {
               'Flood': 'Widespread contamination of water sources, sewage system overflows, drinking water advisories likely',
@@ -2290,6 +2290,7 @@ export async function GET(request: NextRequest) {
               'Fire': 'Post-fire ash runoff increases phosphorus and turbidity in downstream watersheds',
               'Tornado': 'Infrastructure damage may cause sewage spills, debris contamination of waterways',
               'Earthquake': 'Pipe breaks may cause sewage releases, water main contamination',
+              'Winter Storm': 'Frozen pipe bursts, water main breaks, sewage overflows during snowmelt runoff',
             };
 
             for (const d of declarations) {
@@ -2300,8 +2301,8 @@ export async function GET(request: NextRequest) {
               signals.push({
                 type: 'disaster_declaration',
                 severity: 'high',
-                title: d?.declarationTitle || `FEMA Disaster: ${incidentType}`,
-                location: d?.designatedArea || stateFilter,
+                title: d?.disasterName || d?.declarationTitle || `FEMA Disaster: ${incidentType}`,
+                location: stateFilter,
                 state: stateFilter,
                 source: 'FEMA',
                 reason: `Federal disaster declaration (${d?.declarationType || 'DR'}). Incident: ${incidentType}. Declared: ${d?.declarationDate?.split('T')[0] || 'unknown'}.`,

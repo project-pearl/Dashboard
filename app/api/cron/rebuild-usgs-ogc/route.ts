@@ -33,13 +33,13 @@ function delay(ms: number): Promise<void> {
 
 /**
  * Fetch all monitoring locations for a state FIPS code.
- * The OGC API supports `stateFIPS` as a query parameter and returns GeoJSON.
+ * The OGC API supports `state_code` as a query parameter and returns GeoJSON.
  * Handles pagination via `next` links.
  */
 async function fetchStateStations(state: string, fips: string): Promise<UsgsOgcStation[]> {
   const stations: UsgsOgcStation[] = [];
   let url: string | null =
-    `${OGC_MONITORING_URL}?stateFIPS=${fips}&limit=10000&f=json`;
+    `${OGC_MONITORING_URL}?state_code=${fips}&limit=10000&f=json`;
 
   const MAX_PAGES = 20;
   let page = 0;
