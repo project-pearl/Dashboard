@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { ChevronRight } from 'lucide-react';
 
 export interface StatTile {
   value: string | number;
@@ -30,6 +31,8 @@ export interface DataStatCardProps {
   detailCountLabel?: string;
   /** Called on first detail open to lazy-fetch detail data */
   onDetailOpen?: () => void;
+  /** Navigate to related lens on click */
+  onNavigate?: () => void;
 }
 
 function formatValue(tile: StatTile, loading: boolean, loaded: boolean): string {
@@ -52,6 +55,7 @@ export function DataStatCard({
   detailRows,
   detailCountLabel = 'Count',
   onDetailOpen,
+  onNavigate,
 }: DataStatCardProps) {
   const [expandedTile, setExpandedTile] = useState<number | null>(null);
   const [detailRequested, setDetailRequested] = useState(false);
@@ -72,15 +76,15 @@ export function DataStatCard({
   const isClickable = loaded;
 
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 p-3 ${loaded && onNavigate ? 'pin-card-interactive group' : ''}`}>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {/* Metric tiles 1-3 */}
         {tiles.slice(0, 3).map((tile, idx) => (
           <div
             key={idx}
-            className={`bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 ${
-              isClickable ? 'cursor-pointer hover:border-blue-300 dark:hover:border-blue-600 transition-colors' : ''
-            } ${expandedTile === idx ? 'ring-2 ring-blue-400 dark:ring-blue-500' : ''}`}
+            className={`rounded-lg p-4 ${
+              isClickable ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors' : ''
+            } ${expandedTile === idx ? 'ring-2 ring-blue-400 dark:ring-blue-500 bg-blue-50/50 dark:bg-blue-900/20' : ''}`}
             onClick={() => isClickable && handleTileClick(idx)}
             role={isClickable ? 'button' : undefined}
             tabIndex={isClickable ? 0 : undefined}
@@ -89,45 +93,64 @@ export function DataStatCard({
             <div className={`text-2xl font-bold ${tile.color}`}>
               {formatValue(tile, loading, loaded)}
             </div>
-            <div className="text-xs text-gray-500">{tile.label}</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">{tile.label}</div>
           </div>
         ))}
 
         {/* Source badge tile (always position 4) */}
-        <div className="bg-slate-50 dark:bg-gray-800/50 rounded-lg p-4 border border-slate-200 dark:border-gray-700 flex flex-col items-center justify-center">
+        <div
+          className={`bg-slate-50 dark:bg-gray-800 rounded-lg p-4 border border-slate-200 dark:border-gray-700 flex flex-col items-center justify-center ${loaded && onNavigate ? 'cursor-pointer' : ''}`}
+          onClick={loaded && onNavigate ? onNavigate : undefined}
+          role={loaded && onNavigate ? 'button' : undefined}
+          tabIndex={loaded && onNavigate ? 0 : undefined}
+          onKeyDown={loaded && onNavigate ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNavigate(); } } : undefined}
+        >
           <div className="text-sm font-semibold text-slate-600 dark:text-slate-300 text-center leading-tight">
             {loaded ? source.name : '\u2014'}
           </div>
           <div className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Source</div>
+          {loaded && onNavigate && (
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400 mt-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+          )}
         </div>
       </div>
 
       {/* Detail expansion row */}
       {expandedTile !== null && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 animate-in slide-in-from-top-1 duration-200">
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-3 animate-in slide-in-from-top-1 duration-200">
           {hasDetail ? (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-xs text-gray-400 border-b border-gray-100 dark:border-gray-700">
-                  <th className="text-left pb-1.5 font-medium">{detailRows ? 'Item' : 'State'}</th>
-                  <th className="text-right pb-1.5 font-medium">{detailCountLabel}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {topStates && topStates.slice(0, 8).map((row) => (
-                  <tr key={row.state} className="border-b border-gray-50 dark:border-gray-700/50 last:border-0">
-                    <td className="py-1.5 font-medium text-gray-700 dark:text-gray-300">{row.state}</td>
-                    <td className="py-1.5 text-right tabular-nums text-gray-600 dark:text-gray-400">{row.count.toLocaleString()}</td>
+            <>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-xs text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                    <th className="text-left pb-1.5 font-medium">{detailRows ? 'Item' : 'State'}</th>
+                    <th className="text-right pb-1.5 font-medium">{detailCountLabel}</th>
                   </tr>
-                ))}
-                {detailRows && detailRows.slice(0, 8).map((row, i) => (
-                  <tr key={i} className="border-b border-gray-50 dark:border-gray-700/50 last:border-0">
-                    <td className="py-1.5 font-medium text-gray-700 dark:text-gray-300">{row.label}</td>
-                    <td className="py-1.5 text-right tabular-nums text-gray-600 dark:text-gray-400">{typeof row.value === 'number' ? row.value.toLocaleString() : row.value}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {topStates && topStates.slice(0, 8).map((row) => (
+                    <tr key={row.state} className="border-b border-gray-100 dark:border-gray-700/50 last:border-0">
+                      <td className="py-1.5 font-medium text-gray-700 dark:text-gray-300">{row.state}</td>
+                      <td className="py-1.5 text-right tabular-nums text-gray-600 dark:text-gray-400">{row.count.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                  {detailRows && detailRows.slice(0, 8).map((row, i) => (
+                    <tr key={i} className="border-b border-gray-100 dark:border-gray-700/50 last:border-0">
+                      <td className="py-1.5 font-medium text-gray-700 dark:text-gray-300">{row.label}</td>
+                      <td className="py-1.5 text-right tabular-nums text-gray-600 dark:text-gray-400">{typeof row.value === 'number' ? row.value.toLocaleString() : row.value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {onNavigate && (
+                <button
+                  onClick={onNavigate}
+                  className="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                >
+                  View full details <ChevronRight className="w-3 h-3" />
+                </button>
+              )}
+            </>
           ) : (
             <div className="text-xs text-gray-400 py-2 text-center">Loading detail...</div>
           )}

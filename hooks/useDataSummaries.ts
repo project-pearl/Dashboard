@@ -1,6 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+
+export interface TopStateRow { state: string; count: number }
+export interface DetailRow { label: string; value: string | number }
 
 export interface DataSummaries {
   usgsOgc: { loaded: boolean; totalStations: number; siteTypes: number; agencies: number; states: number };
@@ -19,6 +22,17 @@ export interface DataSummaries {
   swdi: { loaded: boolean; events: number; severe: number; states: number };
   nexradQpe: { loaded: boolean; cells: number; maxPrecipMm: number; flashFloodHigh: number };
   congress: { loaded: boolean; bills: number; active: number; enacted: number };
+}
+
+export interface DataDetails {
+  wqxModern?: TopStateRow[];
+  stnFlood?: TopStateRow[];
+  dmrViolations?: TopStateRow[];
+  habForecast?: TopStateRow[];
+  cdcPlaces?: TopStateRow[];
+  swdi?: TopStateRow[];
+  nexradQpe?: TopStateRow[];
+  congress?: DetailRow[];
 }
 
 const EMPTY: DataSummaries = {
@@ -42,8 +56,10 @@ const EMPTY: DataSummaries = {
 
 export function useDataSummaries() {
   const [data, setData] = useState<DataSummaries>(EMPTY);
+  const [details, setDetails] = useState<DataDetails>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const detailsFetched = useRef(false);
 
   const fetchSummaries = useCallback(async () => {
     try {
@@ -59,9 +75,32 @@ export function useDataSummaries() {
     }
   }, []);
 
+  const fetchDetails = useCallback(async () => {
+    if (detailsFetched.current) return;
+    detailsFetched.current = true;
+    try {
+      const res = await fetch('/api/data-summaries?details=true');
+      if (!res.ok) return;
+      const json = await res.json();
+      setDetails({
+        wqxModern: json.wqxModern?.topStates,
+        stnFlood: json.stnFlood?.topStates,
+        dmrViolations: json.dmrViolations?.topStates,
+        habForecast: json.habForecast?.topStates,
+        cdcPlaces: json.cdcPlaces?.topStates,
+        swdi: json.swdi?.topStates,
+        nexradQpe: json.nexradQpe?.topStates,
+        congress: json.congress?.detailRows,
+      });
+    } catch { /* non-fatal */ }
+  }, []);
+
   useEffect(() => {
     fetchSummaries();
   }, [fetchSummaries]);
 
-  return useMemo(() => ({ data, isLoading, error }), [data, isLoading, error]);
+  return useMemo(
+    () => ({ data, details, isLoading, error, fetchDetails }),
+    [data, details, isLoading, error, fetchDetails],
+  );
 }

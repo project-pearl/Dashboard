@@ -15,16 +15,33 @@ import { getNwsForecastCacheStatus, ensureWarmed as warmNwsForecast } from '@/li
 import { getWaterAvailCacheStatus, ensureWarmed as warmWaterAvail } from '@/lib/usgsWaterAvailCache';
 import { getCyberRiskCacheStatus, getCriticalNearMilitary, ensureWarmed as warmCyberRisk } from '@/lib/cyberRiskCache';
 import { getGemsStatAll, getGemsStatCacheStatus, ensureWarmed as warmGemStat } from '@/lib/gemstatCache';
-import { getWqxModernCacheStatus, ensureWarmed as warmWqxModern } from '@/lib/wqxModernCache';
-import { getStnFloodCacheStatus, ensureWarmed as warmStnFlood } from '@/lib/stnFloodCache';
-import { getDmrViolationsCacheStatus, ensureWarmed as warmDmrViolations } from '@/lib/echoDmrViolationsCache';
-import { getHabForecastCacheStatus, ensureWarmed as warmHabForecast } from '@/lib/habForecastCache';
-import { getCdcPlacesCacheStatus, ensureWarmed as warmCdcPlaces } from '@/lib/cdcPlacesCache';
-import { getSwdiCacheStatus, ensureWarmed as warmSwdi } from '@/lib/swdiCache';
+import { getWqxModernCacheStatus, getWqxModernByState, ensureWarmed as warmWqxModern } from '@/lib/wqxModernCache';
+import { getStnFloodCacheStatus, getStnFloodByState, ensureWarmed as warmStnFlood } from '@/lib/stnFloodCache';
+import { getDmrViolationsCacheStatus, getDmrViolationsByState, ensureWarmed as warmDmrViolations } from '@/lib/echoDmrViolationsCache';
+import { getHabForecastCacheStatus, getHabForecastByState, ensureWarmed as warmHabForecast } from '@/lib/habForecastCache';
+import { getCdcPlacesCacheStatus, getCdcPlacesByState, ensureWarmed as warmCdcPlaces } from '@/lib/cdcPlacesCache';
+import { getSwdiCacheStatus, getSwdiByState, ensureWarmed as warmSwdi } from '@/lib/swdiCache';
 import { getNexradQpeCacheStatus, ensureWarmed as warmNexradQpe } from '@/lib/nexradQpeCache';
-import { getCongressCacheStatus, ensureWarmed as warmCongress } from '@/lib/congressCache';
+import { getCongressCacheStatus, getAllCongressBills, ensureWarmed as warmCongress } from '@/lib/congressCache';
+import { ALL_STATES } from '@/lib/constants';
+
+/** Compute top states by count for a getByState function */
+function topStatesByCount(
+  getByState: (state: string) => { length: number },
+  states: readonly string[],
+  limit = 8,
+): { state: string; count: number }[] {
+  const rows: { state: string; count: number }[] = [];
+  for (const st of states) {
+    const count = getByState(st).length;
+    if (count > 0) rows.push({ state: st, count });
+  }
+  return rows.sort((a, b) => b.count - a.count).slice(0, limit);
+}
 
 export async function GET(_req: NextRequest) {
+  const wantDetails = _req.nextUrl.searchParams.get('details') === 'true';
+
   // Warm all caches in parallel
   await Promise.allSettled([
     warmUsgsOgc(), warmNgwmn(), warmFloodImpact(), warmEpaPfas(),
@@ -170,34 +187,40 @@ export async function GET(_req: NextRequest) {
       loaded: wqxStatus.loaded,
       records: wqxStatus.loaded ? wqxStatus.recordCount : 0,
       states: wqxStatus.loaded ? wqxStatus.stateCount : 0,
+      ...(wantDetails && wqxStatus.loaded ? { topStates: topStatesByCount(getWqxModernByState, ALL_STATES) } : {}),
     },
     stnFlood: {
       loaded: stnStatus.loaded,
       events: stnStatus.loaded ? stnStatus.eventCount : 0,
       states: stnStatus.loaded ? stnStatus.stateCount : 0,
+      ...(wantDetails && stnStatus.loaded ? { topStates: topStatesByCount(getStnFloodByState, ALL_STATES) } : {}),
     },
     dmrViolations: {
       loaded: dmrStatus.loaded,
       violations: dmrStatus.loaded ? dmrStatus.violationCount : 0,
       facilities: dmrStatus.loaded ? dmrStatus.facilityCount : 0,
       states: dmrStatus.loaded ? dmrStatus.stateCount : 0,
+      ...(wantDetails && dmrStatus.loaded ? { topStates: topStatesByCount(getDmrViolationsByState, ALL_STATES) } : {}),
     },
     habForecast: {
       loaded: habStatus.loaded,
       forecasts: habStatus.loaded ? habStatus.forecastCount : 0,
       highRisk: habStatus.loaded ? habStatus.highRiskCount : 0,
       waterbodies: habStatus.loaded ? habStatus.waterbodyCount : 0,
+      ...(wantDetails && habStatus.loaded ? { topStates: topStatesByCount(getHabForecastByState, ALL_STATES) } : {}),
     },
     cdcPlaces: {
       loaded: cdcStatus.loaded,
       tracts: cdcStatus.loaded ? (cdcStatus as any).tractCount ?? 0 : 0,
       states: cdcStatus.loaded ? (cdcStatus as any).stateCount ?? 0 : 0,
+      ...(wantDetails && cdcStatus.loaded ? { topStates: topStatesByCount(getCdcPlacesByState, ALL_STATES) } : {}),
     },
     swdi: {
       loaded: swdiStatus.loaded,
       events: swdiStatus.loaded ? (swdiStatus as any).eventCount ?? 0 : 0,
       severe: swdiStatus.loaded ? (swdiStatus as any).severeCount ?? 0 : 0,
       states: swdiStatus.loaded ? (swdiStatus as any).stateCount ?? 0 : 0,
+      ...(wantDetails && swdiStatus.loaded ? { topStates: topStatesByCount(getSwdiByState, ALL_STATES) } : {}),
     },
     nexradQpe: {
       loaded: nexradStatus.loaded,
@@ -210,6 +233,12 @@ export async function GET(_req: NextRequest) {
       bills: congressStatus.loaded ? (congressStatus as any).billCount ?? 0 : 0,
       active: congressStatus.loaded ? (congressStatus as any).activeCount ?? 0 : 0,
       enacted: congressStatus.loaded ? (congressStatus as any).enactedCount ?? 0 : 0,
+      ...(wantDetails && congressStatus.loaded ? {
+        detailRows: getAllCongressBills()
+          .sort((a, b) => b.latestActionDate.localeCompare(a.latestActionDate))
+          .slice(0, 8)
+          .map(b => ({ label: b.shortTitle || b.title, value: b.status })),
+      } : {}),
     },
   });
 }

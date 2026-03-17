@@ -96,6 +96,7 @@ import { TriageQueueSection } from './TriageQueueSection';
 import CorrelationBreakthroughsPanel from '@/components/CorrelationBreakthroughsPanel';
 import LensDataStory from '@/components/LensDataStory';
 import { useDataSummaries } from '@/hooks/useDataSummaries';
+import { DataStatCard } from '@/components/DataStatCard';
 import { daysUntil, deadlineStatus, deadlineRowStyle, deadlineTextColor, daysLabel } from '@/lib/formatDate';
 
 
@@ -1342,7 +1343,7 @@ export function FederalManagementCenter(props: Props) {
   const liveSentinelSevereCount = sentinel.anomalyHucs.length + sentinel.criticalHucs.length;
   const floodForecast = useFloodForecast();
   const floodRisk = useFloodRiskOverview();
-  const { data: dataSummaries, isLoading: summariesLoading } = useDataSummaries();
+  const { data: dataSummaries, details: summaryDetails, isLoading: summariesLoading, fetchDetails } = useDataSummaries();
   const amsSummary = useAlertSummary();
   const { audioEnabled, toggleAudio, playChime } = useSentinelAudio({ userRole: user?.role });
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -6118,221 +6119,145 @@ export function FederalManagementCenter(props: Props) {
           );
         }
 
-        case 'wqx-modern-results': {
-          const d = dataSummaries.wqxModern;
-          return DS(
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.records.toLocaleString() : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Total Results</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-emerald-600">{summariesLoading ? '...' : d.loaded ? d.states : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">States</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-amber-600">{d.loaded ? 'WQX 3.0' : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">API Version</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-purple-600">{d.loaded ? 'EPA' : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Source</div>
-                </div>
-              </div>
-              {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — EPA WQX 3.0 Water Quality API</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
-            </div>
-          );
-        }
+        case 'wqx-modern-results': return DS(
+          <DataStatCard
+            tiles={[
+              { value: dataSummaries.wqxModern.records, label: 'Total Results', color: 'text-blue-600' },
+              { value: dataSummaries.wqxModern.states, label: 'States', color: 'text-emerald-600' },
+              { value: dataSummaries.wqxModern.loaded ? 'WQX 3.0' : 0, label: 'API Version', color: 'text-amber-600' },
+            ]}
+            source={{ name: 'EPA WQX' }}
+            loaded={dataSummaries.wqxModern.loaded}
+            loading={summariesLoading}
+            pendingLabel="Awaiting data — EPA WQX 3.0 Water Quality API"
+            topStates={summaryDetails.wqxModern}
+            onDetailOpen={fetchDetails}
+            onNavigate={() => setViewLens('water-quality')}
+          />
+        );
 
-        case 'flood-event-viewer': {
-          const d = dataSummaries.stnFlood;
-          return DS(
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.events.toLocaleString() : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Active Events</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-emerald-600">{summariesLoading ? '...' : d.loaded ? d.states : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">States</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-amber-600">{d.loaded ? 'USGS' : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Source</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-purple-600">{d.loaded ? 'STN' : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Network</div>
-                </div>
-              </div>
-              {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — USGS STN Flood Event Services</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
-            </div>
-          );
-        }
+        case 'flood-event-viewer': return DS(
+          <DataStatCard
+            tiles={[
+              { value: dataSummaries.stnFlood.events, label: 'Active Events', color: 'text-blue-600' },
+              { value: dataSummaries.stnFlood.states, label: 'States', color: 'text-emerald-600' },
+              { value: dataSummaries.stnFlood.loaded ? 'Real-time' : 0, label: 'Coverage', color: 'text-amber-600' },
+            ]}
+            source={{ name: 'USGS STN' }}
+            loaded={dataSummaries.stnFlood.loaded}
+            loading={summariesLoading}
+            pendingLabel="Awaiting data — USGS STN Flood Event Services"
+            topStates={summaryDetails.stnFlood}
+            onDetailOpen={fetchDetails}
+            onNavigate={() => setViewLens('disaster-emergency')}
+          />
+        );
 
-        case 'dmr-violations-panel': {
-          const d = dataSummaries.dmrViolations;
-          return DS(
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.violations.toLocaleString() : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Violations</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-emerald-600">{summariesLoading ? '...' : d.loaded ? d.facilities.toLocaleString() : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Facilities</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-amber-600">{summariesLoading ? '...' : d.loaded ? d.violations.toLocaleString() : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Exceedances</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-purple-600">{summariesLoading ? '...' : d.loaded ? d.states : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">States</div>
-                </div>
-              </div>
-              {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — EPA ECHO DMR Violations API</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
-            </div>
-          );
-        }
+        case 'dmr-violations-panel': return DS(
+          <DataStatCard
+            tiles={[
+              { value: dataSummaries.dmrViolations.violations, label: 'Violations', color: 'text-blue-600' },
+              { value: dataSummaries.dmrViolations.facilities, label: 'Facilities', color: 'text-emerald-600' },
+              { value: dataSummaries.dmrViolations.states, label: 'States', color: 'text-amber-600' },
+            ]}
+            source={{ name: 'EPA ECHO' }}
+            loaded={dataSummaries.dmrViolations.loaded}
+            loading={summariesLoading}
+            pendingLabel="Awaiting data — EPA ECHO DMR Violations API"
+            topStates={summaryDetails.dmrViolations}
+            detailCountLabel="Violations"
+            onDetailOpen={fetchDetails}
+            onNavigate={() => setViewLens('compliance')}
+          />
+        );
 
-        case 'hab-forecast-panel': {
-          const d = dataSummaries.habForecast;
-          return DS(
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.forecasts.toLocaleString() : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Active Forecasts</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-emerald-600">{summariesLoading ? '...' : d.loaded ? d.highRisk : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">High Risk</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-amber-600">{summariesLoading ? '...' : d.loaded ? d.waterbodies : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Waterbodies</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-purple-600">{d.loaded ? 'NCCOS' : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Source</div>
-                </div>
-              </div>
-              {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — NOAA NCCOS HAB Forecast System</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
-            </div>
-          );
-        }
+        case 'hab-forecast-panel': return DS(
+          <DataStatCard
+            tiles={[
+              { value: dataSummaries.habForecast.forecasts, label: 'Active Forecasts', color: 'text-blue-600' },
+              { value: dataSummaries.habForecast.highRisk, label: 'High Risk', color: 'text-emerald-600' },
+              { value: dataSummaries.habForecast.waterbodies, label: 'Waterbodies', color: 'text-amber-600' },
+            ]}
+            source={{ name: 'NOAA HAB' }}
+            loaded={dataSummaries.habForecast.loaded}
+            loading={summariesLoading}
+            pendingLabel="Awaiting data — NOAA NCCOS HAB Forecast System"
+            topStates={summaryDetails.habForecast}
+            onDetailOpen={fetchDetails}
+            onNavigate={() => setViewLens('water-quality')}
+          />
+        );
 
-        case 'cdc-places-health': {
-          const d = dataSummaries.cdcPlaces;
-          return DS(
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.tracts.toLocaleString() : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Census Tracts</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-emerald-600">{summariesLoading ? '...' : d.loaded ? d.states : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">States</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-amber-600">{d.loaded ? 'CDC' : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Source</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-purple-600">{d.loaded ? 'PLACES' : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Program</div>
-                </div>
-              </div>
-              {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — CDC PLACES Local Health Data</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
-            </div>
-          );
-        }
+        case 'cdc-places-health': return DS(
+          <DataStatCard
+            tiles={[
+              { value: dataSummaries.cdcPlaces.tracts, label: 'Census Tracts', color: 'text-blue-600' },
+              { value: dataSummaries.cdcPlaces.states, label: 'States', color: 'text-emerald-600' },
+              { value: dataSummaries.cdcPlaces.loaded ? 36 : 0, label: 'Health Measures', color: 'text-amber-600' },
+            ]}
+            source={{ name: 'CDC PLACES' }}
+            loaded={dataSummaries.cdcPlaces.loaded}
+            loading={summariesLoading}
+            pendingLabel="Awaiting data — CDC PLACES Local Health Data"
+            topStates={summaryDetails.cdcPlaces}
+            detailCountLabel="Tracts"
+            onDetailOpen={fetchDetails}
+            onNavigate={() => setViewLens('public-health')}
+          />
+        );
 
-        case 'severe-weather-panel': {
-          const d = dataSummaries.swdi;
-          return DS(
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.events.toLocaleString() : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Events (7d)</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-emerald-600">{summariesLoading ? '...' : d.loaded ? d.severe.toLocaleString() : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Severe Events</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-amber-600">{d.loaded ? 'SWDI' : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Source</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-purple-600">{summariesLoading ? '...' : d.loaded ? d.states : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">States</div>
-                </div>
-              </div>
-              {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — NOAA SWDI Severe Weather Data</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
-            </div>
-          );
-        }
+        case 'severe-weather-panel': return DS(
+          <DataStatCard
+            tiles={[
+              { value: dataSummaries.swdi.events, label: 'Events (7d)', color: 'text-blue-600' },
+              { value: dataSummaries.swdi.severe, label: 'Severe', color: 'text-emerald-600' },
+              { value: dataSummaries.swdi.states, label: 'States', color: 'text-amber-600' },
+            ]}
+            source={{ name: 'NOAA SWDI' }}
+            loaded={dataSummaries.swdi.loaded}
+            loading={summariesLoading}
+            pendingLabel="Awaiting data — NOAA SWDI Severe Weather Data"
+            topStates={summaryDetails.swdi}
+            detailCountLabel="Events"
+            onDetailOpen={fetchDetails}
+            onNavigate={() => setViewLens('monitoring')}
+          />
+        );
 
-        case 'nexrad-precip-panel': {
-          const d = dataSummaries.nexradQpe;
-          return DS(
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.cells.toLocaleString() : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Radar Cells</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-emerald-600">{summariesLoading ? '...' : d.loaded ? d.maxPrecipMm.toFixed(1) : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Max Precip (mm)</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-amber-600">{summariesLoading ? '...' : d.loaded ? d.flashFloodHigh.toLocaleString() : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Flash Flood Risk</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-purple-600">{d.loaded ? 'IEM' : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Source</div>
-                </div>
-              </div>
-              {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — IEM NEXRAD Radar QPE (15-min)</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
-            </div>
-          );
-        }
+        case 'nexrad-precip-panel': return DS(
+          <DataStatCard
+            tiles={[
+              { value: dataSummaries.nexradQpe.cells, label: 'Radar Cells', color: 'text-blue-600' },
+              { value: dataSummaries.nexradQpe.maxPrecipMm, label: 'Max Precip (mm)', color: 'text-emerald-600', format: 'fixed1' },
+              { value: dataSummaries.nexradQpe.flashFloodHigh, label: 'Flash Flood Risk', color: 'text-amber-600' },
+            ]}
+            source={{ name: 'IEM NEXRAD' }}
+            loaded={dataSummaries.nexradQpe.loaded}
+            loading={summariesLoading}
+            pendingLabel="Awaiting data — IEM NEXRAD Radar QPE (15-min)"
+            topStates={summaryDetails.nexradQpe}
+            onDetailOpen={fetchDetails}
+            onNavigate={() => setViewLens('monitoring')}
+          />
+        );
 
-        case 'congress-legislation': {
-          const d = dataSummaries.congress;
-          return DS(
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.bills.toLocaleString() : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Active Bills</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-emerald-600">{summariesLoading ? '...' : d.loaded ? d.active.toLocaleString() : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">In Committee+</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-amber-600">{summariesLoading ? '...' : d.loaded ? d.enacted.toLocaleString() : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Enacted</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="text-2xl font-bold text-purple-600">{d.loaded ? 'Congress.gov' : '\u2014'}</div>
-                  <div className="text-xs text-gray-500">Source</div>
-                </div>
-              </div>
-              {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — Congress.gov Water Legislation API</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
-            </div>
-          );
-        }
+        case 'congress-legislation': return DS(
+          <DataStatCard
+            tiles={[
+              { value: dataSummaries.congress.bills, label: 'Active Bills', color: 'text-blue-600' },
+              { value: dataSummaries.congress.active, label: 'In Committee+', color: 'text-emerald-600' },
+              { value: dataSummaries.congress.enacted, label: 'Enacted', color: 'text-amber-600' },
+            ]}
+            source={{ name: 'Congress.gov' }}
+            loaded={dataSummaries.congress.loaded}
+            loading={summariesLoading}
+            pendingLabel="Awaiting data — Congress.gov Water Legislation API"
+            detailRows={summaryDetails.congress}
+            detailCountLabel="Status"
+            onDetailOpen={fetchDetails}
+            onNavigate={() => setViewLens('reports')}
+          />
+        );
 
         case 'correlation-breakthroughs': return DS(
           <CorrelationBreakthroughsPanel state={selectedState} />
