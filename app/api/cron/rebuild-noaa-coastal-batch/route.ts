@@ -114,55 +114,56 @@ async function buildHabForecast(): Promise<SubCronResult> {
 
   setHabForecastBuildInProgress(true);
   try {
-    const url = 'https://coastwatch.pfeg.noaa.gov/erddap/tabledap/habsos.json?latitude,longitude,SAMPLE_DATE,GENUS,CELLCOUNT&time>=now-7days';
+    // NOAA removed the ERDDAP habsos dataset; use ArcGIS REST (Layer 0: Cell Counts Static)
+    const sevenDaysAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
+    const where = encodeURIComponent(`SAMPLE_DATE >= '${sevenDaysAgo}'`);
+    const url = `https://gis.ngdc.noaa.gov/arcgis/rest/services/EnvironmentalMonitoring/HABSOSViewBase/MapServer/0/query?where=${where}&outFields=LATITUDE,LONGITUDE,SAMPLE_DATE,GENUS,CELLCOUNT,STATE_ID,DESCRIPTION&returnGeometry=false&f=json&resultRecordCount=2000`;
     const resp = await fetch(url, {
       signal: AbortSignal.timeout(REQUEST_TIMEOUT),
       headers: { Accept: 'application/json' },
     });
-    if (!resp.ok) throw new Error(`HABSOS HTTP ${resp.status}`);
+    if (!resp.ok) throw new Error(`HABSOS ArcGIS HTTP ${resp.status}`);
     const json = await resp.json();
 
-    const table = json?.table || {};
-    const columnNames: string[] = table.columnNames || [];
-    const rows: any[][] = table.rows || [];
+    const features: any[] = json?.features || [];
 
-    if (rows.length === 0) {
+    if (features.length === 0) {
       console.warn('[NOAA Coastal Batch] HAB Forecast: no data returned -- skipping cache save');
       recordCronRun('rebuild-hab-forecast', 'success', Date.now() - start);
       return { name: 'hab-forecast', status: 'empty', durationMs: Date.now() - start, recordCount: 0 };
     }
-
-    const latIdx = columnNames.indexOf('latitude');
-    const lngIdx = columnNames.indexOf('longitude');
-    const dateIdx = columnNames.indexOf('SAMPLE_DATE');
-    const genusIdx = columnNames.indexOf('GENUS');
-    const countIdx = columnNames.indexOf('CELLCOUNT');
 
     const grid: Record<string, HabForecast[]> = {};
     const stateIndex: Record<string, HabForecast[]> = {};
     const waterbodies = new Set<string>();
     let highRiskCount = 0;
 
-    for (const row of rows) {
-      const lat = parseFloat(row[latIdx]);
-      const lng = parseFloat(row[lngIdx]);
+    for (const feature of features) {
+      const attrs = feature.attributes || {};
+      const lat = parseFloat(attrs.LATITUDE);
+      const lng = parseFloat(attrs.LONGITUDE);
       if (!lat || !lng) continue;
 
-      const cellCount = row[countIdx] != null ? parseFloat(row[countIdx]) : null;
+      const cellCount = attrs.CELLCOUNT != null ? parseFloat(attrs.CELLCOUNT) : null;
       const severity = deriveBloomSeverity(cellCount);
       const drinkingWaterRisk = deriveDrinkingWaterRisk(severity);
-      const genus = row[genusIdx] || 'Unknown';
-      const sampleDate = row[dateIdx] || '';
+      const genus = attrs.GENUS || 'Unknown';
+      const sampleDate = attrs.SAMPLE_DATE
+        ? new Date(attrs.SAMPLE_DATE).toISOString()
+        : '';
 
-      // Derive state from longitude (approximate US coastal mapping)
-      let state = 'US';
-      if (lng > -82 && lng < -75 && lat > 24 && lat < 31) state = 'FL';
-      else if (lng > -98 && lng < -82 && lat > 25 && lat < 31) state = 'TX';
-      else if (lng > -90 && lng < -82 && lat > 28 && lat < 31) state = 'LA';
-      else if (lng > -89 && lng < -87 && lat > 29 && lat < 31) state = 'MS';
-      else if (lng > -88.5 && lng < -84 && lat > 29 && lat < 31) state = 'AL';
+      // Use STATE_ID from the API if available, otherwise derive from coordinates
+      let state = (attrs.STATE_ID || '').toUpperCase();
+      if (!state || state.length !== 2) {
+        state = 'US';
+        if (lng > -82 && lng < -75 && lat > 24 && lat < 31) state = 'FL';
+        else if (lng > -98 && lng < -82 && lat > 25 && lat < 31) state = 'TX';
+        else if (lng > -90 && lng < -82 && lat > 28 && lat < 31) state = 'LA';
+        else if (lng > -89 && lng < -87 && lat > 29 && lat < 31) state = 'MS';
+        else if (lng > -88.5 && lng < -84 && lat > 29 && lat < 31) state = 'AL';
+      }
 
-      const waterbody = `${genus} observation zone`;
+      const waterbody = attrs.DESCRIPTION || `${genus} observation zone`;
       waterbodies.add(waterbody);
       if (severity === 'high' || severity === 'extreme') highRiskCount++;
 
@@ -187,7 +188,7 @@ async function buildHabForecast(): Promise<SubCronResult> {
       (stateIndex[state] ??= []).push(forecast);
     }
 
-    const totalForecasts = rows.length;
+    const totalForecasts = features.length;
 
     await setHabForecastCache({
       _meta: {

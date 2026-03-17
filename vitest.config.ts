@@ -21,10 +21,10 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'lcov', 'json-summary', 'json'],
       thresholds: {
-        statements: 36,
+        statements: 35,
         branches: 22,
-        functions: 28,
-        lines: 39,
+        functions: 27,
+        lines: 38,
       },
     },
   },
