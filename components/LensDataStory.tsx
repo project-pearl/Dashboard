@@ -1,9 +1,16 @@
+/* ------------------------------------------------------------------ */
+/*  LensBriefing — Per-lens context card with static copy + dynamic   */
+/*  data-driven callouts. Replaces the old generic Data Story panel.  */
+/* ------------------------------------------------------------------ */
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { Lightbulb, AlertTriangle, TrendingUp, Info } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { LensStory, StoryFinding } from '@/lib/lensStoryEngine';
 
-// ── Props ────────────────────────────────────────────────────────────────────
+// ── Props (same interface as old LensDataStory) ─────────────────────────────
 
 interface LensDataStoryProps {
   lens: string;
@@ -11,13 +18,104 @@ interface LensDataStoryProps {
   state?: string | null;
 }
 
-// ── Component ────────────────────────────────────────────────────────────────
+// ── Static per-lens copy ────────────────────────────────────────────────────
+
+const LENS_COPY: Record<string, string> = {
+  'habitat-ecology':
+    'This lens aggregates EPA ATTAINS waterbody assessment data with ecological sensitivity scores to show where aquatic life use standards are being met or threatened. It is designed to help identify watersheds where ecological degradation is outpacing restoration investment.',
+  'habitat':
+    'This lens aggregates EPA ATTAINS waterbody assessment data with ecological sensitivity scores to show where aquatic life use standards are being met or threatened. It is designed to help identify watersheds where ecological degradation is outpacing restoration investment.',
+  'compliance':
+    'This lens tracks NPDES permit compliance, SDWIS drinking water violations, and enforcement actions from EPA ECHO and ICIS. It is designed to surface facilities and jurisdictions with elevated violation risk before they escalate to enforcement or public notice.',
+  'water-quality':
+    'This lens scores waterbodies using PIN\u2019s proprietary indices against EPA ATTAINS, USGS monitoring, and TMDL status. The PIN Water Score (0\u2013100) reflects composite health across impairment, load, infrastructure risk, and environmental justice factors.',
+  'fire-air-quality':
+    'This lens correlates NASA FIRMS active fire detections, EPA air quality monitoring, and NWS severe weather alerts with military installation proximity and PACT Act burn pit documentation. It provides force protection and public health intelligence for fire and air quality threats.',
+  'monitoring':
+    'This lens aggregates real-time and historical water quality monitoring data from USGS, NGWMN groundwater networks, and NWS forecast systems. It provides baseline signal for anomaly detection and trend analysis across the PIN Fusion Engine.',
+  'sentinel-monitoring':
+    'This lens aggregates real-time and historical water quality monitoring data from USGS, NGWMN groundwater networks, and NWS forecast systems. It provides baseline signal for anomaly detection and trend analysis across the PIN Fusion Engine.',
+  'infrastructure':
+    'This lens assesses water and environmental infrastructure risk using flood impact modeling, cyber vulnerability assessments, and facility condition data. It identifies systems most likely to fail under stress conditions and prioritizes resilience investment.',
+  'public-health':
+    'This lens correlates waterborne illness surveillance, PFAS detection, environmental justice indicators, and EPA EJScreen data to identify populations facing compounded environmental health risk. It supports proactive public health intervention and grant prioritization.',
+  'policy':
+    'This lens tracks major federal rulemaking milestones, CWA compliance deadlines, and emergency regulatory actions affecting water and environmental programs. It keeps federal program managers ahead of reporting requirements and enforcement windows.',
+  'policy-tracker':
+    'This lens tracks major federal rulemaking milestones, CWA compliance deadlines, and emergency regulatory actions affecting water and environmental programs. It keeps federal program managers ahead of reporting requirements and enforcement windows.',
+  'funding':
+    'This lens aggregates federal, state, and NGO funding opportunities relevant to water quality restoration, infrastructure improvement, and environmental justice. It matches available funding to jurisdictional need based on PIN\u2019s risk scoring.',
+  'overview':
+    'This is the national situation overview aggregating critical findings across all domains \u2014 compliance, water quality, infrastructure, natural hazards, and public health. It surfaces the highest-priority items that require attention across the federal portfolio.',
+  'briefing':
+    'This lens generates an AI-assisted executive briefing summarizing the most significant environmental and infrastructure developments for the current reporting period.',
+  'political-briefing':
+    'This lens generates talking points, funding optics, and constituent impact summaries tailored for elected officials and their staff.',
+  'scorecard':
+    'This lens provides graded performance metrics across states, comparing compliance rates, infrastructure condition, water quality trends, and enforcement activity against national benchmarks.',
+  'disaster-emergency':
+    'This lens integrates FEMA disaster declarations, US Drought Monitor data, USGS flood monitoring, and NWS severe weather alerts to provide a unified natural hazard picture for emergency planning and response coordination.',
+  'disaster':
+    'This lens integrates FEMA disaster declarations, US Drought Monitor data, USGS flood monitoring, and NWS severe weather alerts to provide a unified natural hazard picture for emergency planning and response coordination.',
+  'emergency':
+    'This lens integrates FEMA disaster declarations, US Drought Monitor data, USGS flood monitoring, and NWS severe weather alerts to provide a unified natural hazard picture for emergency planning and response coordination.',
+  'military-installations':
+    'This lens monitors DOD installation environmental compliance, PFAS contamination tracking, and water supply chain analysis. It provides force protection intelligence for military installations and their surrounding communities.',
+  'agricultural-nps':
+    'This lens tracks agriculture-related impairments, nutrient loading trends, and nonpoint source pollution data to support TMDL implementation and agricultural best management practice planning.',
+  'agriculture':
+    'This lens tracks agriculture-related impairments, nutrient loading trends, and nonpoint source pollution data to support TMDL implementation and agricultural best management practice planning.',
+  'trends':
+    'This lens surfaces long-term environmental trends, watershed forecasts, and climate overlay data to support strategic planning and early warning of emerging risks.',
+  'reports':
+    'This lens provides export capabilities for role-specific formatted reports, data summaries, and briefing documents.',
+  'interagency':
+    'This lens surfaces cross-agency coordination items \u2014 shared enforcement targets, joint monitoring gaps, and overlapping jurisdictional responsibilities.',
+  'ej-equity':
+    'This lens highlights environmental justice indicators, EJScreen vulnerability indices, and demographic data to identify communities bearing disproportionate environmental burden.',
+  'stormwater':
+    'This lens tracks NPDES stormwater permit compliance, MS4 program metrics, and green infrastructure performance to support municipal stormwater management.',
+  'permits':
+    'This lens tracks NPDES permit status, renewal timelines, and compliance histories for permitted facilities in the current scope.',
+  'contaminants-tracker':
+    'This lens monitors emerging contaminant detections including PFAS, microplastics, and pharmaceutical compounds across public water systems and environmental monitoring networks.',
+  'wqt':
+    'This lens tracks water quality trading program performance, credit generation, and market activity to support nutrient trading and compliance flexibility mechanisms.',
+};
+
+// ── Callout formatting ──────────────────────────────────────────────────────
+
+interface Callout {
+  severity: 'critical' | 'warning' | 'info';
+  text: string;
+}
+
+function findingsToCallouts(findings: StoryFinding[]): Callout[] {
+  return findings.slice(0, 4).map(f => ({
+    severity: f.severity,
+    text: f.metric
+      ? `${f.title} \u2014 ${f.detail}`
+      : f.title,
+  }));
+}
+
+function CalloutIcon({ severity }: { severity: Callout['severity'] }) {
+  switch (severity) {
+    case 'critical':
+      return <AlertTriangle size={14} className="text-pin-critical shrink-0 mt-0.5" />;
+    case 'warning':
+      return <TrendingUp size={14} className="text-pin-warning shrink-0 mt-0.5" />;
+    default:
+      return <Info size={14} className="text-pin-info shrink-0 mt-0.5" />;
+  }
+}
+
+// ── Component ───────────────────────────────────────────────────────────────
 
 export default function LensDataStory({ lens, role, state }: LensDataStoryProps) {
   const [data, setData] = useState<LensStory | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -47,167 +145,87 @@ export default function LensDataStory({ lens, role, state }: LensDataStoryProps)
     return () => { cancelled = true; };
   }, [lens, role, state]);
 
-  // ── Loading state ────────────────────────────────────────────────────────
+  const staticCopy = LENS_COPY[lens] ?? LENS_COPY['overview'];
+  const lensLabel = lens.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
-  if (loading) {
-    return (
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-700">
-        <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50">
-          <div className="h-5 bg-slate-200 dark:bg-slate-700 rounded w-1/3 animate-pulse" />
-        </div>
-        <div className="p-4 space-y-3">
-          <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-2/3 animate-pulse" />
-          <div className="h-16 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
-          <div className="h-16 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
-        </div>
-      </div>
-    );
-  }
-
-  // ── Error state ──────────────────────────────────────────────────────────
-
-  if (error) {
-    return (
-      <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded-lg p-3">
-        Failed to load data story: {error}
-      </div>
-    );
-  }
-
-  // ── Empty state ──────────────────────────────────────────────────────────
-
-  if (!data || data.findings.length === 0) {
-    return (
-      <div className="text-sm text-slate-500 bg-slate-50 dark:bg-slate-800 dark:text-slate-400 rounded-lg p-4 text-center">
-        No actionable findings for this view.
-        {state ? ` Data for ${state} may not yet be cached.` : ''}
-      </div>
-    );
-  }
-
-  // ── Partition findings ───────────────────────────────────────────────────
-
-  const takeAction = data.findings.filter(f => f.category === 'take-action');
-  const monitor = data.findings.filter(f => f.category === 'monitor');
-  const criticalCount = data.findings.filter(f => f.severity === 'critical').length;
-  const warningCount = data.findings.filter(f => f.severity === 'warning').length;
+  // Build dynamic callouts from findings
+  const callouts: Callout[] = data ? findingsToCallouts(data.findings) : [];
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-700">
-      {/* ── Header ──────────────────────────────────────────────────────── */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/30 dark:to-blue-950/30 hover:from-indigo-100 hover:to-blue-100 dark:hover:from-indigo-950/50 dark:hover:to-blue-950/50 transition-colors text-left"
-      >
-        <div className="flex items-center gap-2 min-w-0">
-          <svg className="h-4 w-4 text-indigo-600 dark:text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <span className="font-semibold text-sm text-slate-800 dark:text-slate-200 truncate">
-            {data.headline}
-          </span>
-        </div>
-        <div className="flex items-center gap-2 shrink-0 ml-2">
-          {criticalCount > 0 && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-              {criticalCount} critical
-            </span>
-          )}
-          {warningCount > 0 && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-              {warningCount} warning{warningCount > 1 ? 's' : ''}
-            </span>
-          )}
-          <svg className={`h-4 w-4 text-slate-400 transition-transform ${collapsed ? '' : 'rotate-180'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
-      </button>
+    <div className="rounded-pin-lg border-l-[3px] border-l-pin-primary border border-pin-border-default bg-pin-primary-light/40 dark:bg-pin-primary-light/10 overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center gap-2 px-4 py-3">
+        <Lightbulb size={16} className="text-pin-primary shrink-0" />
+        <span className="text-pin-sm font-semibold text-pin-text-bright">
+          {lensLabel} — Lens Briefing
+        </span>
+      </div>
 
-      {/* ── Body ────────────────────────────────────────────────────────── */}
-      {!collapsed && (
-        <div className="p-4 space-y-4">
-          {/* Take Action section */}
-          {takeAction.length > 0 && (
-            <div>
-              <h4 className="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wider mb-2">
-                Take Action ({takeAction.length})
-              </h4>
-              <div className="space-y-2">
-                {takeAction.map(f => (
-                  <FindingRow key={f.id} finding={f} accent="action" />
-                ))}
-              </div>
-            </div>
+      <div className="px-4 pb-4 space-y-3">
+        {/* Section 1: What this lens shows */}
+        <p className="text-pin-sm text-pin-text-primary leading-relaxed">
+          {staticCopy}
+        </p>
+
+        {/* Divider */}
+        <div className="border-t border-pin-primary/15" />
+
+        {/* Section 2: What to watch right now */}
+        <div>
+          <h4 className="text-pin-xs font-semibold uppercase tracking-[0.05em] text-pin-text-dim mb-2">
+            What to Watch Right Now
+          </h4>
+
+          {loading && (
+            <p className="text-pin-sm text-pin-text-secondary italic">
+              Data loading — insights will appear once this lens has populated data.
+            </p>
           )}
 
-          {/* Monitor section */}
-          {monitor.length > 0 && (
-            <div>
-              <h4 className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-2">
-                Monitor ({monitor.length})
-              </h4>
-              <div className="space-y-2">
-                {monitor.map(f => (
-                  <FindingRow key={f.id} finding={f} accent="monitor" />
-                ))}
-              </div>
-            </div>
+          {error && (
+            <p className="text-pin-sm text-pin-critical">
+              Unable to load lens data: {error}
+            </p>
           )}
 
-          {/* Footer — data sources */}
-          {data.dataSources.length > 0 && (
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-400 dark:text-slate-500">
-                {data.dataSources.map(ds => (
-                  <span key={ds.name}>
-                    {ds.name} <span className="text-slate-300 dark:text-slate-600">({ds.agency} &middot; {ds.freshness})</span>
+          {!loading && !error && callouts.length === 0 && (
+            <p className="text-pin-sm text-pin-text-secondary italic">
+              No actionable findings for the current scope.
+              {state ? ` Data for ${state} may not yet be cached.` : ''}
+            </p>
+          )}
+
+          {!loading && !error && callouts.length > 0 && (
+            <ul className="space-y-2">
+              {callouts.map((c, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <CalloutIcon severity={c.severity} />
+                  <span className={cn(
+                    'text-pin-sm leading-snug',
+                    c.severity === 'critical' ? 'text-pin-critical font-medium' :
+                    c.severity === 'warning' ? 'text-pin-text-bright' :
+                    'text-pin-text-primary',
+                  )}>
+                    {c.text}
                   </span>
-                ))}
-              </div>
-            </div>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
-      )}
-    </div>
-  );
-}
 
-// ── Finding Row ──────────────────────────────────────────────────────────────
-
-function FindingRow({ finding, accent }: { finding: StoryFinding; accent: 'action' | 'monitor' }) {
-  const borderColor = accent === 'action'
-    ? finding.severity === 'critical'
-      ? 'border-red-400 dark:border-red-600'
-      : 'border-orange-400 dark:border-orange-600'
-    : finding.severity === 'critical'
-      ? 'border-blue-500 dark:border-blue-500'
-      : 'border-blue-300 dark:border-blue-600';
-
-  const dotColor = finding.severity === 'critical'
-    ? 'bg-red-500'
-    : finding.severity === 'warning'
-      ? 'bg-amber-500'
-      : 'bg-blue-400';
-
-  return (
-    <div className={`border-l-[3px] ${borderColor} pl-3 py-1.5`}>
-      <div className="flex items-start gap-2">
-        <span className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${dotColor}`} />
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-slate-800 dark:text-slate-200 leading-snug">
-            {finding.title}
-          </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-            {finding.detail}
-          </p>
-          {finding.metric && (
-            <div className="mt-1 inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-50 dark:bg-slate-800 text-xs">
-              <span className="text-slate-400 dark:text-slate-500">{finding.metric.label}:</span>
-              <span className="font-semibold text-slate-700 dark:text-slate-300">{finding.metric.value}</span>
+        {/* Data source attribution */}
+        {data && data.dataSources.length > 0 && (
+          <div className="pt-2 border-t border-pin-primary/10">
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-2xs text-pin-text-dim">
+              {data.dataSources.map(ds => (
+                <span key={ds.name}>
+                  {ds.name} <span className="opacity-60">({ds.agency} · {ds.freshness})</span>
+                </span>
+              ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

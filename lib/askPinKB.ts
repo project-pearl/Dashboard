@@ -563,6 +563,18 @@ export const SECTION_KB: Record<string, SectionKB> = {
         a: 'PIN adjusts its communication style and focus areas based on your role. Federal users get cross-state policy analysis, K-12 users get educational explanations, utilities get operational guidance, and so on.' },
     ],
   },
+
+  'lens-data-story': {
+    explanation: 'The Lens Briefing provides a concise overview of what this lens shows, why it matters, and which data points currently warrant attention. The dynamic section highlights findings generated from live data sources.',
+    lookFor: 'Check the "What to Watch Right Now" section for critical or warning-level findings. These are generated from threshold rules applied to real-time cached data.',
+    action: 'Investigate any critical findings immediately. Warning items should be monitored for escalation. Use the source attribution at the bottom to verify data freshness.',
+    faq: [
+      { q: 'Where does the briefing data come from?', keywords: ['data', 'source', 'where', 'come from'],
+        a: 'The Lens Briefing pulls from the same EPA, USGS, FEMA, and other federal data caches that power the rest of the lens. Data sources and their refresh cadence are listed at the bottom of the card.' },
+      { q: 'Why are there no findings?', keywords: ['no findings', 'empty', 'nothing', 'blank'],
+        a: 'If no findings appear, either the relevant data caches have not yet loaded or no values currently exceed the threshold rules for this lens. Try refreshing the page or selecting a different state scope.' },
+    ],
+  },
 };
 
 /**
