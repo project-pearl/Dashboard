@@ -28,39 +28,34 @@ import type {
   ClassificationReasoning,
   CbrnIndicator,
 } from '@/lib/sentinel/types';
+import { cn } from '@/lib/utils';
+import { LEVEL_COLORS, CLASSIFICATION_COLORS, CBRN_COLORS } from '@/lib/design-tokens';
 
 interface SentinelIntelFeedProps {
   hucNames: Record<string, string>;
 }
 
-/* ── Colour Constants ── */
+/* ── Colour Constants (dynamic — used for inline style bindings) ── */
 
 const LEVEL_BORDER: Record<string, string> = {
-  ANOMALY: '#7B1FA2',
-  CRITICAL: '#D32F2F',
-  WATCH: '#F9A825',
-  ADVISORY: '#9E9E9E',
+  ANOMALY: LEVEL_COLORS.ANOMALY,
+  CRITICAL: LEVEL_COLORS.CRITICAL,
+  WATCH: LEVEL_COLORS.WATCH,
+  ADVISORY: LEVEL_COLORS.ADVISORY,
 };
 
 const LEVEL_BG: Record<string, string> = {
-  ANOMALY: 'rgba(123,31,162,0.10)',
-  CRITICAL: 'rgba(211,47,47,0.10)',
-  WATCH: 'rgba(249,168,37,0.10)',
-  ADVISORY: 'rgba(158,158,158,0.08)',
+  ANOMALY: `${LEVEL_COLORS.ANOMALY}1a`,
+  CRITICAL: `${LEVEL_COLORS.CRITICAL}1a`,
+  WATCH: `${LEVEL_COLORS.WATCH}1a`,
+  ADVISORY: `${LEVEL_COLORS.ADVISORY}14`,
 };
 
 const CLASSIFICATION_BADGE: Record<string, { bg: string; text: string }> = {
-  likely_attack: { bg: '#D32F2F', text: '#fff' },
-  possible_attack: { bg: '#F57C00', text: '#fff' },
-  likely_benign: { bg: '#388E3C', text: '#fff' },
-  insufficient_data: { bg: '#616161', text: '#fff' },
-};
-
-const CBRN_COLOR: Record<string, string> = {
-  chemical: '#FF6F00',
-  biological: '#2E7D32',
-  radiological: '#6A1B9A',
-  nuclear: '#B71C1C',
+  likely_attack: { bg: CLASSIFICATION_COLORS.likely_attack, text: '#fff' },
+  possible_attack: { bg: CLASSIFICATION_COLORS.possible_attack, text: '#fff' },
+  likely_benign: { bg: CLASSIFICATION_COLORS.likely_benign, text: '#fff' },
+  insufficient_data: { bg: CLASSIFICATION_COLORS.insufficient_data, text: '#fff' },
 };
 
 const TIME_RANGES = [
@@ -111,37 +106,40 @@ const SOURCE_LABELS: Partial<Record<ChangeSource, string>> = {
 
 function ConfounderRow({ c }: { c: ConfounderCheck }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+    <div className="flex items-center gap-1.5 text-pin-xs">
       {c.matched
-        ? <Check size={13} style={{ color: '#388E3C' }} />
-        : <X size={13} style={{ color: '#9E9E9E' }} />}
-      <span style={{ color: c.matched ? '#388E3C' : 'var(--text-secondary)' }}>{c.rule}</span>
-      <span style={{ color: 'var(--text-secondary)', fontSize: 11 }}>{c.detail}</span>
+        ? <Check size={13} className="text-pin-success" />
+        : <X size={13} className="text-pin-nominal" />}
+      <span className={cn(c.matched ? 'text-pin-success' : 'text-pin-text-secondary')}>{c.rule}</span>
+      <span className="text-pin-text-secondary text-pin-xs">{c.detail}</span>
     </div>
   );
 }
 
 function ReasoningRow({ r }: { r: ClassificationReasoning }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
-      <span style={{ color: r.effect === 'boost' ? '#D32F2F' : '#388E3C', fontWeight: 600 }}>
+    <div className="flex items-center gap-1.5 text-pin-xs">
+      <span className={cn('font-semibold', r.effect === 'boost' ? 'text-pin-critical' : 'text-pin-success')}>
         {r.effect === 'boost' ? '+' : '-'}{r.magnitude.toFixed(2)}
       </span>
       <span>{r.rule}</span>
-      <span style={{ color: 'var(--text-secondary)', fontSize: 11 }}>{r.detail}</span>
+      <span className="text-pin-text-secondary text-pin-xs">{r.detail}</span>
     </div>
   );
 }
 
 function CbrnBadge({ ind }: { ind: CbrnIndicator }) {
-  const color = CBRN_COLOR[ind.category] ?? '#616161';
+  const color = CBRN_COLORS[ind.category as keyof typeof CBRN_COLORS] ?? '#616161';
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: `${color}18`, border: `1px solid ${color}40`, borderRadius: 4, padding: '2px 8px', fontSize: 12 }}>
-      <span style={{ fontWeight: 600, color, textTransform: 'uppercase' }}>{ind.category}</span>
-      <div style={{ width: 40, height: 4, background: '#e0e0e0', borderRadius: 2, overflow: 'hidden' }}>
-        <div style={{ width: `${ind.confidence * 100}%`, height: '100%', background: color, borderRadius: 2 }} />
+    <div
+      className="inline-flex items-center gap-1.5 rounded-pin-sm px-2 py-0.5 text-pin-xs"
+      style={{ background: `${color}18`, border: `1px solid ${color}40` }}
+    >
+      <span className="font-semibold uppercase" style={{ color }}>{ind.category}</span>
+      <div className="h-1 w-10 overflow-hidden rounded-full bg-neutral-300">
+        <div className="h-full rounded-full" style={{ width: `${ind.confidence * 100}%`, background: color }} />
       </div>
-      <span style={{ color: 'var(--text-secondary)', fontSize: 11 }}>{(ind.confidence * 100).toFixed(0)}%</span>
+      <span className="text-pin-text-secondary text-pin-xs">{(ind.confidence * 100).toFixed(0)}%</span>
     </div>
   );
 }
@@ -177,22 +175,30 @@ function EntryCard({ entry, hucName }: { entry: SentinelFeedEntry; hucName: stri
   const classSummary = showClassContext ? classificationSummary(entry) : '';
 
   return (
-    <div style={{ border: `1px solid ${border}`, borderLeft: `3px solid ${border}`, borderRadius: 6, background: bg, marginBottom: 6, overflow: 'hidden' }}>
+    <div
+      className="mb-1.5 overflow-hidden rounded-pin-sm"
+      style={{ border: `1px solid ${border}`, borderLeft: `3px solid ${border}`, background: bg }}
+    >
       {/* Collapsed header */}
       <button
         onClick={() => setExpanded(!expanded)}
-        style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', fontSize: 13, flexWrap: 'wrap' }}
+        className="flex w-full cursor-pointer flex-wrap items-center gap-2 border-none bg-transparent px-3 py-2 text-left text-pin-sm"
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+        <div className="flex min-w-0 flex-1 items-center gap-2">
           {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-          <span style={{ color: 'var(--text-secondary)', minWidth: 50, fontSize: 11 }}>{formatTimeSince(entry.detectedAt)}</span>
-          <span style={{ fontWeight: 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{hucName}</span>
-          <span style={{ background: 'var(--bg-secondary)', borderRadius: 3, padding: '1px 6px', fontSize: 11 }}>{SOURCE_LABELS[entry.source] ?? entry.source}</span>
-          <span style={{ background: classBadge.bg, color: classBadge.text, borderRadius: 3, padding: '1px 6px', fontSize: 11 }}>{entry.classification.replace(/_/g, ' ')}</span>
-          <span style={{ fontWeight: 600, fontSize: 12, minWidth: 40, textAlign: 'right' }}>{entry.hucScore.toFixed(0)}</span>
+          <span className="min-w-[50px] text-pin-text-secondary text-pin-xs">{formatTimeSince(entry.detectedAt)}</span>
+          <span className="flex-1 overflow-hidden truncate font-semibold">{hucName}</span>
+          <span className="rounded-pin-sm bg-pin-bg-surface px-1.5 py-px text-pin-xs">{SOURCE_LABELS[entry.source] ?? entry.source}</span>
+          <span
+            className="rounded-pin-sm px-1.5 py-px text-pin-xs"
+            style={{ background: classBadge.bg, color: classBadge.text }}
+          >
+            {entry.classification.replace(/_/g, ' ')}
+          </span>
+          <span className="min-w-[40px] text-right font-semibold text-pin-xs">{entry.hucScore.toFixed(0)}</span>
         </div>
         {showClassContext && classSummary && (
-          <div style={{ width: '100%', paddingLeft: 28, fontSize: 11, color: classBadge.bg, opacity: 0.85 }}>
+          <div className="w-full pl-7 text-pin-xs opacity-85" style={{ color: classBadge.bg }}>
             {classSummary}
           </div>
         )}
@@ -200,11 +206,11 @@ function EntryCard({ entry, hucName }: { entry: SentinelFeedEntry; hucName: stri
 
       {/* Expanded details */}
       {expanded && (
-        <div style={{ padding: '0 12px 12px 30px', display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13 }}>
+        <div className="flex flex-col gap-2.5 px-3 pb-3 pl-[30px] text-pin-sm">
           {/* Event info */}
           <div>
-            <div style={{ fontWeight: 600, marginBottom: 4 }}>Event Details</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, fontSize: 12 }}>
+            <div className="mb-1 font-semibold">Event Details</div>
+            <div className="flex flex-wrap gap-2 text-pin-xs">
               <span>Source: <strong>{entry.source}</strong></span>
               <span>Type: <strong>{entry.changeType}</strong></span>
               <span>Severity: <strong>{entry.severityHint}</strong></span>
@@ -214,16 +220,16 @@ function EntryCard({ entry, hucName }: { entry: SentinelFeedEntry; hucName: stri
 
           {/* Score contribution */}
           <div>
-            <div style={{ fontWeight: 600, marginBottom: 4 }}>Score Contribution</div>
-            <div style={{ display: 'flex', gap: 16, fontSize: 12 }}>
+            <div className="mb-1 font-semibold">Score Contribution</div>
+            <div className="flex gap-4 text-pin-xs">
               <span>Base: <strong>{entry.baseScore.toFixed(1)}</strong></span>
               <span>Decayed: <strong>{entry.decayedScore.toFixed(1)}</strong></span>
               <span>HUC Total: <strong>{entry.hucScore.toFixed(0)}</strong> ({entry.hucLevel})</span>
             </div>
             {entry.activePatterns.length > 0 && (
-              <div style={{ marginTop: 4, fontSize: 12 }}>
+              <div className="mt-1 text-pin-xs">
                 Patterns: {entry.activePatterns.map(p => (
-                  <span key={p} style={{ background: 'var(--bg-secondary)', borderRadius: 3, padding: '1px 5px', marginRight: 4, fontSize: 11 }}>{p}</span>
+                  <span key={p} className="mr-1 rounded-pin-sm bg-pin-bg-surface px-1.5 py-px text-pin-xs">{p}</span>
                 ))}
               </div>
             )}
@@ -232,7 +238,7 @@ function EntryCard({ entry, hucName }: { entry: SentinelFeedEntry; hucName: stri
           {/* Reasoning chain */}
           {entry.reasoning.length > 0 && (
             <div>
-              <div style={{ fontWeight: 600, marginBottom: 4 }}>Classification Reasoning</div>
+              <div className="mb-1 font-semibold">Classification Reasoning</div>
               {entry.reasoning.map((r, i) => <ReasoningRow key={i} r={r} />)}
             </div>
           )}
@@ -240,7 +246,7 @@ function EntryCard({ entry, hucName }: { entry: SentinelFeedEntry; hucName: stri
           {/* Confounders */}
           {entry.confounders.length > 0 && (
             <div>
-              <div style={{ fontWeight: 600, marginBottom: 4 }}>Confounder Checks</div>
+              <div className="mb-1 font-semibold">Confounder Checks</div>
               {entry.confounders.map((c, i) => <ConfounderRow key={i} c={c} />)}
             </div>
           )}
@@ -248,8 +254,8 @@ function EntryCard({ entry, hucName }: { entry: SentinelFeedEntry; hucName: stri
           {/* CBRN indicators */}
           {entry.cbrnIndicators.length > 0 && (
             <div>
-              <div style={{ fontWeight: 600, marginBottom: 4 }}>CBRN Indicators</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              <div className="mb-1 font-semibold">CBRN Indicators</div>
+              <div className="flex flex-wrap gap-1.5">
                 {entry.cbrnIndicators.map((ind, i) => <CbrnBadge key={i} ind={ind} />)}
               </div>
             </div>
@@ -258,8 +264,8 @@ function EntryCard({ entry, hucName }: { entry: SentinelFeedEntry; hucName: stri
           {/* Coordination */}
           {entry.coordination && (
             <div>
-              <div style={{ fontWeight: 600, marginBottom: 4 }}>Coordination Cluster</div>
-              <div style={{ fontSize: 12, display: 'flex', gap: 16 }}>
+              <div className="mb-1 font-semibold">Coordination Cluster</div>
+              <div className="flex gap-4 text-pin-xs">
                 <span>Score: <strong>{entry.coordination.coordinationScore.toFixed(1)}</strong></span>
                 <span>HUCs: <strong>{entry.coordination.memberHucs.length}</strong></span>
                 <span>Breadth: <strong>{entry.coordination.parameterBreadth}</strong></span>
@@ -271,8 +277,8 @@ function EntryCard({ entry, hucName }: { entry: SentinelFeedEntry; hucName: stri
           {/* Plume adjustment */}
           {entry.plumeAdjustment && (
             <div>
-              <div style={{ fontWeight: 600, marginBottom: 4 }}>Plume Analysis</div>
-              <div style={{ fontSize: 12 }}>
+              <div className="mb-1 font-semibold">Plume Analysis</div>
+              <div className="text-pin-xs">
                 Exposure: <strong>{entry.plumeAdjustment.exposure}</strong> |
                 Target: <strong>{entry.plumeAdjustment.targetName}</strong> |
                 Adjustment: <strong>{entry.plumeAdjustment.adjustment > 0 ? '+' : ''}{entry.plumeAdjustment.adjustment.toFixed(1)}</strong>
@@ -319,24 +325,24 @@ export default function SentinelIntelFeed({ hucNames }: SentinelIntelFeedProps) 
 
   if (error && entries.length === 0) {
     return (
-      <div style={{ padding: 16, color: 'var(--text-secondary)' }}>
-        <AlertTriangle size={16} style={{ marginRight: 6 }} />
+      <div className="p-4 text-pin-text-secondary">
+        <AlertTriangle size={16} className="mr-1.5 inline" />
         Sentinel feed unavailable: {error}
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div className="flex flex-col gap-3">
       {/* Filter bar */}
-      <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-        <Filter size={14} style={{ color: 'var(--text-secondary)' }} />
+      <div className="flex flex-wrap items-center gap-2">
+        <Filter size={14} className="text-pin-text-secondary" />
         {LEVELS.map(l => (
           <button
             key={l}
             onClick={() => toggleLevel(l)}
+            className="cursor-pointer rounded-full px-2.5 py-0.5 text-pin-xs font-semibold"
             style={{
-              padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, cursor: 'pointer',
               border: `1px solid ${LEVEL_BORDER[l]}`,
               background: activeLevels.includes(l) ? LEVEL_BORDER[l] : 'transparent',
               color: activeLevels.includes(l) ? '#fff' : LEVEL_BORDER[l],
@@ -345,44 +351,49 @@ export default function SentinelIntelFeed({ hucNames }: SentinelIntelFeedProps) 
             {l}
           </button>
         ))}
-        <span style={{ borderLeft: '1px solid var(--border-default)', height: 20, margin: '0 4px' }} />
+        <span className="mx-1 h-5 border-l border-pin-border-default" />
         {TIME_RANGES.map(t => (
           <button
             key={t.hours}
             onClick={() => setActiveHours(t.hours)}
-            style={{
-              padding: '3px 8px', borderRadius: 4, fontSize: 11, cursor: 'pointer',
-              border: '1px solid var(--border-default)',
-              background: activeHours === t.hours ? 'var(--bg-secondary)' : 'transparent',
-              fontWeight: activeHours === t.hours ? 600 : 400,
-            }}
+            className={cn(
+              'cursor-pointer rounded-pin-sm border border-pin-border-default px-2 py-0.5 text-pin-xs',
+              activeHours === t.hours ? 'bg-pin-bg-surface font-semibold' : 'bg-transparent font-normal',
+            )}
           >
             {t.label}
           </button>
         ))}
-        <button onClick={refetch} style={{ marginLeft: 'auto', padding: '3px 8px', borderRadius: 4, fontSize: 11, cursor: 'pointer', border: '1px solid var(--border-default)', background: 'transparent', display: 'flex', alignItems: 'center', gap: 4 }}>
+        <button
+          onClick={refetch}
+          className="ml-auto flex cursor-pointer items-center gap-1 rounded-pin-sm border border-pin-border-default bg-transparent px-2 py-0.5 text-pin-xs"
+        >
           <RefreshCw size={12} className={isLoading ? 'animate-spin' : ''} /> Refresh
         </button>
       </div>
 
       {/* Summary strip */}
       {summary && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, fontSize: 12, color: 'var(--text-secondary)' }}>
-          <span><Activity size={12} style={{ marginRight: 3 }} /><strong>{summary.total}</strong> events</span>
+        <div className="flex flex-wrap gap-3 text-pin-xs text-pin-text-secondary">
+          <span><Activity size={12} className="mr-0.5 inline" /><strong>{summary.total}</strong> events</span>
           {Object.entries(summary.byLevel).map(([level, count]) => (
             <span key={level} style={{ color: LEVEL_BORDER[level] ?? 'inherit' }}>
               <strong>{count}</strong> {level}
             </span>
           ))}
           {summary.coordinatedClusters > 0 && (
-            <span style={{ color: '#7B1FA2' }}><Zap size={12} style={{ marginRight: 2 }} /><strong>{summary.coordinatedClusters}</strong> coordinated</span>
+            <span style={{ color: LEVEL_COLORS.ANOMALY }}>
+              <Zap size={12} className="mr-0.5 inline" /><strong>{summary.coordinatedClusters}</strong> coordinated
+            </span>
           )}
           {summary.cbrnDetections > 0 && (
-            <span style={{ color: '#D32F2F' }}><Shield size={12} style={{ marginRight: 2 }} /><strong>{summary.cbrnDetections}</strong> CBRN</span>
+            <span className="text-pin-critical">
+              <Shield size={12} className="mr-0.5 inline" /><strong>{summary.cbrnDetections}</strong> CBRN
+            </span>
           )}
           {lastFetched && (
-            <span style={{ marginLeft: 'auto' }}>
-              <Clock size={11} style={{ marginRight: 3 }} />Updated {formatTimeSince(lastFetched)}
+            <span className="ml-auto">
+              <Clock size={11} className="mr-0.5 inline" />Updated {formatTimeSince(lastFetched)}
             </span>
           )}
         </div>
@@ -390,10 +401,10 @@ export default function SentinelIntelFeed({ hucNames }: SentinelIntelFeedProps) 
 
       {/* Timeline */}
       {isLoading && entries.length === 0 ? (
-        <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-secondary)' }}>Loading sentinel feed...</div>
+        <div className="p-6 text-center text-pin-text-secondary">Loading sentinel feed...</div>
       ) : entries.length === 0 ? (
-        <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-secondary)' }}>
-          <Eye size={20} style={{ marginBottom: 8 }} /><br />
+        <div className="p-6 text-center text-pin-text-secondary">
+          <Eye size={20} className="mb-2 inline" /><br />
           No sentinel events match the current filters.
         </div>
       ) : (
@@ -408,12 +419,7 @@ export default function SentinelIntelFeed({ hucNames }: SentinelIntelFeedProps) 
           {!showAll && hiddenCount > 0 && (
             <button
               onClick={() => setShowAll(true)}
-              style={{
-                width: '100%', padding: '8px 0', marginTop: 4,
-                border: '1px solid var(--border-default)', borderRadius: 6,
-                background: 'var(--bg-secondary)', cursor: 'pointer',
-                fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)',
-              }}
+              className="mt-1 w-full cursor-pointer rounded-pin-sm border border-pin-border-default bg-pin-bg-surface py-2 text-pin-xs font-semibold text-pin-text-secondary"
             >
               Show {hiddenCount} more event{hiddenCount !== 1 ? 's' : ''}
             </button>
@@ -421,12 +427,7 @@ export default function SentinelIntelFeed({ hucNames }: SentinelIntelFeedProps) 
           {showAll && sortedEntries.length > INITIAL_VISIBLE && (
             <button
               onClick={() => setShowAll(false)}
-              style={{
-                width: '100%', padding: '8px 0', marginTop: 4,
-                border: '1px solid var(--border-default)', borderRadius: 6,
-                background: 'var(--bg-secondary)', cursor: 'pointer',
-                fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)',
-              }}
+              className="mt-1 w-full cursor-pointer rounded-pin-sm border border-pin-border-default bg-pin-bg-surface py-2 text-pin-xs font-semibold text-pin-text-secondary"
             >
               Show fewer
             </button>

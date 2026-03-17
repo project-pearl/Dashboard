@@ -38,18 +38,18 @@
     --radius: 0.5rem;
 
     /* ── PIN custom properties (light) ── */
-    --pin-teal: #1A9A8E;
+    --pin-teal: #0B6E6E;
     --pin-copper: #B87333;
-    --pin-page-bg: #F5F7FA;
+    --pin-page-bg: #F7F8FA;
     --pin-sidebar-bg: #FFFFFF;
-    --pin-text-bright: #0F172A;
-    --pin-text-primary: #1E293B;
-    --pin-text-secondary: #475569;
-    --pin-text-dim: #94A3B8;
-    --pin-status-healthy: #10B981;
-    --pin-status-watch: #F59E0B;
+    --pin-text-bright: #1A1A1A;
+    --pin-text-primary: #4A4A4A;
+    --pin-text-secondary: #888888;
+    --pin-text-dim: #BBBBBB;
+    --pin-status-healthy: #16A34A;
+    --pin-status-watch: #D97706;
     --pin-status-impaired: #F97316;
-    --pin-status-severe: #EF4444;
+    --pin-status-severe: #DC2626;
   }
 
   .dark {
@@ -150,35 +150,68 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  --bg-base: #F5F7FA;
+  --bg-base: #F7F8FA;
   --bg-surface: #FFFFFF;
   --bg-card: rgba(255, 255, 255, 0.92);
   --bg-elevated: #FFFFFF;
   --bg-hover: rgba(0, 0, 0, 0.03);
   --bg-input: #F0F2F5;
-  --border-default: rgba(0, 0, 0, 0.08);
+  --border-default: #E2E5EA;
   --border-subtle: rgba(0, 0, 0, 0.05);
-  --border-strong: rgba(0, 0, 0, 0.15);
-  --text-bright: #0F172A;
-  --text-primary: #334155;
-  --text-secondary: #64748B;
-  --text-dim: #94A3B8;
-  --accent-teal: #1A9A8E;
-  --accent-teal-glow: rgba(26, 154, 142, 0.08);
+  --border-strong: #C8CDD5;
+  --text-bright: #1A1A1A;
+  --text-primary: #4A4A4A;
+  --text-secondary: #888888;
+  --text-dim: #BBBBBB;
+  --accent-teal: #0B6E6E;
+  --accent-teal-glow: rgba(11, 110, 110, 0.08);
   --accent-copper: #A67A45;
   --accent-copper-glow: rgba(166, 122, 69, 0.08);
-  --status-healthy: #5E9A6F;
-  --status-healthy-bg: rgba(94, 154, 111, 0.07);
-  --status-warning: #A89055;
-  --status-warning-bg: rgba(168, 144, 85, 0.07);
-  --status-watch: #A89055;
-  --status-watch-bg: rgba(168, 144, 85, 0.07);
-  --status-impaired: #A89055;
-  --status-impaired-bg: rgba(168, 144, 85, 0.07);
-  --status-severe: #C53030;
-  --status-severe-bg: rgba(197, 48, 48, 0.07);
-  --shadow-card: 0 1px 2px rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.03), 0 4px 12px rgba(0,0,0,0.02);
-  --shadow-elevated: 0 2px 4px rgba(0,0,0,0.04), 0 8px 16px rgba(0,0,0,0.06), 0 16px 32px rgba(0,0,0,0.04);
+  --status-healthy: #16A34A;
+  --status-healthy-bg: rgba(22, 163, 74, 0.07);
+  --status-warning: #D97706;
+  --status-warning-bg: rgba(217, 119, 6, 0.07);
+  --status-watch: #D97706;
+  --status-watch-bg: rgba(217, 119, 6, 0.07);
+  --status-impaired: #D97706;
+  --status-impaired-bg: rgba(217, 119, 6, 0.07);
+  --status-severe: #DC2626;
+  --status-severe-bg: rgba(220, 38, 38, 0.07);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-elevated: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+
+  /* ── Primary palette ── */
+  --color-primary: #0B6E6E;
+  --color-primary-light: #E6F4F4;
+  --color-primary-dark: #084F4F;
+
+  /* ── Status tokens ── */
+  --status-critical: #DC2626;
+  --status-critical-bg: #FEF2F2;
+  --status-info: #2563EB;
+  --status-info-bg: #EFF6FF;
+  --status-success: #16A34A;
+  --status-success-bg: #F0FDF4;
+  --status-nominal: #6B7280;
+  --status-nominal-bg: #F3F4F6;
+  --shadow-modal: 0 20px 40px rgba(0,0,0,0.12);
+
+  /* ── Type scale ── */
+  --text-xs: 0.6875rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-md: 1.0625rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 1.875rem;
+  --text-3xl: 2.25rem;
+
+  /* ── Spacing scale ── */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px; --space-12: 48px;
+
+  /* ── Radius scale ── */
+  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px;
   --border-highlight: rgba(255,255,255,0.9);
   --pill-bg: #FFFFFF;
   --pill-bg-active: #1B2A4A;
@@ -226,16 +259,32 @@
   --accent-copper-glow: rgba(212, 165, 106, 0.12);
   --status-healthy: #6EAA7E;
   --status-healthy-bg: rgba(110, 170, 126, 0.08);
-  --status-warning: #C4B06A;
-  --status-warning-bg: rgba(196, 176, 106, 0.08);
-  --status-watch: #C4B06A;
-  --status-watch-bg: rgba(196, 176, 106, 0.08);
-  --status-impaired: #C4B06A;
-  --status-impaired-bg: rgba(196, 176, 106, 0.08);
-  --status-severe: #D45050;
-  --status-severe-bg: rgba(212, 80, 80, 0.08);
+  --status-warning: #FBBF24;
+  --status-warning-bg: rgba(251, 191, 36, 0.08);
+  --status-watch: #FBBF24;
+  --status-watch-bg: rgba(251, 191, 36, 0.08);
+  --status-impaired: #FBBF24;
+  --status-impaired-bg: rgba(251, 191, 36, 0.08);
+  --status-severe: #F87171;
+  --status-severe-bg: rgba(248, 113, 113, 0.08);
   --shadow-card: 0 1px 2px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.2), 0 0 1px rgba(255,255,255,0.04);
   --shadow-elevated: 0 2px 4px rgba(0,0,0,0.3), 0 8px 20px rgba(0,0,0,0.3), 0 16px 40px rgba(0,0,0,0.2);
+
+  /* ── Primary palette (dark) ── */
+  --color-primary: #3ABDB0;
+  --color-primary-light: rgba(58, 189, 176, 0.12);
+  --color-primary-dark: #2A9A8E;
+
+  /* ── Status tokens (dark) ── */
+  --status-critical: #F87171;
+  --status-critical-bg: rgba(248, 113, 113, 0.12);
+  --status-info: #60A5FA;
+  --status-info-bg: rgba(96, 165, 250, 0.12);
+  --status-success: #4ADE80;
+  --status-success-bg: rgba(74, 222, 128, 0.12);
+  --status-nominal: #9CA3AF;
+  --status-nominal-bg: rgba(156, 163, 175, 0.12);
+  --shadow-modal: 0 20px 40px rgba(0,0,0,0.4);
   --border-highlight: rgba(255,255,255,0.06);
   --pill-bg: rgba(22, 34, 62, 0.8);
   --pill-bg-active: #3ABDB0;
@@ -648,6 +697,26 @@ canvas, video, iframe, .no-theme-transition {
     padding: 12px 8px;
     background: var(--bg-surface);
     border: 1px solid var(--border-subtle);
+  }
+
+  /* ── PIN Table Utilities ── */
+  .pin-table-header {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+    border-bottom: 2px solid var(--border-default);
+  }
+
+  .pin-table-row {
+    font-size: var(--text-base);
+    color: var(--text-bright);
+    min-height: 48px;
+  }
+
+  .pin-table-zebra:nth-child(even) {
+    background: var(--bg-input);
   }
 }
 

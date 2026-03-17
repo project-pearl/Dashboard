@@ -359,10 +359,10 @@ export function DashboardSidebar() {
           className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
             active
               ? `${item.accentBg} ${item.accent} font-semibold border shadow-sm`
-              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              : 'text-pin-text-secondary hover:bg-pin-primary-light hover:text-pin-text-bright'
           }`}
         >
-          <Icon className={`w-4 h-4 flex-shrink-0 ${active ? item.accent : 'text-slate-400'}`} />
+          <Icon className={`w-4 h-4 flex-shrink-0 ${active ? item.accent : 'text-pin-text-dim'}`} />
           {!collapsed && <span className="truncate">{item.label}</span>}
         </Link>
       );
@@ -380,14 +380,14 @@ export function DashboardSidebar() {
             className={`flex items-center justify-center px-3 py-2 rounded-lg text-sm transition-all ${
               active
                 ? `${item.accentBg} ${item.accent} font-semibold border shadow-sm`
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                : 'text-pin-text-secondary hover:bg-pin-primary-light hover:text-pin-text-bright'
             }`}
           >
-            <Icon className={`w-4 h-4 flex-shrink-0 ${active ? item.accent : 'text-slate-400'}`} />
+            <Icon className={`w-4 h-4 flex-shrink-0 ${active ? item.accent : 'text-pin-text-dim'}`} />
           </Link>
           {/* Flyout popover on hover */}
-          <div className="hidden group-hover:block absolute left-full top-0 ml-2 z-50 min-w-[160px] bg-white dark:bg-[#0D1526] border border-slate-200 dark:border-[rgba(58,189,176,0.12)] rounded-lg shadow-lg py-1.5">
-            <div className="px-3 py-1.5 text-xs font-semibold text-slate-700 border-b border-slate-100">
+          <div className="hidden group-hover:block absolute left-full top-0 ml-2 z-50 min-w-[160px] bg-white dark:bg-[#0D1526] border border-pin-border-default rounded-lg shadow-lg py-1.5">
+            <div className="px-3 py-1.5 text-pin-xs font-semibold text-pin-text-primary border-b border-pin-border-default">
               {item.label}
             </div>
             {lenses.map((lens) => (
@@ -396,8 +396,8 @@ export function DashboardSidebar() {
                 onClick={() => navigateToLens(item.href, lens.id)}
                 className={`block w-full text-left px-3 py-1.5 text-xs transition-colors ${
                   isLensActive(item.href, lens.id)
-                    ? `${item.accent} font-semibold bg-slate-50`
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    ? `${item.accent} font-semibold bg-pin-primary-light`
+                    : 'text-pin-text-secondary hover:bg-pin-primary-light hover:text-pin-text-bright'
                 }`}
               >
                 {lens.label}
@@ -415,14 +415,14 @@ export function DashboardSidebar() {
         <div className={`flex items-center rounded-lg text-sm transition-all ${
           active
             ? `${item.accentBg} ${item.accent} font-semibold border shadow-sm`
-            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+            : 'text-pin-text-secondary hover:bg-pin-primary-light hover:text-pin-text-bright'
         }`}>
           <Link
             href={item.href}
             onClick={() => setMobileOpen(false)}
             className="flex items-center gap-3 px-3 py-2 flex-1 min-w-0"
           >
-            <Icon className={`w-4 h-4 flex-shrink-0 ${active ? item.accent : 'text-slate-400'}`} />
+            <Icon className={`w-4 h-4 flex-shrink-0 ${active ? item.accent : 'text-pin-text-dim'}`} />
             <span className="truncate">{item.label}</span>
           </Link>
           <button
@@ -436,7 +436,7 @@ export function DashboardSidebar() {
         {/* Sub-items */}
         {isExpanded && (
           <div
-            className="ml-4 pl-3 border-l border-slate-200 mt-0.5 space-y-0.5"
+            className="ml-4 pl-3 border-l border-pin-border-default mt-0.5 space-y-0.5"
             role="group"
             aria-label={`${item.label} lenses`}
             onKeyDown={(e) => {
@@ -457,8 +457,8 @@ export function DashboardSidebar() {
                   aria-current={lensActive ? 'page' : undefined}
                   className={`block w-full text-left px-3 py-1.5 rounded-md text-xs transition-all min-h-[44px] flex items-center ${
                     lensActive
-                      ? `${item.accent} font-semibold bg-slate-50`
-                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                      ? `${item.accent} font-semibold bg-pin-primary-light`
+                      : 'text-pin-text-secondary hover:bg-pin-primary-light hover:text-pin-text-primary'
                   }`}
                 >
                   {lens.label}
@@ -475,10 +475,10 @@ export function DashboardSidebar() {
     <aside
       role="navigation"
       aria-label="Main navigation"
-      className={`flex flex-col h-full bg-white dark:bg-[#0D1526] border-r border-slate-200 dark:border-[rgba(58,189,176,0.12)] transition-all duration-300 ${collapsed ? 'w-16' : 'w-64'}`}
+      className={`flex flex-col h-full bg-white dark:bg-[#0D1526] border-r border-pin-border-default transition-all duration-300 ${collapsed ? 'w-16' : 'w-64'}`}
     >
       {/* Logo */}
-      <div className="p-4 flex items-center justify-center border-b border-slate-200 dark:border-[rgba(58,189,176,0.12)]">
+      <div className="p-4 flex items-center justify-center border-b border-pin-border-default">
         {collapsed ? (
           <Image src="/Pearl-Logo-alt.png" alt="PIN" width={32} height={32} className="rounded-lg flex-shrink-0" />
         ) : (
@@ -490,8 +490,8 @@ export function DashboardSidebar() {
       <div className="px-2 pt-3">
         <Link
           href="/"
-          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-slate-100 ${
-            pathname === '/' ? 'bg-slate-100 text-slate-900 font-semibold' : 'text-slate-500'
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-pin-sm font-medium transition-colors hover:bg-pin-primary-light ${
+            pathname === '/' ? 'bg-pin-primary-light text-pin-text-bright font-semibold' : 'text-pin-text-secondary'
           }`}
         >
           <Home className="w-4 h-4 flex-shrink-0" />
@@ -502,7 +502,7 @@ export function DashboardSidebar() {
       {/* Pending navigation indicator */}
       {isPending && (
         <div className="mx-3 mb-1">
-          <div className="h-0.5 bg-slate-200 rounded-full overflow-hidden">
+          <div className="h-0.5 bg-pin-border-default rounded-full overflow-hidden">
             <div className="h-full bg-blue-500 rounded-full animate-pulse" style={{ width: '60%' }} />
           </div>
         </div>
@@ -526,13 +526,13 @@ export function DashboardSidebar() {
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all w-full text-left min-h-[44px] ${
                     lensActive
                       ? `${singleRoleItem.accentBg} ${singleRoleItem.accent} font-semibold border shadow-sm`
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                      : 'text-pin-text-secondary hover:bg-pin-primary-light hover:text-pin-text-bright'
                   }`}
                 >
                   <LazyIcon
                     name={iconName}
                     role="federal"
-                    className={`w-4 h-4 flex-shrink-0 ${lensActive ? singleRoleItem.accent : 'text-slate-400'}`}
+                    className={`w-4 h-4 flex-shrink-0 ${lensActive ? singleRoleItem.accent : 'text-pin-text-dim'}`}
                   />
                   {!collapsed && <span className="truncate">{lens.label}</span>}
                 </button>
@@ -544,7 +544,7 @@ export function DashboardSidebar() {
           filteredGroups.map((group) => (
             <div key={group.title}>
               {!collapsed && (
-                <div className="px-3 mb-1.5 text-2xs font-bold uppercase tracking-wider text-slate-400">
+                <div className="px-3 mb-1.5 text-pin-xs font-semibold uppercase tracking-[0.06em] text-pin-text-dim">
                   {group.title}
                 </div>
               )}
@@ -558,11 +558,11 @@ export function DashboardSidebar() {
 
       {/* Admin section — Pearl / admin users only */}
       {user && (user.role === 'Pearl' || user.isAdmin) && (
-        <div className="border-t border-slate-200 dark:border-[rgba(58,189,176,0.12)] px-2 py-3 space-y-0.5">
+        <div className="border-t border-pin-border-default px-2 py-3 space-y-0.5">
           {!collapsed ? (
             <div className="px-3 mb-1.5 space-y-1">
-              <div className="text-2xs font-bold uppercase tracking-wider text-slate-400">Admin</div>
-              <label htmlFor="admin-state-selector" className="text-2xs font-medium text-slate-500">Viewing as</label>
+              <div className="text-pin-xs font-semibold uppercase tracking-[0.06em] text-pin-text-dim">Admin</div>
+              <label htmlFor="admin-state-selector" className="text-pin-xs font-medium text-pin-text-secondary">Viewing as</label>
               <select
                 id="admin-state-selector"
                 value={adminState}
@@ -574,7 +574,7 @@ export function DashboardSidebar() {
                   }
                 }}
                 aria-label="Select state to view as administrator"
-                className="w-full text-xs px-2 py-1.5 rounded-md border border-slate-200 dark:border-[rgba(58,189,176,0.15)] bg-white dark:bg-[#0D1526] text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-purple-400"
+                className="w-full text-pin-xs px-2 py-1.5 rounded-pin-md border border-pin-border-default bg-white dark:bg-[#0D1526] text-pin-text-primary focus:outline-none focus:ring-1 focus:ring-pin-primary"
               >
                 {Object.entries(STATE_ABBR_TO_NAME).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
                   <option key={abbr} value={abbr}>{abbr} — {name}</option>
@@ -594,10 +594,10 @@ export function DashboardSidebar() {
             className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
               pathname === '/dashboard/breakpoint'
                 ? 'bg-orange-50 border-orange-200 text-orange-700 font-semibold border shadow-sm'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                : 'text-pin-text-secondary hover:bg-pin-primary-light hover:text-pin-text-bright'
             }`}
           >
-            <Zap className={`w-4 h-4 flex-shrink-0 ${pathname === '/dashboard/breakpoint' ? 'text-orange-700' : 'text-slate-400'}`} />
+            <Zap className={`w-4 h-4 flex-shrink-0 ${pathname === '/dashboard/breakpoint' ? 'text-orange-700' : 'text-pin-text-dim'}`} />
             {!collapsed && <span className="truncate">Breakpoint</span>}
           </Link>
           <Link
@@ -607,17 +607,17 @@ export function DashboardSidebar() {
             className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
               pathname.startsWith('/dashboard/outreach')
                 ? 'bg-blue-50 border-blue-200 text-blue-700 font-semibold border shadow-sm dark:bg-blue-950 dark:border-blue-800 dark:text-blue-300'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
+                : 'text-pin-text-secondary hover:bg-pin-primary-light hover:text-pin-text-bright'
             }`}
           >
-            <Mail className={`w-4 h-4 flex-shrink-0 ${pathname.startsWith('/dashboard/outreach') ? 'text-blue-700 dark:text-blue-300' : 'text-slate-400'}`} />
+            <Mail className={`w-4 h-4 flex-shrink-0 ${pathname.startsWith('/dashboard/outreach') ? 'text-blue-700 dark:text-blue-300' : 'text-pin-text-dim'}`} />
             {!collapsed && <span className="truncate">Outreach</span>}
           </Link>
         </div>
       )}
 
       {/* Bottom section */}
-      <div className="border-t border-slate-200 dark:border-[rgba(58,189,176,0.12)] p-3 space-y-2">
+      <div className="border-t border-pin-border-default p-3 space-y-2">
         <Link
           href="/dashboard/data-provenance"
           onClick={() => setMobileOpen(false)}
@@ -625,7 +625,7 @@ export function DashboardSidebar() {
           className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
             pathname === '/dashboard/data-provenance'
               ? 'bg-cyan-50 border-cyan-200 text-cyan-700 font-semibold border shadow-sm'
-              : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+              : 'text-pin-text-secondary hover:bg-pin-primary-light hover:text-pin-text-primary'
           }`}
         >
           <FileCheck className={`w-4 h-4 flex-shrink-0 ${pathname === '/dashboard/data-provenance' ? 'text-cyan-700' : ''}`} />
@@ -633,7 +633,7 @@ export function DashboardSidebar() {
         </Link>
         <Link
           href="/account"
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-pin-sm font-medium text-pin-text-secondary hover:bg-pin-primary-light hover:text-pin-text-primary transition-colors"
         >
           <Settings className="w-4 h-4 flex-shrink-0" />
           {!collapsed && <span>Settings</span>}
@@ -649,7 +649,7 @@ export function DashboardSidebar() {
         <button
           onClick={() => setCollapsed(!collapsed)}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="hidden lg:flex items-center justify-center w-full py-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+          className="hidden lg:flex items-center justify-center w-full py-1.5 rounded-lg text-pin-text-dim hover:bg-pin-primary-light hover:text-pin-text-secondary transition-colors"
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
@@ -663,9 +663,9 @@ export function DashboardSidebar() {
       <button
         onClick={() => setMobileOpen(true)}
         aria-label="Open navigation menu"
-        className="lg:hidden fixed top-3 left-3 z-50 p-2 rounded-lg bg-white dark:bg-[#0D1526] shadow-md border border-slate-200 dark:border-[rgba(58,189,176,0.12)] min-w-[44px] min-h-[44px] flex items-center justify-center"
+        className="lg:hidden fixed top-3 left-3 z-50 p-2 rounded-lg bg-white dark:bg-[#0D1526] shadow-md border border-pin-border-default min-w-[44px] min-h-[44px] flex items-center justify-center"
       >
-        <Menu className="w-5 h-5 text-slate-700" />
+        <Menu className="w-5 h-5 text-pin-text-primary" />
       </button>
 
       {/* Mobile overlay */}
@@ -680,7 +680,7 @@ export function DashboardSidebar() {
             <button
               onClick={() => setMobileOpen(false)}
               aria-label="Close navigation menu"
-              className="absolute top-4 right-4 z-20 p-2 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="absolute top-4 right-4 z-20 p-2 rounded-full bg-pin-primary-light text-pin-text-secondary hover:bg-pin-border-default min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
               <X className="w-4 h-4" />
             </button>

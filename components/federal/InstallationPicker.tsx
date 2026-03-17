@@ -67,21 +67,13 @@ export default function InstallationPicker({ selected, onSelect, conusOnly = tru
   }, [conusOnly, installations]);
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <Building2 size={16} style={{ color: 'var(--text-secondary)' }} />
-      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>Installation:</span>
+    <div className="flex items-center gap-2">
+      <Building2 size={16} className="text-pin-text-secondary" />
+      <span className="text-pin-sm font-semibold text-pin-text-secondary">Installation:</span>
       <select
         value={selected ?? ''}
         onChange={e => onSelect(e.target.value)}
-        style={{
-          padding: '6px 10px',
-          borderRadius: 6,
-          border: '1px solid var(--border-default)',
-          background: 'var(--bg-primary)',
-          fontSize: 13,
-          minWidth: 220,
-          cursor: 'pointer',
-        }}
+        className="px-2.5 py-1.5 rounded-pin-md border border-pin-border-default bg-pin-bg-surface text-pin-sm min-w-[220px] cursor-pointer"
       >
         <option value="">Select an installation...</option>
         {grouped.map(([region, instList]) => (

@@ -18,27 +18,18 @@ import {
   X,
   Check,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+  FUSION_LEVEL_COLORS,
+  FPCON_COLORS,
+  STATUS_CRITICAL,
+  STATUS_SUCCESS,
+} from '@/lib/design-tokens';
 import InstallationPicker from './InstallationPicker';
 import { useThreatFusion } from '@/hooks/useThreatFusion';
 import type { DomainScore, FusionLevel, ThreatFusionResponse } from '@/lib/threatFusion';
 
 /* ── Constants ── */
-
-const LEVEL_COLOR: Record<FusionLevel, string> = {
-  low: '#388E3C',
-  moderate: '#1565C0',
-  elevated: '#F9A825',
-  high: '#F57C00',
-  critical: '#D32F2F',
-};
-
-const FPCON_COLOR: Record<string, string> = {
-  NORMAL: '#388E3C',
-  ALPHA: '#1565C0',
-  BRAVO: '#F9A825',
-  CHARLIE: '#F57C00',
-  DELTA: '#D32F2F',
-};
 
 const DOMAIN_ICON: Record<string, React.ReactNode> = {
   CBRN: <Shield size={14} />,
@@ -52,23 +43,23 @@ const DOMAIN_ICON: Record<string, React.ReactNode> = {
 /* ── Gauge ── */
 
 function CompositeGauge({ score, level }: { score: number; level: FusionLevel }) {
-  const color = LEVEL_COLOR[level];
+  const color = FUSION_LEVEL_COLORS[level];
   // Color zones: green(0-20), blue(21-40), yellow(41-60), orange(61-80), red(81-100)
   const zones = [
-    { start: 0, end: 20, color: '#388E3C' },
-    { start: 20, end: 40, color: '#1565C0' },
-    { start: 40, end: 60, color: '#F9A825' },
-    { start: 60, end: 80, color: '#F57C00' },
-    { start: 80, end: 100, color: '#D32F2F' },
+    { start: 0, end: 20, color: FUSION_LEVEL_COLORS.low },
+    { start: 20, end: 40, color: FUSION_LEVEL_COLORS.moderate },
+    { start: 40, end: 60, color: FUSION_LEVEL_COLORS.elevated },
+    { start: 60, end: 80, color: FUSION_LEVEL_COLORS.high },
+    { start: 80, end: 100, color: FUSION_LEVEL_COLORS.critical },
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <span style={{ fontSize: 24, fontWeight: 700, color }}>{score}</span>
-        <span style={{ fontSize: 14, fontWeight: 600, color, textTransform: 'uppercase' }}>{level}</span>
+    <div className="flex flex-col gap-1">
+      <div className="flex justify-between items-baseline">
+        <span className="text-pin-xl font-bold" style={{ color }}>{score}</span>
+        <span className="text-pin-sm font-semibold uppercase" style={{ color }}>{level}</span>
       </div>
-      <div style={{ position: 'relative', height: 12, borderRadius: 6, overflow: 'hidden', display: 'flex' }}>
+      <div className="relative h-3 rounded-md overflow-hidden flex">
         {zones.map(z => (
           <div
             key={z.start}
@@ -80,19 +71,16 @@ function CompositeGauge({ score, level }: { score: number; level: FusionLevel })
           />
         ))}
         {/* Indicator needle */}
-        <div style={{
-          position: 'absolute',
-          left: `${score}%`,
-          top: 0,
-          bottom: 0,
-          width: 3,
-          background: color,
-          borderRadius: 2,
-          transform: 'translateX(-50%)',
-          boxShadow: `0 0 4px ${color}80`,
-        }} />
+        <div
+          className="absolute top-0 bottom-0 w-[3px] rounded-sm -translate-x-1/2"
+          style={{
+            left: `${score}%`,
+            background: color,
+            boxShadow: `0 0 4px ${color}80`,
+          }}
+        />
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text-secondary)' }}>
+      <div className="flex justify-between text-[10px] text-pin-text-secondary">
         <span>LOW</span><span>MOD</span><span>ELEV</span><span>HIGH</span><span>CRIT</span>
       </div>
     </div>
@@ -103,26 +91,36 @@ function CompositeGauge({ score, level }: { score: number; level: FusionLevel })
 
 function DomainBar({ domain }: { domain: DomainScore }) {
   const [expanded, setExpanded] = useState(false);
-  const barColor = domain.score >= 60 ? '#D32F2F' : domain.score >= 40 ? '#F57C00' : domain.score >= 20 ? '#F9A825' : '#388E3C';
+  const barColor =
+    domain.score >= 60
+      ? FUSION_LEVEL_COLORS.critical
+      : domain.score >= 40
+        ? FUSION_LEVEL_COLORS.high
+        : domain.score >= 20
+          ? FUSION_LEVEL_COLORS.elevated
+          : FUSION_LEVEL_COLORS.low;
 
   return (
-    <div style={{ marginBottom: 4 }}>
+    <div className="mb-1">
       <button
         onClick={() => setExpanded(!expanded)}
-        style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', border: 'none', background: 'none', cursor: 'pointer', padding: '4px 0', fontSize: 13 }}
+        className="flex items-center gap-2 w-full border-none bg-transparent cursor-pointer py-1 text-pin-sm"
       >
         {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 100 }}>
+        <span className="flex items-center gap-1 min-w-[100px]">
           {DOMAIN_ICON[domain.domain]}
           {domain.domain}
         </span>
-        <div style={{ flex: 1, height: 8, background: '#e0e0e0', borderRadius: 4, overflow: 'hidden' }}>
-          <div style={{ width: `${domain.score}%`, height: '100%', background: barColor, borderRadius: 4, transition: 'width 0.3s' }} />
+        <div className="flex-1 h-2 bg-gray-300 rounded-pin-sm overflow-hidden">
+          <div
+            className="h-full rounded-pin-sm transition-[width] duration-300"
+            style={{ width: `${domain.score}%`, background: barColor }}
+          />
         </div>
-        <span style={{ minWidth: 30, textAlign: 'right', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{domain.score}</span>
+        <span className="min-w-[30px] text-right font-semibold tabular-nums">{domain.score}</span>
       </button>
       {expanded && (
-        <div style={{ paddingLeft: 28, fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>
+        <div className="pl-7 text-pin-xs text-pin-text-secondary mb-1">
           {domain.detail} (weight: {(domain.weight * 100).toFixed(0)}%)
         </div>
       )}
@@ -133,13 +131,16 @@ function DomainBar({ domain }: { domain: DomainScore }) {
 /* ── FPCON Badge ── */
 
 function FpconBadge({ fpcon }: { fpcon: string }) {
-  const color = FPCON_COLOR[fpcon] ?? '#9E9E9E';
+  const color = FPCON_COLORS[fpcon as keyof typeof FPCON_COLORS] ?? '#9E9E9E';
   return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: 4,
-      background: `${color}18`, color, border: `1px solid ${color}40`,
-      padding: '2px 10px', borderRadius: 4, fontSize: 12, fontWeight: 600,
-    }}>
+    <span
+      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-pin-sm text-pin-xs font-semibold"
+      style={{
+        background: `${color}18`,
+        color,
+        border: `1px solid ${color}40`,
+      }}
+    >
       FPCON {fpcon}
     </span>
   );
@@ -149,14 +150,11 @@ function FpconBadge({ fpcon }: { fpcon: string }) {
 
 function AlertBadge({ alert, onDismiss }: { alert: { domain: string; message: string }; onDismiss: () => void }) {
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px',
-      background: '#FFF3E0', border: '1px solid #FFB74D', borderRadius: 4, fontSize: 12,
-    }}>
-      <AlertTriangle size={13} style={{ color: '#F57C00', flexShrink: 0 }} />
-      <span style={{ flex: 1 }}><strong>{alert.domain}:</strong> {alert.message}</span>
-      <button onClick={onDismiss} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0 }}>
-        <X size={12} style={{ color: '#9E9E9E' }} />
+    <div className="flex items-center gap-2 px-2.5 py-1.5 bg-amber-50 border border-amber-300 rounded-pin-sm text-pin-xs">
+      <AlertTriangle size={13} className="text-amber-600 shrink-0" />
+      <span className="flex-1"><strong>{alert.domain}:</strong> {alert.message}</span>
+      <button onClick={onDismiss} className="border-none bg-transparent cursor-pointer p-0">
+        <X size={12} className="text-gray-400" />
       </button>
     </div>
   );
@@ -179,17 +177,17 @@ export default function ThreatFusionCard() {
   const visibleAlerts = (data?.alerts ?? []).filter((_, i) => !dismissedAlerts.has(String(i)));
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="flex flex-col gap-4">
       <InstallationPicker selected={selectedId} onSelect={setSelectedId} />
 
       {error && (
-        <div style={{ padding: 12, color: '#D32F2F', fontSize: 13 }}>
-          <AlertTriangle size={14} style={{ marginRight: 6 }} />{error}
+        <div className="p-3 text-pin-critical text-pin-sm">
+          <AlertTriangle size={14} className="mr-1.5 inline-block" />{error}
         </div>
       )}
 
       {isLoading && (
-        <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-secondary)' }}>Loading threat fusion...</div>
+        <div className="p-6 text-center text-pin-text-secondary">Loading threat fusion...</div>
       )}
 
       {data && (
@@ -198,36 +196,36 @@ export default function ThreatFusionCard() {
           <CompositeGauge score={data.compositeScore} level={data.level} />
 
           {/* FPCON + state info */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div className="flex items-center gap-3 flex-wrap">
             <FpconBadge fpcon={data.fpcon} />
-            <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{data.installationName}, {data.state}</span>
+            <span className="text-pin-xs text-pin-text-secondary">{data.installationName}, {data.state}</span>
           </div>
 
           {/* Domain breakdown */}
           <div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>DOMAIN BREAKDOWN</div>
+            <div className="text-pin-xs font-semibold text-pin-text-secondary mb-1.5">DOMAIN BREAKDOWN</div>
             {data.domains
               .sort((a, b) => b.weightedScore - a.weightedScore)
               .map(d => <DomainBar key={d.domain} domain={d} />)}
           </div>
 
           {/* Narrative */}
-          <div style={{
-            padding: '10px 14px', background: 'var(--bg-secondary)', borderRadius: 6,
-            fontSize: 13, lineHeight: 1.5, borderLeft: `3px solid ${LEVEL_COLOR[data.level]}`,
-          }}>
+          <div
+            className="px-3.5 py-2.5 bg-[var(--bg-secondary)] rounded-pin-md text-pin-sm leading-relaxed"
+            style={{ borderLeft: `3px solid ${FUSION_LEVEL_COLORS[data.level]}` }}
+          >
             {data.narrative}
           </div>
 
           {/* Protective actions */}
           {data.protectiveActions && (
             <div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>PROTECTIVE ACTIONS</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div className="text-pin-xs font-semibold text-pin-text-secondary mb-1.5">PROTECTIVE ACTIONS</div>
+              <div className="flex flex-col gap-1 text-pin-xs">
+                <div className="flex items-center gap-1.5">
                   {data.protectiveActions.shelterInPlace
-                    ? <AlertTriangle size={12} style={{ color: '#D32F2F' }} />
-                    : <Check size={12} style={{ color: '#388E3C' }} />}
+                    ? <AlertTriangle size={12} className="text-pin-critical" />
+                    : <Check size={12} className="text-pin-success" />}
                   Shelter in Place: {data.protectiveActions.shelterInPlace ? 'ACTIVE' : 'Not required'}
                 </div>
                 <div>Respiratory: <strong>{data.protectiveActions.respiratoryProtection}</strong></div>
@@ -235,7 +233,7 @@ export default function ThreatFusionCard() {
                   <div>Evacuation zones: {data.protectiveActions.evacuationZones.join(', ')}</div>
                 )}
                 {data.protectiveActions.recommendedFPCON !== data.protectiveActions.currentFPCON && (
-                  <div style={{ color: '#F57C00', fontWeight: 600 }}>
+                  <div className="text-pin-warning font-semibold">
                     Recommended FPCON: {data.protectiveActions.recommendedFPCON.toUpperCase()}
                   </div>
                 )}
@@ -246,8 +244,8 @@ export default function ThreatFusionCard() {
           {/* Alerts */}
           {visibleAlerts.length > 0 && (
             <div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>ACTIVE ALERTS</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div className="text-pin-xs font-semibold text-pin-text-secondary mb-1.5">ACTIVE ALERTS</div>
+              <div className="flex flex-col gap-1">
                 {data.alerts.map((a, i) => (
                   !dismissedAlerts.has(String(i)) && (
                     <AlertBadge
@@ -264,7 +262,7 @@ export default function ThreatFusionCard() {
       )}
 
       {!selectedId && !isLoading && (
-        <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-secondary)', fontSize: 13 }}>
+        <div className="p-6 text-center text-pin-text-secondary text-pin-sm">
           Select an installation above to view cross-domain threat fusion analysis.
         </div>
       )}

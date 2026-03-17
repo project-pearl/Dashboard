@@ -14,6 +14,14 @@ import {
   Zap,
   Activity,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+  LEVEL_COLORS,
+  STATUS_CRITICAL,
+  STATUS_SUCCESS,
+  STATUS_WARNING,
+  STATUS_NOMINAL,
+} from '@/lib/design-tokens';
 import { useEscalationIndicators } from '@/hooks/useEscalationIndicators';
 import type { EscalationIndicators, ScoreLevel } from '@/lib/sentinel/types';
 
@@ -24,18 +32,18 @@ interface EscalationSummaryProps {
 /* ── Constants ── */
 
 const LEVEL_COLOR: Record<ScoreLevel, string> = {
-  ANOMALY: '#7B1FA2',
-  CRITICAL: '#D32F2F',
-  WATCH: '#F9A825',
-  ADVISORY: '#9E9E9E',
-  NOMINAL: '#4CAF50',
+  ANOMALY: LEVEL_COLORS.ANOMALY,
+  CRITICAL: LEVEL_COLORS.CRITICAL,
+  WATCH: LEVEL_COLORS.WATCH,
+  ADVISORY: LEVEL_COLORS.ADVISORY,
+  NOMINAL: LEVEL_COLORS.NOMINAL,
 };
 
 const CLASS_STYLE: Record<EscalationIndicators['escalationClass'], { color: string; label: string }> = {
-  rapid: { color: '#D32F2F', label: 'RAPID' },
-  steady: { color: '#F9A825', label: 'STEADY' },
-  plateaued: { color: '#9E9E9E', label: 'PLATEAU' },
-  deescalating: { color: '#388E3C', label: 'DE-ESC' },
+  rapid: { color: STATUS_CRITICAL, label: 'RAPID' },
+  steady: { color: STATUS_WARNING, label: 'STEADY' },
+  plateaued: { color: STATUS_NOMINAL, label: 'PLATEAU' },
+  deescalating: { color: STATUS_SUCCESS, label: 'DE-ESC' },
 };
 
 /* ── Inline Sparkline ── */
@@ -59,7 +67,7 @@ function Sparkline({ points, color }: { points: { hoursAgo: number; score: numbe
     .join(' ');
 
   return (
-    <svg width={w} height={h} style={{ display: 'block' }}>
+    <svg width={w} height={h} className="block">
       <path d={d} fill="none" stroke={color} strokeWidth={1.5} strokeLinejoin="round" />
       {/* Dot on current value */}
       {sorted.length > 0 && (() => {
@@ -75,9 +83,9 @@ function Sparkline({ points, color }: { points: { hoursAgo: number; score: numbe
 /* ── Velocity Arrow ── */
 
 function VelocityArrow({ velocity }: { velocity: number }) {
-  if (velocity > 2) return <TrendingUp size={14} style={{ color: '#D32F2F' }} />;
-  if (velocity < -2) return <TrendingDown size={14} style={{ color: '#388E3C' }} />;
-  return <Minus size={14} style={{ color: '#9E9E9E' }} />;
+  if (velocity > 2) return <TrendingUp size={14} className="text-pin-critical" />;
+  if (velocity < -2) return <TrendingDown size={14} className="text-pin-success" />;
+  return <Minus size={14} className="text-pin-nominal" />;
 }
 
 /* ── Table Row ── */
@@ -93,75 +101,91 @@ function EscalationRow({
 }) {
   const cls = CLASS_STYLE[ind.escalationClass];
   const highlight = rank < 5 && (ind.escalationClass === 'rapid' || ind.escalationClass === 'steady');
-  const borderColor = highlight ? (ind.escalationClass === 'rapid' ? '#D32F2F' : '#F9A825') : 'transparent';
+  const borderColor = highlight
+    ? (ind.escalationClass === 'rapid' ? STATUS_CRITICAL : STATUS_WARNING)
+    : 'transparent';
 
   return (
     <tr style={{ borderLeft: `3px solid ${borderColor}` }}>
-      <td style={{ padding: '6px 8px', fontWeight: 600 }}>
+      <td className="px-2 py-1.5 font-semibold">
         {hucName}
-        <span style={{ color: 'var(--text-secondary)', fontSize: 11, marginLeft: 6 }}>{ind.stateAbbr}</span>
+        <span className="text-pin-text-secondary text-pin-xs ml-1.5">{ind.stateAbbr}</span>
       </td>
-      <td style={{ padding: '6px 8px', textAlign: 'center' }}>
-        <span style={{
-          background: `${LEVEL_COLOR[ind.level]}20`,
-          color: LEVEL_COLOR[ind.level],
-          padding: '1px 8px',
-          borderRadius: 4,
-          fontSize: 11,
-          fontWeight: 600,
-        }}>
+      <td className="px-2 py-1.5 text-center">
+        <span
+          className="px-2 py-px rounded-pin-sm text-pin-xs font-semibold"
+          style={{
+            background: `${LEVEL_COLOR[ind.level]}20`,
+            color: LEVEL_COLOR[ind.level],
+          }}
+        >
           {ind.level}
         </span>
       </td>
-      <td style={{ padding: '6px 8px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+      <td className="px-2 py-1.5 text-right tabular-nums">
         {ind.score.toFixed(0)}
       </td>
-      <td style={{ padding: '6px 8px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+      <td className="px-2 py-1.5 text-center">
+        <div className="flex items-center justify-center gap-1">
           <VelocityArrow velocity={ind.velocity} />
-          <span style={{
-            fontVariantNumeric: 'tabular-nums',
-            fontSize: 12,
-            color: ind.velocity > 2 ? '#D32F2F' : ind.velocity < -2 ? '#388E3C' : 'var(--text-secondary)',
-          }}>
+          <span
+            className={cn(
+              'tabular-nums text-pin-xs',
+              ind.velocity > 2
+                ? 'text-pin-critical'
+                : ind.velocity < -2
+                  ? 'text-pin-success'
+                  : 'text-pin-text-secondary'
+            )}
+          >
             {ind.velocity > 0 ? '+' : ''}{ind.velocity.toFixed(1)}/hr
           </span>
         </div>
       </td>
-      <td style={{ padding: '6px 4px' }}>
+      <td className="px-1 py-1.5">
         <Sparkline points={ind.trajectory} color={LEVEL_COLOR[ind.level]} />
       </td>
-      <td style={{ padding: '6px 8px', textAlign: 'center', fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>
+      <td className="px-2 py-1.5 text-center text-pin-xs tabular-nums">
         {ind.estimatedHoursToNext != null ? (
-          <span style={{ color: ind.estimatedHoursToNext < 3 ? '#D32F2F' : 'var(--text-secondary)' }}>
+          <span
+            className={cn(
+              ind.estimatedHoursToNext < 3 ? 'text-pin-critical' : 'text-pin-text-secondary'
+            )}
+          >
             ~{ind.estimatedHoursToNext.toFixed(1)}h
           </span>
         ) : (
-          <span style={{ color: 'var(--text-secondary)' }}>—</span>
+          <span className="text-pin-text-secondary">&mdash;</span>
         )}
       </td>
-      <td style={{ padding: '6px 8px' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+      <td className="px-2 py-1.5">
+        <div className="flex flex-wrap gap-0.5">
           {ind.patternEmergence.newPatterns.map(p => (
-            <span key={p} style={{ background: '#E3F2FD', color: '#1565C0', fontSize: 10, padding: '0 4px', borderRadius: 3 }}>
+            <span
+              key={p}
+              className="bg-pin-info-bg text-pin-info text-2xs px-1 rounded-pin-sm"
+            >
               {p}
             </span>
           ))}
           {ind.patternEmergence.newPatterns.length === 0 && ind.patternEmergence.totalActive > 0 && (
-            <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{ind.patternEmergence.totalActive} active</span>
+            <span className="text-pin-xs text-pin-text-secondary">
+              {ind.patternEmergence.totalActive} active
+            </span>
           )}
         </div>
       </td>
-      <td style={{ padding: '6px 8px', textAlign: 'center' }}>
-        <span style={{
-          background: `${cls.color}18`,
-          color: cls.color,
-          padding: '1px 6px',
-          borderRadius: 3,
-          fontSize: 10,
-          fontWeight: 600,
-          ...(ind.escalationClass === 'rapid' ? { animation: 'pulse 1.5s infinite' } : {}),
-        }}>
+      <td className="px-2 py-1.5 text-center">
+        <span
+          className={cn(
+            'px-1.5 py-px rounded-pin-sm text-2xs font-semibold',
+            ind.escalationClass === 'rapid' && 'sentinel-pulse'
+          )}
+          style={{
+            background: `${cls.color}18`,
+            color: cls.color,
+          }}
+        >
           {cls.label}
         </span>
       </td>
@@ -176,21 +200,25 @@ export default function EscalationSummary({ hucNames }: EscalationSummaryProps) 
 
   if (error && indicators.length === 0) {
     return (
-      <div style={{ padding: 16, color: 'var(--text-secondary)' }}>
-        <AlertTriangle size={16} style={{ marginRight: 6 }} />
+      <div className="p-4 text-pin-text-secondary">
+        <AlertTriangle size={16} className="inline mr-1.5" />
         Escalation data unavailable: {error}
       </div>
     );
   }
 
   if (isLoading && indicators.length === 0) {
-    return <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-secondary)' }}>Loading escalation indicators...</div>;
+    return (
+      <div className="p-6 text-center text-pin-text-secondary">
+        Loading escalation indicators...
+      </div>
+    );
   }
 
   if (indicators.length === 0) {
     return (
-      <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-secondary)' }}>
-        <Activity size={20} style={{ marginBottom: 8 }} /><br />
+      <div className="p-6 text-center text-pin-text-secondary">
+        <Activity size={20} className="inline mb-2" /><br />
         No active escalation indicators. All HUCs at NOMINAL.
       </div>
     );
@@ -200,31 +228,35 @@ export default function EscalationSummary({ hucNames }: EscalationSummaryProps) 
   const urgentCount = indicators.filter(i => i.estimatedHoursToNext != null && i.estimatedHoursToNext < 3).length;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div className="flex flex-col gap-2.5">
       {/* Summary strip */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, fontSize: 12, color: 'var(--text-secondary)' }}>
-        <span><Activity size={12} style={{ marginRight: 3 }} /><strong>{indicators.length}</strong> active HUCs</span>
+      <div className="flex flex-wrap gap-3 text-pin-xs text-pin-text-secondary">
+        <span><Activity size={12} className="inline mr-0.5" /><strong>{indicators.length}</strong> active HUCs</span>
         {rapidCount > 0 && (
-          <span style={{ color: '#D32F2F' }}><Zap size={12} style={{ marginRight: 2 }} /><strong>{rapidCount}</strong> rapid</span>
+          <span className="text-pin-critical">
+            <Zap size={12} className="inline mr-0.5" /><strong>{rapidCount}</strong> rapid
+          </span>
         )}
         {urgentCount > 0 && (
-          <span style={{ color: '#D32F2F' }}><Clock size={12} style={{ marginRight: 2 }} /><strong>{urgentCount}</strong> {'<'}3h to next level</span>
+          <span className="text-pin-critical">
+            <Clock size={12} className="inline mr-0.5" /><strong>{urgentCount}</strong> {'<'}3h to next level
+          </span>
         )}
       </div>
 
       {/* Table */}
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-pin-sm">
           <thead>
-            <tr style={{ borderBottom: '1px solid var(--border-default)' }}>
-              <th style={{ padding: '6px 8px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>HUC</th>
-              <th style={{ padding: '6px 8px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>Level</th>
-              <th style={{ padding: '6px 8px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>Score</th>
-              <th style={{ padding: '6px 8px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>Velocity</th>
-              <th style={{ padding: '6px 4px', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>Trend</th>
-              <th style={{ padding: '6px 8px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>Next Level</th>
-              <th style={{ padding: '6px 8px', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>Patterns</th>
-              <th style={{ padding: '6px 8px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>Class</th>
+            <tr className="pin-table-header">
+              <th className="px-2 py-1.5 text-left">HUC</th>
+              <th className="px-2 py-1.5 text-center">Level</th>
+              <th className="px-2 py-1.5 text-right">Score</th>
+              <th className="px-2 py-1.5 text-center">Velocity</th>
+              <th className="px-1 py-1.5 text-left">Trend</th>
+              <th className="px-2 py-1.5 text-center">Next Level</th>
+              <th className="px-2 py-1.5 text-left">Patterns</th>
+              <th className="px-2 py-1.5 text-center">Class</th>
             </tr>
           </thead>
           <tbody>
@@ -239,14 +271,6 @@ export default function EscalationSummary({ hucNames }: EscalationSummaryProps) 
           </tbody>
         </table>
       </div>
-
-      {/* Pulse animation style */}
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-      `}</style>
     </div>
   );
 }

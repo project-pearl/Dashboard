@@ -13,7 +13,7 @@ const Card = React.forwardRef<
       role={interactive ? "button" : undefined}
       tabIndex={interactive ? 0 : undefined}
       className={cn(
-      'pin-soft-surface rounded-[14px] border bg-card text-card-foreground backdrop-blur-[20px]',
+      'pin-soft-surface rounded-pin-lg border bg-card text-card-foreground backdrop-blur-[20px]',
       interactive && 'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer hover:bg-accent/50 transition-colors',
       className
     )}
@@ -45,7 +45,7 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      'text-2xl font-semibold leading-none tracking-tight',
+      'text-pin-lg font-semibold leading-none tracking-tight',
       className
     )}
     {...props}
