@@ -19,7 +19,7 @@ import {
 const ECHO_QUERY = 'https://echodata.epa.gov/echo/cwa_rest_services.get_facilities';
 const ECHO_QID   = 'https://echodata.epa.gov/echo/cwa_rest_services.get_qid';
 const ECHO_DL    = 'https://echodata.epa.gov/echo/cwa_rest_services.get_download';
-const ECHO_NNCOMPLIANCE = 'https://echo.epa.gov/api/rest_services.get_nncompliance';
+const ECHO_NNCOMPLIANCE = 'https://echodata.epa.gov/echo/cwa_rest_services.get_nncompliance';
 const CONCURRENCY = 6;
 // Columns we request: basic info (1-9), coords (24-25), compliance (97-101)
 const DL_QCOLS = '1,2,3,4,5,9,24,25,97,98,99,101';

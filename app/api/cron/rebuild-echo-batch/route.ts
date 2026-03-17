@@ -246,7 +246,7 @@ async function buildDmrViolations(): Promise<SubCronResult> {
 // ── Sub-cron 2: ICIS-Air ────────────────────────────────────────────────────
 
 async function fetchIcisAirForState(st: string): Promise<IcisAirViolation[]> {
-  const url = `https://echo.epa.gov/api/air_rest_services.get_facility_info?p_st=${st}&output=JSON`;
+  const url = `https://echodata.epa.gov/echo/air_rest_services.get_facility_info?p_st=${st}&output=JSON`;
   const resp = await fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT) });
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
   const json = await resp.json();
@@ -329,7 +329,7 @@ async function buildIcisAir(): Promise<SubCronResult> {
 // ── Sub-cron 3: MS4 Permits ─────────────────────────────────────────────────
 
 async function fetchMs4ForState(st: string): Promise<Ms4Permit[]> {
-  const url = `https://echo.epa.gov/api/cwa_rest_services.get_facility_info?p_st=${st}&p_permit_type=MS4&output=JSON`;
+  const url = `https://echodata.epa.gov/echo/cwa_rest_services.get_facility_info?p_st=${st}&p_permit_type=MS4&output=JSON`;
   const resp = await fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT) });
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
   const json = await resp.json();
@@ -424,7 +424,7 @@ async function buildMs4Permits(): Promise<SubCronResult> {
 // ── Sub-cron 4: ECHO Biosolids ──────────────────────────────────────────────
 
 async function fetchBiosolidsForState(st: string): Promise<BiosolidsReport[]> {
-  const url = `https://echo.epa.gov/api/cwa_rest_services.get_facility_info?p_st=${st}&p_biosolids=Y&output=JSON`;
+  const url = `https://echodata.epa.gov/echo/cwa_rest_services.get_facility_info?p_st=${st}&p_biosolids=Y&output=JSON`;
   const resp = await fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT) });
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
   const json = await resp.json();

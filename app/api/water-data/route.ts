@@ -18,7 +18,7 @@ const USGS_IV_BASE = 'https://waterservices.usgs.gov/nwis/iv';
 const USGS_SITE_BASE = 'https://waterservices.usgs.gov/nwis/site';
 const USGS_OGC_BASE = 'https://api.waterdata.usgs.gov/ogcapi/v0';
 const ATTAINS_BASE = 'https://attains.epa.gov/attains-public/api';
-const ECHO_BASE = 'https://echo.epa.gov/api/rest_services';
+const ECHO_BASE = 'https://echodata.epa.gov/echo/cwa_rest_services';
 const ECHO_CWA_BASE = 'https://echodata.epa.gov/echo';
 // NOTE: EPA removed EJScreen from its website on Feb 5, 2025.
 // EJScreen fetch logic now centralized in lib/ejscreenFetch.ts with 3-tier fallback.

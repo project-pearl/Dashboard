@@ -20,8 +20,8 @@ import { recordCronRun } from '@/lib/cronHealth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
-const ECHO_BASE = 'https://echo.epa.gov/api/rest_services.get_facilities';
-const ECHO_QID_BASE = 'https://echo.epa.gov/api/rest_services.get_qid';
+const ECHO_BASE = 'https://echodata.epa.gov/echo/cwa_rest_services.get_facilities';
+const ECHO_QID_BASE = 'https://echodata.epa.gov/echo/cwa_rest_services.get_qid';
 const BATCH_SIZE = 6;
 const DELAY_MS = 1000;
 const FETCH_TIMEOUT_MS = 45_000;
