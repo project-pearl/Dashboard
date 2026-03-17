@@ -163,7 +163,7 @@ const LENS_CONFIG: Record<ViewLens, {
       'pol-talking-points', 'pol-constituent-concerns', 'pol-funding-wins', 'pol-funding-risks',
       'pol-regulatory-deadlines', 'pol-ej-exposure', 'pol-media-ready-grades',
       'pol-peer-comparison', 'pol-council-agenda', 'disclaimer',
-    , 'lens-data-story']),
+      'lens-data-story']),
   },
   trends: {
     label: 'Trends & Projections',
