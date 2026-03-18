@@ -157,9 +157,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             triggerPrefetch(pearlUser.role, pearlUser.state);
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         console.warn('Auth init error:', err);
-        if (mounted) setError('Authentication service unavailable. Please try again.');
+        // Handle refresh token errors by clearing the session
+        if (err?.message?.includes('refresh_token_not_found') || err?.message?.includes('Invalid Refresh Token')) {
+          console.log('Clearing invalid session due to refresh token error');
+          await supabase.auth.signOut();
+          if (mounted) setUser(null);
+        } else {
+          if (mounted) setError('Authentication service unavailable. Please try again.');
+        }
       } finally {
         if (mounted) setLoading(false);
       }
@@ -180,9 +187,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           } else if (event === 'SIGNED_OUT') {
             if (mounted) setUser(null);
           }
-        } catch (err) {
+        } catch (err: any) {
           console.warn('Auth state change error:', err);
-          if (mounted) setError('Session update failed. Please sign in again.');
+          // Handle refresh token errors
+          if (err?.message?.includes('refresh_token_not_found') || err?.message?.includes('Invalid Refresh Token')) {
+            console.log('Clearing invalid session due to refresh token error in state change');
+            if (mounted) {
+              setUser(null);
+              setError('Your session has expired. Please sign in again.');
+            }
+          } else {
+            if (mounted) setError('Session update failed. Please sign in again.');
+          }
         }
       }
     );
