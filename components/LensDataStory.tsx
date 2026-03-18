@@ -9,6 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { Lightbulb, AlertTriangle, TrendingUp, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { LensStory, StoryFinding } from '@/lib/lensStoryEngine';
+import DisasterDeclarationsModal from './DisasterDeclarationsModal';
 
 // ── Props (same interface as old LensDataStory) ─────────────────────────────
 
@@ -88,6 +89,8 @@ const LENS_COPY: Record<string, string> = {
 interface Callout {
   severity: 'critical' | 'warning' | 'info';
   text: string;
+  sources?: string[];
+  id?: string;
 }
 
 function findingsToCallouts(findings: StoryFinding[]): Callout[] {
@@ -96,6 +99,8 @@ function findingsToCallouts(findings: StoryFinding[]): Callout[] {
     text: f.metric
       ? `${f.title} \u2014 ${f.detail}`
       : f.title,
+    sources: f.sources,
+    id: f.id,
   }));
 }
 
@@ -116,6 +121,7 @@ export default function LensDataStory({ lens, role, state }: LensDataStoryProps)
   const [data, setData] = useState<LensStory | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDisasterModal, setShowDisasterModal] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -197,19 +203,37 @@ export default function LensDataStory({ lens, role, state }: LensDataStoryProps)
 
           {!loading && !error && callouts.length > 0 && (
             <ul className="space-y-2">
-              {callouts.map((c, i) => (
-                <li key={i} className="flex items-start gap-2">
-                  <CalloutIcon severity={c.severity} />
-                  <span className={cn(
-                    'text-pin-sm leading-snug',
-                    c.severity === 'critical' ? 'text-pin-critical font-medium' :
-                    c.severity === 'warning' ? 'text-pin-text-bright' :
-                    'text-pin-text-primary',
-                  )}>
-                    {c.text}
-                  </span>
-                </li>
-              ))}
+              {callouts.map((c, i) => {
+                const isDisasterDeclaration = c.sources?.includes('fema') || c.text.includes('FEMA disaster declaration');
+
+                return (
+                  <li key={i} className="flex items-start gap-2">
+                    <CalloutIcon severity={c.severity} />
+                    {isDisasterDeclaration ? (
+                      <button
+                        onClick={() => setShowDisasterModal(true)}
+                        className={cn(
+                          'text-pin-sm leading-snug text-left hover:underline cursor-pointer',
+                          c.severity === 'critical' ? 'text-pin-critical font-medium' :
+                          c.severity === 'warning' ? 'text-pin-text-bright' :
+                          'text-pin-text-primary',
+                        )}
+                      >
+                        {c.text}
+                      </button>
+                    ) : (
+                      <span className={cn(
+                        'text-pin-sm leading-snug',
+                        c.severity === 'critical' ? 'text-pin-critical font-medium' :
+                        c.severity === 'warning' ? 'text-pin-text-bright' :
+                        'text-pin-text-primary',
+                      )}>
+                        {c.text}
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
@@ -227,6 +251,12 @@ export default function LensDataStory({ lens, role, state }: LensDataStoryProps)
           </div>
         )}
       </div>
+
+      {/* Disaster Declarations Modal */}
+      <DisasterDeclarationsModal
+        isOpen={showDisasterModal}
+        onClose={() => setShowDisasterModal(false)}
+      />
     </div>
   );
 }
