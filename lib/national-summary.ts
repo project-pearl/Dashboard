@@ -147,18 +147,16 @@ export function getNationalSummary(): NationalSummary {
 
     if (s.high > 0) highAlertStates++;
 
-    // Primary: 14-layer composite index (already incorporates flow + all data layers)
-    // Fallback: ATTAINS alert-level weighted average blended with flow
+    // 14-layer composite index only (no ATTAINS fallback)
+    // All 2,456 HUC-8s now computed with confidence penalties for sparse data
     const composite = compositeScores[abbr];
-    let score: number;
+    let score: number = 50; // neutral default if no composite data
+
     if (composite && composite.hucCount > 0) {
       score = composite.score;
     } else {
-      const attainsScore = computeStateScore(s);
-      const flow = flowScores[abbr];
-      score = (attainsScore >= 0 && flow)
-        ? Math.round(attainsScore * 0.85 + flow.score * 0.15)
-        : attainsScore;
+      // Log states without composite scores (should be rare now)
+      console.warn(`[National Summary] No composite score for state ${abbr} - using neutral default`);
     }
 
     const flow = flowScores[abbr];

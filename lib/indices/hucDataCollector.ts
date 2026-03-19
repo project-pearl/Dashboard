@@ -31,10 +31,28 @@ export interface HucData {
  * 3x3 neighbor lookup (~30km radius). For ATTAINS (state-keyed), filters
  * waterbodies whose ATTAINS ID maps to this HUC-8.
  */
-export function collectForHuc(huc8: string): HucData | null {
+export function collectForHuc(huc8: string): HucData {
   const centroid = centroids[huc8];
   const adj = adjacency[huc8];
-  if (!centroid || !adj) return null;
+
+  // For HUCs missing centroid/adjacency data, create fallback with empty arrays
+  if (!centroid || !adj) {
+    console.warn(`[HUC Data Collector] Missing centroid/adjacency for ${huc8}, using fallback`);
+    return {
+      huc8,
+      stateAbbr: 'XX', // Unknown state - will be handled by index calculators
+      wqpRecords: [],
+      icisPermits: [],
+      icisViolations: [],
+      icisDmrs: [],
+      icisEnforcement: [],
+      icisInspections: [],
+      sdwisSystems: [],
+      sdwisViolations: [],
+      sdwisEnforcement: [],
+      attainsWaterbodies: [],
+    };
+  }
 
   const { lat, lng } = centroid;
   const stateAbbr = adj.state;

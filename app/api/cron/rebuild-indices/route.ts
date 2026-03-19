@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
 
       const batchResults = await Promise.all(batch.map(async (huc8) => {
         const data = collectForHuc(huc8);
-        if (!data) return null;
+        // collectForHuc now always returns data (with empty arrays for sparse HUCs)
 
         // Run all 9 index engines
         const pearlLoadVelocity = computePearlLoadVelocity(data);
@@ -142,7 +142,6 @@ export async function GET(request: NextRequest) {
       }));
 
       for (const result of batchResults) {
-        if (!result) continue;
         results[result.huc8] = result.hucIndices;
         historyEntries[result.huc8] = { date: todayISO, composite: result.composite };
         totalConfidence += result.hucIndices.compositeConfidence;
