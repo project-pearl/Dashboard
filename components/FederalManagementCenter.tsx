@@ -97,6 +97,7 @@ import LensDataStory from '@/components/LensDataStory';
 import { useDataSummaries } from '@/hooks/useDataSummaries';
 import { DataStatCard } from '@/components/DataStatCard';
 import { daysUntil, deadlineStatus, deadlineRowStyle, deadlineTextColor, daysLabel } from '@/lib/formatDate';
+import { generateCongressionalActionItems, getCongressionalActivitySummary } from '@/lib/congressionalActionItems';
 
 
 import SentinelIntelFeed from '@/components/federal/SentinelIntelFeed';
@@ -2769,6 +2770,10 @@ export function FederalManagementCenter(props: Props) {
 
     return insights;
   }, [nationalStats, stateRollup, derived.regionsByState, overlay, overlayByState, slaMetrics, attainsAggregation]);
+
+  // ─── Congressional Action Items (real-time from Congress.gov) ────────────────
+  const congressionalActions = useMemo(() => generateCongressionalActionItems(), []);
+  const congressionalSummary = useMemo(() => getCongressionalActivitySummary(), []);
 
   // ─── Network Health Score (derived from state grades) ────────────────────────
   const [showHealthDetails, setShowHealthDetails] = useState(false);
@@ -5477,13 +5482,32 @@ export function FederalManagementCenter(props: Props) {
               </div>
 
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Action Required</p>
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Congressional Action Items</p>
+                  {congressionalSummary.lastUpdated && (
+                    <p className="text-2xs text-slate-400">
+                      Updated {new Date(congressionalSummary.lastUpdated).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+                {(congressionalSummary.activeBills > 0 || congressionalSummary.upcomingHearings > 0 || congressionalSummary.urgentComments > 0) && (
+                  <div className="mb-3 grid grid-cols-3 gap-2 text-center">
+                    <div className="rounded border bg-blue-50 border-blue-200 px-2 py-1.5">
+                      <p className="text-xs font-semibold text-blue-700">{congressionalSummary.activeBills}</p>
+                      <p className="text-2xs text-blue-600">Active Bills</p>
+                    </div>
+                    <div className="rounded border bg-amber-50 border-amber-200 px-2 py-1.5">
+                      <p className="text-xs font-semibold text-amber-700">{congressionalSummary.upcomingHearings}</p>
+                      <p className="text-2xs text-amber-600">Hearings (30d)</p>
+                    </div>
+                    <div className="rounded border bg-red-50 border-red-200 px-2 py-1.5">
+                      <p className="text-xs font-semibold text-red-700">{congressionalSummary.urgentComments}</p>
+                      <p className="text-2xs text-red-600">Urgent Comments</p>
+                    </div>
+                  </div>
+                )}
                 <div className="space-y-2">
-                  {[
-                    { id: 'fed-act-1', priority: 'High', item: '47 NPDES permits expiring within 30 days across 12 states - renewal packages incomplete', detail: 'States most affected: TX (8), CA (7), PA (6), OH (5). 14 are major facilities. EPA regional offices notified.', color: 'text-red-700 bg-red-50 border-red-200' },
-                    { id: 'fed-act-2', priority: 'High', item: 'EPA Administrator requesting consolidated TMDL progress briefing for congressional testimony', detail: 'Testimony scheduled March 18, 2026 before House T&I. Need 50-state rollup of TMDL completion rates and restoration outcomes.', color: 'text-red-700 bg-red-50 border-red-200' },
-                    { id: 'fed-act-3', priority: 'Medium', item: '8 consent decree milestone reports due across 5 EPA regions next month', detail: 'Regions 1, 3, 4, 5, 9. Covers CSO long-term control plans, nutrient reduction milestones, and stormwater deliverables.', color: 'text-amber-700 bg-amber-50 border-amber-200' },
-                  ].map((a) => (
+                  {congressionalActions.map((a) => (
                     <div key={a.id}>
                       <div
                         className={`rounded-lg border p-3 cursor-pointer hover:ring-1 hover:ring-blue-300 transition-all ${a.color}`}
@@ -5492,12 +5516,34 @@ export function FederalManagementCenter(props: Props) {
                         <div className="flex items-center gap-2">
                           <Badge variant="outline" className="text-2xs">{a.priority}</Badge>
                           <span className="text-xs flex-1">{a.item}</span>
+                          {a.daysUntil !== undefined && a.daysUntil <= 14 && (
+                            <Badge
+                              className={`text-2xs ${a.daysUntil <= 3 ? 'bg-red-100 text-red-700' : a.daysUntil <= 7 ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}
+                            >
+                              {a.daysUntil}d
+                            </Badge>
+                          )}
                           <ChevronDown size={14} className={`flex-shrink-0 text-slate-400 transition-transform ${comingSoonId === a.id ? 'rotate-180' : ''}`} />
                         </div>
                       </div>
                       {comingSoonId === a.id && (
                         <div className="ml-4 mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                           <p className="text-xs text-slate-700">{a.detail}</p>
+                          {a.url && (
+                            <div className="mt-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 text-2xs"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(a.url, '_blank');
+                                }}
+                              >
+                                View on Congress.gov →
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
