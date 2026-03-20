@@ -59,8 +59,8 @@ describe('waterQualityScore', () => {
       }
     });
 
-    it('TOTAL_DISPLAY_PARAMS is 15', () => {
-      expect(TOTAL_DISPLAY_PARAMS).toBe(15);
+    it('TOTAL_DISPLAY_PARAMS is 16', () => {
+      expect(TOTAL_DISPLAY_PARAMS).toBe(16);
     });
   });
 

@@ -836,9 +836,9 @@ export function generateImplications(grade: WaterQualityGrade): Observation[] {
 
 // ─── Composite Freshness Score ───────────────────────────────────────────────
 // Freshness = coverage (how many param slots populated) + recency (how old).
-// 1/15 params should never be green. 15/15 within 30 days = near-perfect.
+// 1/16 params should never be green. 16/16 within 30 days = near-perfect.
 
-export const TOTAL_DISPLAY_PARAMS = 15;
+export const TOTAL_DISPLAY_PARAMS = 16;
 
 function paramRecencyScore(lastSampled: string | null | undefined): number {
   if (!lastSampled) return 0;
