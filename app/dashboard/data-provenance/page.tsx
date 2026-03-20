@@ -340,7 +340,7 @@ export default function DataProvenancePage() {
           <SectionHeading id="pin-score" number={4} title="PIN Water Score Methodology" />
           <p className="text-sm text-slate-600 mb-4 leading-relaxed">
             The PIN Water Score is a 0–100 composite index that summarizes the overall health of a waterbody
-            by combining 14 weighted sub-indices across two groups. The score drives the condition label displayed
+            by combining 15+ weighted sub-indices across two groups with enhanced intelligence layers. The score drives the condition label displayed
             on every waterbody card and map marker.
           </p>
 
@@ -363,16 +363,16 @@ export default function DataProvenancePage() {
           </p>
           <Formula
             label="Final Composite"
-            formula="PIN Water Score = (0.56 × Group A Score) + (0.44 × Group B Score)"
+            formula="PIN Water Score = (0.62 × Group A Score) + (0.38 × Group B Score)"
             notes="Each group score = Σ(w_i × S_i) / Σ(w_i), computed only over indices with available data within that group. This ensures that missing indices in one group don't cause the other group to dominate disproportionately."
           />
           <p className="text-xs text-slate-500 mt-2 mb-4 leading-relaxed">
-            The 56/44 split reflects the relative analytical depth of watershed-level systemic assessment (Group A)
-            versus site-specific monitoring (Group B). This weighting is calibrated for general watershed health
-            assessment and may be adjusted for domain-specific applications in future versions.
+            The 62/38 split reflects the enhanced analytical depth of watershed-level systemic assessment (Group A)
+            with climate intelligence and satellite remote sensing versus site-specific monitoring (Group B). This weighting
+            is calibrated for comprehensive watershed health assessment incorporating predictive climate vulnerability.
           </p>
 
-          <SubHeading>4.3 HUC-8 Indices (Group A — 9 indices)</SubHeading>
+          <SubHeading>4.3 HUC-8 Indices (Group A — 11 indices)</SubHeading>
           <p className="text-sm text-slate-600 mb-3 leading-relaxed">
             Computed per HUC-8 watershed from live federal data sources. Each produces a 0–100 score with an
             associated confidence rating. Indices marked &quot;inverted&quot; are scored so that higher raw
@@ -381,15 +381,17 @@ export default function DataProvenancePage() {
           <Table
             headers={['Index', 'Weight', 'Inv', 'Description', 'Sources']}
             rows={[
-              ['PEARL Load Velocity', '15%', 'No', 'Rate of nutrient/pollutant loading relative to watershed capacity', 'WQP, ICIS DMR'],
-              ['Per Capita Load', '13%', 'Yes', 'Population-normalized pollutant burden on the watershed', 'SDWIS, WQP, ICIS DMR'],
-              ['Infrastructure Failure', '14%', 'Yes', 'Risk of drinking water and wastewater infrastructure failure based on violations and age', 'SDWIS, ICIS inspections'],
-              ['Permit Risk Exposure', '12%', 'Yes', 'Compliance risk from NPDES-permitted dischargers in the watershed', 'ICIS permits, violations, DMR, enforcement'],
-              ['Ecological Health', '12%', 'Yes', 'Ecological sensitivity based on impairment status and species at risk', 'ATTAINS, USFWS ECOS'],
-              ['Watershed Recovery', '10%', 'No', 'Potential for ecological recovery based on impairment status and restoration activity', 'ATTAINS'],
-              ['Waterfront Exposure', '8%', 'Yes', 'Human exposure risk from recreational and residential waterfront proximity', 'WQP, ATTAINS, DMR'],
-              ['EJ Vulnerability', '8%', 'Yes', 'Environmental justice burden on surrounding communities', 'EJScreen, SDWIS'],
-              ['Governance Response', '8%', 'Yes', 'Strength and timeliness of regulatory response to violations', 'ATTAINS, ICIS, SDWIS'],
+              ['PEARL Load Velocity', '13%', 'No', 'Rate of nutrient/pollutant loading relative to watershed capacity', 'WQP, ICIS DMR'],
+              ['Per Capita Load', '11%', 'Yes', 'Population-normalized pollutant burden on the watershed', 'SDWIS, WQP, ICIS DMR'],
+              ['Infrastructure Failure', '12%', 'Yes', 'Risk of drinking water and wastewater infrastructure failure based on violations and age', 'SDWIS, ICIS inspections'],
+              ['Permit Risk Exposure', '10%', 'Yes', 'Compliance risk from NPDES-permitted dischargers in the watershed', 'ICIS permits, violations, DMR, enforcement'],
+              ['Climate Vulnerability', '10%', 'Yes', 'Climate change risk assessment: drought, temperature, precipitation extremes, sea level rise', 'NOAA Climate Data, USDM, NWS'],
+              ['Ecological Health', '10%', 'Yes', 'Ecological sensitivity based on impairment status and species at risk', 'ATTAINS, USFWS ECOS'],
+              ['Watershed Recovery', '9%', 'No', 'Potential for ecological recovery based on impairment status and restoration activity', 'ATTAINS'],
+              ['Satellite Water Quality', '8%', 'Yes', 'Remote sensing water quality: chlorophyll-a, turbidity, algal blooms', 'Landsat/Sentinel-2, ground truth validation'],
+              ['Waterfront Exposure', '7%', 'Yes', 'Human exposure risk from recreational and residential waterfront proximity', 'WQP, ATTAINS, DMR'],
+              ['EJ Vulnerability', '6%', 'Yes', 'Environmental justice burden on surrounding communities', 'EJScreen, SDWIS'],
+              ['Governance Response', '4%', 'Yes', 'Strength and timeliness of regulatory response to violations', 'ATTAINS, ICIS, SDWIS'],
             ]}
           />
           <p className="text-xs text-slate-500 mt-2 leading-relaxed">Group A weights sum to 100%.</p>
@@ -408,7 +410,7 @@ export default function DataProvenancePage() {
               ['Trend Direction', '16%', 'Direction and magnitude of water quality trends', '50 + trend value, clamped to 0–100. Positive trends improve score'],
             ]}
           />
-          <p className="text-xs text-slate-500 mt-2 leading-relaxed">Group B weights sum to 100%. In earlier documentation, these weights were expressed as fractions of the total 14-index pool (15%, 7%, 7%, 8%, 7% = 44%). The values above are those same weights renormalized within Group B for clarity.</p>
+          <p className="text-xs text-slate-500 mt-2 leading-relaxed">Group B weights sum to 100%. In earlier documentation, these weights were expressed as fractions of the total 15-layer pool (13%, 6%, 6%, 7%, 6% = 38%). The values above are those same weights renormalized within Group B for clarity.</p>
 
           <SubHeading>4.5 Composite Formula</SubHeading>
           <Formula
@@ -418,7 +420,7 @@ export default function DataProvenancePage() {
           />
           <Formula
             label="Final Score"
-            formula="PIN Water Score = (0.56 × Group A Score) + (0.44 × Group B Score)"
+            formula="PIN Water Score = (0.62 × Group A Score) + (0.38 × Group B Score)"
             notes="If an entire group has no available data, the score is computed from the available group alone (equivalent to that group receiving 100% weight)."
           />
 
@@ -482,7 +484,7 @@ export default function DataProvenancePage() {
               ═══════════════════════════════════════════════════════════════════ */}
           <SectionHeading id="sources" number={6} title="Source Catalog" />
           <p className="text-sm text-slate-600 mb-4 leading-relaxed">
-            PIN integrates data from 20+ sources across federal, state, and community organizations.
+            PIN integrates data from 25+ sources across federal, state, and community organizations.
             All data is fetched via official APIs, cached for performance, and timestamped for provenance.
           </p>
 
@@ -497,6 +499,9 @@ export default function DataProvenancePage() {
               ['USGS WDFN', 'USGS', 'Real-time streamflow, water level, continuous WQ', '15-min (real-time)', 'Water Quality Grade, Monitoring Coverage, Data Freshness'],
               ['EJScreen', 'EPA', 'Environmental justice indices, demographic indicators (API offline since Feb 2025; Census ACS/SDWIS fallback active)', 'Annual (when available)', 'EJ Vulnerability'],
               ['NOAA CO-OPS', 'NOAA', 'Tidal levels, water temperature, salinity, meteorological', '6-min (real-time)', 'Waterfront Exposure, Water Quality Grade'],
+              ['NOAA Climate Data Online', 'NOAA NCDC', 'Temperature trends, precipitation variability, drought indices, extreme events', 'Daily cache', 'Climate Vulnerability'],
+              ['US Drought Monitor', 'NDMC/USDA/NOAA', 'Drought severity classifications (D0-D4) and historical frequency', 'Weekly', 'Climate Vulnerability'],
+              ['Landsat/Sentinel-2', 'NASA/ESA', 'Satellite imagery for chlorophyll-a, turbidity, algal bloom detection', '16-day revisit', 'Satellite Water Quality'],
               ['NHD / NHDPlus HR', 'USGS', 'Stream/waterbody geometry, HUC boundaries, flow direction', 'Annual', 'Spatial indexing, watershed delineation'],
               ['WATERS GeoServices', 'EPA', 'Geospatial impairment mapping, TMDL linkage', 'Synced with ATTAINS', 'Watershed Recovery, Regulatory Compliance'],
               ['USFWS ECOS', 'USFWS', 'Threatened & Endangered species listings', 'Periodic', 'Ecological Health'],
@@ -632,7 +637,7 @@ export default function DataProvenancePage() {
           <ul className="text-sm text-slate-600 space-y-1.5 mb-4 ml-4 list-disc">
             <li><span className="font-medium text-slate-700">Non-detects:</span> Results reported as &quot;below detection limit&quot; are stored as DL/2 (half the detection limit) for scoring purposes, consistent with EPA guidance for left-censored environmental data.</li>
             <li>The parameter displays &quot;—&quot; with an &quot;Unassessed&quot; label</li>
-            <li>The parameter is excluded from grade calculations and its weight is redistributed among available parameters within the same index class (Group A or Group B), preserving the 56/44 group split</li>
+            <li>The parameter is excluded from grade calculations and its weight is redistributed among available parameters within the same index class (Group A or Group B), preserving the 62/38 group split</li>
             <li>Monitoring Coverage and Data Freshness indices reflect the gap, reducing the PIN Water Score</li>
             <li>If fewer than 3 key parameters have data, the waterbody is shown as &quot;Insufficient Data&quot; rather than graded</li>
           </ul>
@@ -773,8 +778,8 @@ export default function DataProvenancePage() {
               Log-transformation of high-variance parameters may compress the apparent magnitude of extreme trends.
             </li>
             <li>
-              <span className="font-medium text-slate-700">Fixed group split:</span> The 56/44 split between Group A
-              (HUC-8 indices) and Group B (standard indices) is a fixed architectural decision. When an entire group
+              <span className="font-medium text-slate-700">Fixed group split:</span> The 62/38 split between Group A
+              (HUC-8 indices with enhanced intelligence) and Group B (standard indices) is a fixed architectural decision. When an entire group
               has no data, the available group receives 100% weight, which may overrepresent one analytical dimension.
             </li>
             <li>
