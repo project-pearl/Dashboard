@@ -24,7 +24,7 @@ import { getEJScore, getEJData, ejScoreLabel } from '@/lib/ejVulnerability';
 import { scoreToGrade, alertLevelAvgScore, ALERT_LEVEL_SCORES, ecoScoreStyle, ejScoreStyle } from '@/lib/scoringUtils';
 import { STATE_AUTHORITIES } from '@/lib/stateWaterData';
 import { useAuth } from '@/lib/authContext';
-import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
+import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/realWaterData';
 import { WildlifeImpactDisclaimer } from '@/components/WildlifeImpactDisclaimer';
 import { K12EducationalHub } from '@/components/K12EducationalHub';
 import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
@@ -48,6 +48,7 @@ import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { UserManagementPanel } from './UserManagementPanel';
 import { getInvitableRoles } from '@/lib/adminHierarchy';
+import { AquaticWildlifePanel } from '@/components/AquaticWildlifePanel';
 import dynamic from 'next/dynamic';
 import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
 
@@ -2406,68 +2407,13 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
               );
             }
             case 'hab-wildlife': {
-              const teData = getEcoData(stateAbbr);
-              const federalAquatic = teData?.aquaticTE ?? 0;
-              const federalTotal = teData?.totalTE ?? 0;
-              const critHab = teData?.criticalHabitat ?? 0;
-              const aquaticPct = federalTotal > 0 ? ((federalAquatic / federalTotal) * 100).toFixed(0) : '0';
-              const critPct = federalTotal > 0 ? ((critHab / federalTotal) * 100).toFixed(0) : '0';
               return DS(
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Bug className="h-5 w-5 text-rose-600" />
-                      Threatened & Endangered Species — {stateName}
-                      <Badge variant="secondary" className="ml-1 text-2xs">USFWS ECOS</Badge>
-                    </CardTitle>
-                    <CardDescription>Animals &amp; plants that need our help near your school&apos;s watershed</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      <div className="rounded-xl border p-4 bg-slate-50 border-slate-200">
-                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Total T&E</div>
-                        <div className="text-2xl font-bold text-slate-800 mt-1">{federalTotal}</div>
-                        <div className="text-2xs text-slate-400">Federal ESA</div>
-                      </div>
-                      <div className="rounded-xl border p-4 bg-blue-50 border-blue-200">
-                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Aquatic T&E</div>
-                        <div className="text-2xl font-bold text-blue-700 mt-1">{federalAquatic}</div>
-                        <div className="text-2xs text-slate-400">Freshwater / marine</div>
-                      </div>
-                      <div className="rounded-xl border p-4 bg-rose-50 border-rose-200">
-                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Critical Habitat</div>
-                        <div className="text-2xl font-bold text-rose-700 mt-1">{critHab}</div>
-                        <div className="text-2xs text-slate-400">Designated areas</div>
-                      </div>
-                      <div className="rounded-xl border p-4 bg-amber-50 border-amber-200">
-                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Eco Score</div>
-                        <div className="text-2xl font-bold text-amber-700 mt-1">{getEcoScore(stateAbbr)}</div>
-                        <div className="text-2xs text-slate-400">{ecoScoreLabel(getEcoScore(stateAbbr))}</div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="rounded-lg border border-slate-200 p-3">
-                        <div className="flex items-center justify-between text-xs mb-1.5">
-                          <span className="flex items-center gap-1 text-slate-600"><Fish size={12} /> Aquatic species ratio</span>
-                          <span className="font-semibold text-blue-700">{aquaticPct}%</span>
-                        </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                          <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${aquaticPct}%` }} />
-                        </div>
-                      </div>
-                      <div className="rounded-lg border border-slate-200 p-3">
-                        <div className="flex items-center justify-between text-xs mb-1.5">
-                          <span className="flex items-center gap-1 text-slate-600"><ShieldAlert size={12} /> Critical habitat coverage</span>
-                          <span className="font-semibold text-rose-700">{critPct}%</span>
-                        </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                          <div className="h-full rounded-full bg-rose-500 transition-all" style={{ width: `${critPct}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-xs text-slate-400 italic">Source: USFWS ECOS — ESA-listed species by state (2024-2025)</p>
-                  </CardContent>
-                </Card>
+                <AquaticWildlifePanel
+                  stateCode={stateAbbr}
+                  lat={mapCenter?.lat || 39.0}
+                  lng={mapCenter?.lng || -77.0}
+                  defaultTab="overview"
+                />
               );
             }
 

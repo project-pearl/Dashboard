@@ -41,7 +41,7 @@ import { getEcoScore, getEcoData, ecoScoreLabel } from '@/lib/ecologicalSensitiv
 import { getEJScore, getEJData, ejScoreLabel } from '@/lib/ejVulnerability';
 import { getStateMS4Jurisdictions, getMS4ComplianceSummary, STATE_AUTHORITIES } from '@/lib/stateWaterData';
 import { useAuth } from '@/lib/authContext';
-import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
+import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/realWaterData';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
 import { WatershedWaterbodyPanel } from '@/components/WatershedWaterbodyPanel';
@@ -58,6 +58,7 @@ import LocationReportCard from '@/components/LocationReportCard';
 import { WaterQualityTradingPanel } from '@/components/WaterQualityTradingPanel';
 import { getEpaRegionForState } from '@/lib/epa-regions';
 import { NUTRIENT_TRADING_STATES } from '@/lib/constants';
+import { AquaticWildlifePanel } from '@/components/AquaticWildlifePanel';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { useJurisdictionContext } from '@/lib/jurisdiction-context';
 import { scopeRowsByJurisdiction } from '@/lib/jurisdictions/index';
@@ -3604,105 +3605,12 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             );
 
             case 'hab-wildlife': {
-              const teData = getEcoData(stateAbbr);
-              const teScore = getEcoScore(stateAbbr);
-              const teLabel = ecoScoreLabel(teScore);
-              // Federal ESA count from USFWS ECOS
-              const federalAquatic = teData?.aquaticTE ?? 0;
-              const federalTotal = teData?.totalTE ?? 0;
-              const critHab = teData?.criticalHabitat ?? 0;
-              // Estimated federal+state listed (ECOS count + ~11 state-only species for typical state)
-              const stateOnlyEstimate = Math.round(federalAquatic * 0.9);
-              const combinedAquatic = federalAquatic + stateOnlyEstimate;
-              const aquaticPct = federalTotal > 0 ? ((federalAquatic / federalTotal) * 100).toFixed(0) : '0';
-              const critPct = federalTotal > 0 ? ((critHab / federalTotal) * 100).toFixed(0) : '0';
-
               return DS(
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Bug className="h-5 w-5 text-rose-600" />
-                      Threatened & Endangered Species — {stateName}
-                      <Badge variant="secondary" className="ml-1 text-2xs">USFWS ECOS + IPaC</Badge>
-                    </CardTitle>
-                    <CardDescription>ESA-listed species counts, ecological sensitivity, and wildlife agency coordination for {stateAbbr}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* Primary metrics grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                      <div className="rounded-xl border p-4 bg-slate-50 border-slate-200">
-                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Total T&E</div>
-                        <div className="text-2xl font-bold text-slate-800 mt-1">{federalTotal}</div>
-                        <div className="text-2xs text-slate-400">Federal ESA</div>
-                      </div>
-                      <div className="rounded-xl border p-4 bg-blue-50 border-blue-200">
-                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Aquatic (ESA)</div>
-                        <div className="text-2xl font-bold text-blue-700 mt-1">{federalAquatic}</div>
-                        <div className="text-2xs text-slate-400">Federal ESA only</div>
-                      </div>
-                      <div className="rounded-xl border p-4 bg-emerald-50 border-emerald-200">
-                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Aquatic (All)</div>
-                        <div className="text-2xl font-bold text-emerald-700 mt-1">~{combinedAquatic}</div>
-                        <div className="text-2xs text-slate-400">Federal + state listed</div>
-                      </div>
-                      <div className="rounded-xl border p-4 bg-rose-50 border-rose-200">
-                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Critical Habitat</div>
-                        <div className="text-2xl font-bold text-rose-700 mt-1">{critHab}</div>
-                        <div className="text-2xs text-slate-400">Designated areas</div>
-                      </div>
-                      <div className="rounded-xl border p-4 bg-amber-50 border-amber-200">
-                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Active Consultations</div>
-                        <div className="text-2xl font-bold text-amber-700 mt-1">5</div>
-                        <div className="text-2xs text-slate-400">USFWS Section 7</div>
-                      </div>
-                    </div>
-
-                    {/* Aquatic ratio + critical habitat bars */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="rounded-lg border border-slate-200 p-3">
-                        <div className="flex items-center justify-between text-xs mb-1.5">
-                          <span className="flex items-center gap-1 text-slate-600"><Fish size={12} /> Aquatic species ratio</span>
-                          <span className="font-semibold text-blue-700">{aquaticPct}%</span>
-                        </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                          <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${aquaticPct}%` }} />
-                        </div>
-                      </div>
-                      <div className="rounded-lg border border-slate-200 p-3">
-                        <div className="flex items-center justify-between text-xs mb-1.5">
-                          <span className="flex items-center gap-1 text-slate-600"><ShieldAlert size={12} /> Critical habitat coverage</span>
-                          <span className="font-semibold text-rose-700">{critPct}%</span>
-                        </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                          <div className="h-full rounded-full bg-rose-500 transition-all" style={{ width: `${critPct}%` }} />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Eco Score inline badge */}
-                    <div className="flex items-center gap-3 rounded-lg border border-slate-200 p-3 bg-slate-50/50">
-                      <Gauge className="h-5 w-5 text-slate-500" />
-                      <div className="flex-1">
-                        <span className="text-xs font-semibold text-slate-700">Eco Score: </span>
-                        <span className="text-xs font-bold">{teScore}</span>
-                        <span className="text-xs text-slate-500"> / 100</span>
-                        <Badge variant="outline" className="text-2xs ml-2">{teLabel}</Badge>
-                      </div>
-                      <div className="text-2xs text-slate-400">50% aquatic T&E + 25% total T&E + 25% crit. habitat</div>
-                    </div>
-
-                    {/* Source note explaining the two counts */}
-                    <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3">
-                      <p className="text-2xs text-amber-800 font-medium mb-1">Why two aquatic species counts?</p>
-                      <p className="text-2xs text-amber-700">
-                        <strong>{federalAquatic} species (Federal ESA only)</strong> — from USFWS ECOS, includes only federally listed threatened and endangered aquatic species.{' '}
-                        <strong>~{combinedAquatic} species (Federal + State listed)</strong> — adds state-listed species from IPaC/NatureServe that include semi-aquatic, riparian, and anadromous species not covered by federal ESA. Critical habitat count ({critHab}) is consistent across both sources.
-                      </p>
-                    </div>
-
-                    <p className="text-xs text-slate-400 italic">Data source: USFWS ECOS (federal ESA), USFWS IPaC (broader scope), NatureServe (state listings)</p>
-                  </CardContent>
-                </Card>
+                <AquaticWildlifePanel
+                  stateCode={stateAbbr}
+                  lat={mapCenter?.lat || 39.0}
+                  lng={mapCenter?.lng || -77.0}
+                />
               );
             }
 

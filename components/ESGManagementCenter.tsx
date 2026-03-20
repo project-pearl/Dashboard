@@ -66,6 +66,7 @@ import { RoleBriefingActionsCard } from '@/components/RoleBriefingCards';
 import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
 import { ecoScoreStyle } from '@/lib/scoringUtils';
 import { AskPinUniversalCard } from '@/components/AskPinUniversalCard';
+import { AquaticWildlifePanel } from '@/components/AquaticWildlifePanel';
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
   { ssr: false }
@@ -2409,68 +2410,12 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               );
             }
             case 'hab-wildlife': {
-              const teData = getEcoData(focusedState);
-              const federalAquatic = teData?.aquaticTE ?? 0;
-              const federalTotal = teData?.totalTE ?? 0;
-              const critHab = teData?.criticalHabitat ?? 0;
-              const aquaticPct = federalTotal > 0 ? ((federalAquatic / federalTotal) * 100).toFixed(0) : '0';
-              const critPct = federalTotal > 0 ? ((critHab / federalTotal) * 100).toFixed(0) : '0';
               return DS(
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Bug className="h-5 w-5 text-rose-600" />
-                      Threatened & Endangered Species — {STATE_NAMES[focusedState] || focusedState}
-                      <Badge variant="secondary" className="ml-1 text-2xs">USFWS ECOS</Badge>
-                    </CardTitle>
-                    <CardDescription>ESA-listed species near facility operations — supports TNFD &amp; GRI 304 disclosure</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      <div className="rounded-xl border p-4 bg-slate-50 border-slate-200">
-                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Total T&E</div>
-                        <div className="text-2xl font-bold text-slate-800 mt-1">{federalTotal}</div>
-                        <div className="text-2xs text-slate-400">Federal ESA</div>
-                      </div>
-                      <div className="rounded-xl border p-4 bg-blue-50 border-blue-200">
-                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Aquatic T&E</div>
-                        <div className="text-2xl font-bold text-blue-700 mt-1">{federalAquatic}</div>
-                        <div className="text-2xs text-slate-400">Freshwater / marine</div>
-                      </div>
-                      <div className="rounded-xl border p-4 bg-rose-50 border-rose-200">
-                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Critical Habitat</div>
-                        <div className="text-2xl font-bold text-rose-700 mt-1">{critHab}</div>
-                        <div className="text-2xs text-slate-400">Designated areas</div>
-                      </div>
-                      <div className="rounded-xl border p-4 bg-amber-50 border-amber-200">
-                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Eco Score</div>
-                        <div className="text-2xl font-bold text-amber-700 mt-1">{getEcoScore(focusedState)}</div>
-                        <div className="text-2xs text-slate-400">{ecoScoreLabel(getEcoScore(focusedState))}</div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="rounded-lg border border-slate-200 p-3">
-                        <div className="flex items-center justify-between text-xs mb-1.5">
-                          <span className="flex items-center gap-1 text-slate-600"><Fish size={12} /> Aquatic species ratio</span>
-                          <span className="font-semibold text-blue-700">{aquaticPct}%</span>
-                        </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                          <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${aquaticPct}%` }} />
-                        </div>
-                      </div>
-                      <div className="rounded-lg border border-slate-200 p-3">
-                        <div className="flex items-center justify-between text-xs mb-1.5">
-                          <span className="flex items-center gap-1 text-slate-600"><ShieldAlert size={12} /> Critical habitat coverage</span>
-                          <span className="font-semibold text-rose-700">{critPct}%</span>
-                        </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                          <div className="h-full rounded-full bg-rose-500 transition-all" style={{ width: `${critPct}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-xs text-slate-400 italic">Source: USFWS ECOS — ESA-listed species by state (2024-2025)</p>
-                  </CardContent>
-                </Card>
+                <AquaticWildlifePanel
+                  stateCode={focusedState}
+                  lat={mapCenter.lat}
+                  lng={mapCenter.lng}
+                />
               );
             }
             case 'briefing-actions': return DS(
