@@ -132,5 +132,6 @@ export function letterGrade(pct: number): string {
   if (pct >= 80) return 'B';
   if (pct >= 70) return 'C';
   if (pct >= 60) return 'D';
+  if (pct >= 30) return 'E';
   return 'F';
 }

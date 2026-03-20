@@ -166,8 +166,12 @@ describe('scoringUtils', () => {
       expect(letterGrade(65)).toBe('D');
     });
 
-    it('returns F for < 60', () => {
-      expect(letterGrade(50)).toBe('F');
+    it('returns E for 30-59', () => {
+      expect(letterGrade(50)).toBe('E');
+    });
+
+    it('returns F for < 30', () => {
+      expect(letterGrade(25)).toBe('F');
     });
 
     it('returns N/A for negative', () => {
