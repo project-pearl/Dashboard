@@ -7,6 +7,8 @@
  *
  * Architecture:
  *   Lens → Data Domains → Caches → Threshold Rules → Findings + Actions
+ *
+ * Updated: Now supports state-specific data filtering for lens stories
  */
 
 import { CACHE_META } from './cacheDeltaDescriber';
