@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { WaterQualityData, WaterQualityParameter } from '@/lib/types';
 
-vi.mock('@/lib/mockData', () => ({
+vi.mock('@/lib/realWaterData', () => ({
   getParameterStatus: (value: number, param: any) => {
     if (param.type === 'decreasing-bad') {
       return value >= 6 ? 'green' : value >= 5 ? 'yellow' : value >= 4 ? 'orange' : 'red';
