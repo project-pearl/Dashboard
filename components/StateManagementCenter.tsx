@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, AlertCircle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Building2, Info, LogOut, Waves, Heart, TreePine, Sprout, FileCheck, Scale, Activity, Sparkles, ClipboardList, Trophy, FileText, Banknote, Zap, RadioTower, Wrench, HardHat, FlaskConical, Leaf, Landmark, ShieldCheck, ExternalLink, Bug, Fish, ShieldAlert, Gauge, Clock, Link2, Megaphone, Users } from 'lucide-react';
 import ResolutionPlanner from '@/components/ResolutionPlanner';
+import StakeholderWatchCard from '@/components/StakeholderWatchCard';
 import { BrandedPrintBtn } from '@/lib/brandedPrint';
 import { useRouter } from 'next/navigation';
 import { getRegionById } from '@/lib/regionsConfig';
@@ -148,7 +149,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Overview',
     description: 'State operational dashboard — morning check before the day starts',
     defaultOverlay: 'risk',
-    sections: new Set(['regprofile', 'operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'briefing-actions', 'triage-queue', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'ask-pin-universal', 'correlation-breakthroughs', 'lens-data-story']),
+    sections: new Set(['regprofile', 'operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'briefing-actions', 'triage-queue', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'correlation-breakthroughs', 'lens-data-story']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -2695,47 +2696,12 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             );
 
             case 'briefing-stakeholder': return DS(
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Scale className="h-5 w-5 text-indigo-600" />
-                    Stakeholder Watch — {stateName}
-                  </CardTitle>
-                  <CardDescription>Recent stakeholder activity, public comments, and media mentions in {stateName}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {[
-                      { id: 'stk-1', type: 'Public Comment', detail: `Draft TMDL for Bear Creek (${stateAbbr}) received 14 comments during public notice period`, status: 'Review Needed', expandDetail: '14 comments submitted by 8 unique commenters. Key themes: agricultural runoff concerns (6), implementation timeline (4), monitoring adequacy (4). Response-to-comments document due within 30 days.' },
-                      { id: 'stk-2', type: 'Media', detail: `Local news coverage of PFAS detection in 2 ${stateName} community water systems`, status: 'Monitoring', expandDetail: `Coverage in ${stateName} Gazette and local TV. Systems affected: Town of Easton, City of Cambridge. Communications team monitoring social media sentiment. No legislative inquiry yet.` },
-                      { id: 'stk-3', type: 'Legislative', detail: `${stateName} legislature committee hearing on SRF funding allocation scheduled next week`, status: 'Prepare Testimony', expandDetail: `House Environment Committee hearing Mar 5 at 10 AM. Requested testimony on SRF project prioritization methodology and environmental justice scoring. Briefing package in preparation.` },
-                    ].map((s) => (
-                      <div key={s.id}>
-                        <div
-                          className="rounded-lg border border-slate-200 p-3 cursor-pointer hover:ring-1 hover:ring-indigo-300 transition-all"
-                          onClick={() => setComingSoonId(comingSoonId === s.id ? null : s.id)}
-                        >
-                          <div className="flex items-center justify-between mb-1">
-                            <Badge variant="outline" className="text-2xs">{s.type}</Badge>
-                            <div className="flex items-center gap-1.5">
-                              <Badge variant="secondary" className="text-2xs">{s.status}</Badge>
-                              <ChevronDown size={14} className={`text-slate-400 transition-transform ${comingSoonId === s.id ? 'rotate-180' : ''}`} />
-                            </div>
-                          </div>
-                          <p className="text-xs text-slate-700">{s.detail}</p>
-                        </div>
-                        {comingSoonId === s.id && (
-                          <div className="ml-4 mt-1 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3">
-                            <p className="text-xs text-slate-700">{s.expandDetail}</p>
-                            <p className="text-2xs text-indigo-600 mt-2 font-medium">Open full context — Coming Soon</p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: AI analysis of {stateAbbr} public notice systems, media monitoring, legislative tracking</p>
-                </CardContent>
-              </Card>
+              <StakeholderWatchCard
+                jurisdiction={stateAbbr}
+                stateName={stateName}
+                entityType="state"
+                maxItems={8}
+              />
             );
 
             // ── Resolution Planner ─────────────────────────────────────────
