@@ -1,0 +1,42 @@
+
+> nextjs@0.1.0 dev
+> next dev
+
+[@sentry/nextjs] DEPRECATION WARNING: automaticVercelMonitors is deprecated and will be removed in a future version. Use webpack.automaticVercelMonitors instead.
+ ⚠ `experimental.instrumentationHook` is no longer needed, because `instrumentation.js` is available by default. You can remove it from next.config.js.
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'instrumentationHook' at "experimental"
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ⚠ Port 3000 is in use by process 58700, using available port 3007 instead.
+[@sentry/nextjs] DEPRECATION WARNING: automaticVercelMonitors is deprecated and will be removed in a future version. Use webpack.automaticVercelMonitors instead.
+   ▲ Next.js 15.5.12
+   - Local:        http://localhost:3007
+   - Network:      http://192.168.1.104:3007
+   - Environments: .env.local
+   - Experiments (use with caution):
+     ✓ instrumentationHook
+     · clientTraceMetadata
+
+ ✓ Starting...
+[@sentry/nextjs] Could not find `onRequestError` hook in instrumentation file. This indicates outdated configuration of the Sentry SDK. Use `Sentry.captureRequestError` to instrument the `onRequestError` hook: https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/#errors-from-nested-react-server-components
+[@sentry/nextjs] DEPRECATION WARNING: It is recommended renaming your `sentry.client.config.ts` file, or moving its content to `instrumentation-client.ts`. When using Turbopack `sentry.client.config.ts` will no longer work. Read more about the `instrumentation-client.ts` file: https://nextjs.org/docs/app/api-reference/file-conventions/instrumentation-client
+ ○ Compiling /instrumentation ...
+ ✓ Compiled /instrumentation in 1756ms (1154 modules)
+ ✓ Ready in 3.6s
+   Reload env: .env.local
+ ✓ Compiled in 622ms (1154 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (188kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (139kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+ ⚠ Found a change in next.config.js. Restarting the server to apply the changes...
+[@sentry/nextjs] DEPRECATION WARNING: automaticVercelMonitors is deprecated and will be removed in a future version. Use webpack.automaticVercelMonitors instead.
+▲ Next.js 16.1.6 (webpack)
+- Local:         http://localhost:3007
+- Network:       http://192.168.1.104:3007
+- Environments: .env.local
+- Experiments (use with caution):
+  · clientTraceMetadata
+
+✓ Starting...
+⨯ Unable to acquire lock at C:\Users\Doug\Dashboard\.next\dev\lock, is another instance of next dev running?
+  Suggestion: If you intended to restart next dev, terminate the other process, and then try again.
+[?25h

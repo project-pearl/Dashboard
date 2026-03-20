@@ -8,7 +8,8 @@ export interface IndexScore {
 }
 
 export interface HucIndices {
-  huc8: string;
+  huc12: string;
+  huc8: string;  // Parent HUC-8 for backwards compatibility
   stateAbbr: string;
   pearlLoadVelocity: IndexScore;
   infrastructureFailure: IndexScore;

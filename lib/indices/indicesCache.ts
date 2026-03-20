@@ -83,9 +83,16 @@ export async function ensureWarmed(): Promise<void> {
 
 /* ── Read API ────────────────────────────────────────────────── */
 
-export function getIndicesForHuc(huc8: string): HucIndices | null {
+export function getIndicesForHuc(huc12: string): HucIndices | null {
   ensureDiskLoaded();
-  return _cache?.indices[huc8] ?? null;
+  return _cache?.indices[huc12] ?? null;
+}
+
+// Backwards compatibility - look up by HUC-8 (returns all HUC-12s within that HUC-8)
+export function getIndicesForHuc8(huc8: string): HucIndices[] {
+  ensureDiskLoaded();
+  if (!_cache) return [];
+  return Object.values(_cache.indices).filter(h => h.huc8 === huc8);
 }
 
 export function getAllIndices(): HucIndices[] {
@@ -93,9 +100,9 @@ export function getAllIndices(): HucIndices[] {
   return _cache ? Object.values(_cache.indices) : [];
 }
 
-export function getScoreHistory(huc8: string): ScoreHistoryEntry[] {
+export function getScoreHistory(huc12: string): ScoreHistoryEntry[] {
   ensureDiskLoaded();
-  return _scoreHistory[huc8] ?? [];
+  return _scoreHistory[huc12] ?? [];
 }
 
 export function getCacheStatus() {
@@ -157,12 +164,12 @@ export async function setIndicesCache(
 export async function appendScoreHistory(
   entries: Record<string, ScoreHistoryEntry>,
 ): Promise<void> {
-  for (const [huc8, entry] of Object.entries(entries)) {
-    if (!_scoreHistory[huc8]) _scoreHistory[huc8] = [];
-    _scoreHistory[huc8].push(entry);
+  for (const [huc12, entry] of Object.entries(entries)) {
+    if (!_scoreHistory[huc12]) _scoreHistory[huc12] = [];
+    _scoreHistory[huc12].push(entry);
     // Cap at MAX_HISTORY_ENTRIES
-    if (_scoreHistory[huc8].length > MAX_HISTORY_ENTRIES) {
-      _scoreHistory[huc8] = _scoreHistory[huc8].slice(-MAX_HISTORY_ENTRIES);
+    if (_scoreHistory[huc12].length > MAX_HISTORY_ENTRIES) {
+      _scoreHistory[huc12] = _scoreHistory[huc12].slice(-MAX_HISTORY_ENTRIES);
     }
   }
   saveCacheToDisk(DISK_PATH_HISTORY, _scoreHistory);

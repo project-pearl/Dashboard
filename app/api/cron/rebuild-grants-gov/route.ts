@@ -7,10 +7,9 @@ export const maxDuration = 300;
 
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  setGrantsGovCache, getGrantsGovCacheStatus,
-  isGrantsGovBuildInProgress, setGrantsGovBuildInProgress,
-  type GrantsGovOpportunity,
-} from '@/lib/grantsGovCache';
+  setGrantCache, getBuildStatus, setBuildInProgress, addGrantOpportunity,
+  type GrantOpportunity,
+} from '@/lib/grantCache';
 import { isCronAuthorized } from '@/lib/apiAuth';
 import * as Sentry from '@sentry/nextjs';
 import { notifySlackCronFailure } from '@/lib/slackNotify';
@@ -94,15 +93,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  if (isGrantsGovBuildInProgress()) {
+  const buildStatus = getBuildStatus();
+  if (buildStatus.inProgress) {
     return NextResponse.json({
       status: 'skipped',
-      reason: 'Grants.gov build already in progress',
-      cache: getGrantsGovCacheStatus(),
+      reason: 'Grant cache build already in progress',
+      cache: buildStatus,
     });
   }
 
-  setGrantsGovBuildInProgress(true);
+  setBuildInProgress(true);
   const startTime = Date.now();
 
   try {
@@ -132,8 +132,8 @@ export async function GET(request: NextRequest) {
 
     console.log(`[GrantsGov Cron] Found ${allHits.length} opportunities, fetching details...`);
 
-    // Step 2: Enrich each opportunity with detail API
-    const detailTasks = allHits.map(hit => async (): Promise<GrantsGovOpportunity | null> => {
+    // Step 2: Enrich each opportunity with detail API and convert to unified format
+    const detailTasks = allHits.map(hit => async (): Promise<GrantOpportunity | null> => {
       try {
         const oppId = String(hit.id || hit.opportunityId || '');
         if (!oppId) return null;
@@ -144,23 +144,57 @@ export async function GET(request: NextRequest) {
         const cfdaList = (opp.cfdas || []).map((c: any) => c.cfdaNumber || c.cfda || '').filter(Boolean);
         const eligibilities = (opp.eligibilities || []).map((e: any) => e.description || e.eligibility || '').filter(Boolean);
 
+        // Convert to unified GrantOpportunity format
+        const status = (hit.oppStatus || opp.status || '').toLowerCase();
+        const openDate = hit.openDate || synopsis.postingDate || '';
+        const closeDate = hit.closeDate || synopsis.responseDate || synopsis.archiveDate || '';
+        const awardFloor = Number(synopsis.awardFloor) || 0;
+        const awardCeiling = Number(synopsis.awardCeiling) || 0;
+        const estimatedFunding = Number(synopsis.estimatedFunding) || 0;
+
         return {
-          opportunityId: oppId,
-          opportunityNumber: hit.number || opp.number || '',
+          id: oppId,
           title: hit.title || opp.title || '',
           agency: hit.agency || opp.owningAgency?.name || '',
-          agencyCode: hit.agencyCode || opp.owningAgency?.code || '',
-          fundingCategory: hit.fundingCategory || synopsis.fundingActivityCategory || '',
-          status: (hit.oppStatus || opp.status || '').toLowerCase(),
-          openDate: hit.openDate || synopsis.postingDate || '',
-          closeDate: hit.closeDate || synopsis.responseDate || synopsis.archiveDate || '',
-          awardFloor: Number(synopsis.awardFloor) || 0,
-          awardCeiling: Number(synopsis.awardCeiling) || 0,
-          estimatedFunding: Number(synopsis.estimatedFunding) || 0,
+          funder: hit.agency || opp.owningAgency?.name || '',
+          type: 'federal-grant' as const,
+          status: status === 'posted' ? 'open' : status === 'forecasted' ? 'closed' : 'open',
+          openDate,
+          closeDate,
+          fundingAmount: {
+            min: awardFloor,
+            max: awardCeiling,
+            total: estimatedFunding,
+          },
+          awards: {
+            anticipated: 1,
+            typical: 1,
+          },
+          eligibility: eligibilities.map(e => {
+            if (e.toLowerCase().includes('state')) return 'state-gov';
+            if (e.toLowerCase().includes('local')) return 'local-gov';
+            if (e.toLowerCase().includes('nonprofit')) return 'nonprofit';
+            if (e.toLowerCase().includes('university') || e.toLowerCase().includes('college')) return 'university';
+            if (e.toLowerCase().includes('tribe')) return 'tribe';
+            if (e.toLowerCase().includes('private')) return 'private';
+            return 'nonprofit';
+          }),
           description: stripHtml(synopsis.synopsisDesc || synopsis.description || ''),
-          cfdaList,
-          eligibilities,
-          url: `https://grants.gov/search-results-detail/${oppId}`,
+          waterQualityRelevance: 'Water quality and environmental protection funding opportunity from Grants.gov',
+          requirements: eligibilities,
+          matchingFunds: {
+            required: false,
+          },
+          programs: ['CWA', 'SDWA'],
+          keywords: [
+            'environmental', 'water quality', 'grants.gov',
+            ...(hit.fundingCategory ? [hit.fundingCategory] : []),
+            ...cfdaList,
+          ],
+          cfda: cfdaList[0] || undefined,
+          applicationUrl: `https://grants.gov/search-results-detail/${oppId}`,
+          lastUpdated: new Date().toISOString(),
+          tags: ['federal', 'environmental', 'grants.gov'],
         };
       } catch (e) {
         console.warn(`[GrantsGov Cron] Detail fetch failed for ${hit.id}: ${e instanceof Error ? e.message : e}`);
@@ -169,46 +203,78 @@ export async function GET(request: NextRequest) {
     });
 
     const results = await runWithSemaphore(detailTasks, CONCURRENCY);
-    const opportunities: Record<string, GrantsGovOpportunity> = {};
-    let postedCount = 0;
-    let forecastedCount = 0;
+    const grants: GrantOpportunity[] = results.filter((opp): opp is GrantOpportunity => opp !== null);
 
-    for (const opp of results) {
-      if (!opp) continue;
-      opportunities[opp.opportunityId] = opp;
-      if (opp.status === 'posted') postedCount++;
-      else if (opp.status === 'forecasted') forecastedCount++;
+    let openCount = 0;
+    let closedCount = 0;
+
+    for (const grant of grants) {
+      if (grant.status === 'open') openCount++;
+      else if (grant.status === 'closed') closedCount++;
     }
 
-    const oppCount = Object.keys(opportunities).length;
-    console.log(`[GrantsGov Cron] Enriched ${oppCount} opportunities (${postedCount} posted, ${forecastedCount} forecasted)`);
+    const grantCount = grants.length;
+    console.log(`[Grants Cron] Enriched ${grantCount} opportunities (${openCount} open, ${closedCount} closed)`);
 
     // Empty-data guard
-    if (oppCount === 0) {
+    if (grantCount === 0) {
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      console.warn(`[GrantsGov Cron] 0 opportunities in ${elapsed}s — skipping cache save`);
-      return NextResponse.json({ status: 'empty', duration: `${elapsed}s`, cache: getGrantsGovCacheStatus() });
+      console.warn(`[Grants Cron] 0 opportunities in ${elapsed}s — skipping cache save`);
+      return NextResponse.json({ status: 'empty', duration: `${elapsed}s` });
     }
 
-    await setGrantsGovCache(opportunities, {
-      built: new Date().toISOString(),
-      opportunityCount: oppCount,
-      postedCount,
-      forecastedCount,
-    });
+    // Create new cache data with grants
+    const newCacheData = {
+      _meta: {
+        built: new Date().toISOString(),
+        grantCount,
+        openGrantCount: openCount,
+        totalFunding: grants.reduce((sum, g) => sum + g.fundingAmount.total, 0),
+        deadlineCount: grants.filter(g => g.closeDate).length,
+        agenciesProcessed: [...new Set(grants.map(g => g.agency))],
+        gridCells: 1, // Federal grants don't use geographic grid
+        sourcesProcessed: ['grants.gov'],
+      },
+      grid: {
+        federal: {
+          grants,
+          deadlines: grants
+            .filter(g => g.closeDate && g.status === 'open')
+            .map(g => {
+              const daysRemaining = Math.ceil((new Date(g.closeDate).getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+              return {
+                grantId: g.id,
+                title: g.title,
+                agency: g.agency,
+                closeDate: g.closeDate,
+                daysRemaining,
+                urgency: daysRemaining <= 7 ? 'critical' as const :
+                         daysRemaining <= 14 ? 'urgent' as const :
+                         daysRemaining <= 30 ? 'moderate' as const : 'normal' as const,
+                fundingAmount: g.fundingAmount.total,
+                applicationUrl: g.applicationUrl,
+              };
+            }),
+        },
+      },
+      _buildInProgress: false,
+      _buildStartedAt: null,
+    };
+
+    await setGrantCache(newCacheData);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log(`[GrantsGov Cron] Built in ${elapsed}s — ${oppCount} opportunities`);
+    console.log(`[Grants Cron] Built in ${elapsed}s — ${grantCount} opportunities`);
 
     recordCronRun('rebuild-grants-gov', 'success', Date.now() - startTime);
 
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
-      opportunities: oppCount,
-      posted: postedCount,
-      forecasted: forecastedCount,
-      cache: getGrantsGovCacheStatus(),
+      grants: grantCount,
+      open: openCount,
+      closed: closedCount,
+      totalFunding: grants.reduce((sum, g) => sum + g.fundingAmount.total, 0),
     });
 
   } catch (err: any) {
@@ -224,6 +290,6 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   } finally {
-    setGrantsGovBuildInProgress(false);
+    setBuildInProgress(false);
   }
 }

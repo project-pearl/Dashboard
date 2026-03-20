@@ -17,6 +17,14 @@
       "schedule": "30 4 * * *"
     },
     {
+      "path": "/api/cron/rebuild-stakeholder",
+      "schedule": "45 4 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-policy",
+      "schedule": "0 5 * * *"
+    },
+    {
       "path": "/api/cron/rebuild-wqp",
       "schedule": "0 5 * * *"
     },
@@ -201,6 +209,10 @@
       "schedule": "0 16 * * 0"
     },
     {
+      "path": "/api/cron/rebuild-edna",
+      "schedule": "0 4 * * 2"
+    },
+    {
       "path": "/api/cron/rebuild-ncei",
       "schedule": "30 16 * * *"
     },
@@ -275,6 +287,10 @@
     {
       "path": "/api/cron/rebuild-usgs-water-avail",
       "schedule": "15 19 * * 0"
+    },
+    {
+      "path": "/api/cron/rebuild-force-protection",
+      "schedule": "15 4 * * 0"
     },
     {
       "path": "/api/cron/rebuild-cyber-risk",
@@ -379,6 +395,10 @@
     {
       "path": "/api/cron/rebuild-realtime-wx",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/build-briefings",
+      "schedule": "0 1 * * *"
     }
   ]
 }

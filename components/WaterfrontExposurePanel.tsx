@@ -1,7 +1,8 @@
 ﻿'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { DollarSign, TrendingUp, AlertTriangle, Droplets, Building2, BarChart3 } from 'lucide-react';
+import { DollarSign, TrendingUp, AlertTriangle, Droplets, Building2, BarChart3, ChevronDown } from 'lucide-react';
+import { STATE_ABBR_TO_NAME } from '@/lib/adminStateContext';
 import type { WaterfrontExposureResult } from '@/lib/waterfrontExposure';
 
 const PARAM_LABELS: Record<string, string> = {
@@ -46,6 +47,8 @@ interface WaterfrontExposurePanelProps {
   selectedState?: string;
   stateRollup?: Array<{ abbr: string; score: number }>;
   compactMode?: boolean;
+  showStateSelector?: boolean;
+  onStateChange?: (state: string) => void;
 }
 
 type DriverBar = {
@@ -55,20 +58,33 @@ type DriverBar = {
   color: string;
 };
 
-export default function WaterfrontExposurePanel({ selectedState = 'MD', compactMode }: WaterfrontExposurePanelProps) {
+export default function WaterfrontExposurePanel({
+  selectedState = 'MD',
+  compactMode,
+  showStateSelector = false,
+  onStateChange
+}: WaterfrontExposurePanelProps) {
   const [data, setData] = useState<WaterfrontExposureResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const [internalState, setInternalState] = useState(selectedState);
+
+  const effectiveState = showStateSelector ? internalState : selectedState;
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/waterfront-exposure?state=${selectedState}`)
+    fetch(`/api/waterfront-exposure?state=${effectiveState}`)
       .then((r) => r.json())
       .then((d) => {
         if (!d.error) setData(d);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [selectedState]);
+  }, [effectiveState]);
+
+  const handleStateChange = (newState: string) => {
+    setInternalState(newState);
+    onStateChange?.(newState);
+  };
 
   const componentDrivers = useMemo<DriverBar[]>(() => {
     if (!data) return [];
@@ -123,7 +139,24 @@ export default function WaterfrontExposurePanel({ selectedState = 'MD', compactM
           <DollarSign className="w-5 h-5 text-amber-600" />
           <div>
             <h3 className="text-sm font-semibold text-slate-900">Waterfront Value Exposure</h3>
-            <p className="text-2xs text-slate-500">{data.stateAbbr} - Hedonic property risk model</p>
+            <div className="flex items-center gap-2">
+              {showStateSelector ? (
+                <div className="relative">
+                  <select
+                    value={internalState}
+                    onChange={(e) => handleStateChange(e.target.value)}
+                    className="text-2xs text-slate-500 bg-transparent border-none outline-none pr-4 appearance-none cursor-pointer hover:text-slate-700"
+                  >
+                    {Object.entries(STATE_ABBR_TO_NAME).map(([abbr, name]) => (
+                      <option key={abbr} value={abbr}>{abbr} - {name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-3 h-3 text-slate-400 absolute right-0 top-0.5 pointer-events-none" />
+                </div>
+              ) : (
+                <p className="text-2xs text-slate-500">{data.stateAbbr} - Hedonic property risk model</p>
+              )}
+            </div>
           </div>
         </div>
         <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${riskColor(data.riskLabel)}`}>

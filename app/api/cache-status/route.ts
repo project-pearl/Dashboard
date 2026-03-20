@@ -35,7 +35,7 @@ import { getTriCacheStatus, ensureWarmed as warmTri } from '@/lib/triCache';
 import { getFemaCacheStatus, ensureWarmed as warmFema } from '@/lib/femaCache';
 import { getSuperfundCacheStatus, ensureWarmed as warmSuperfund } from '@/lib/superfundCache';
 import { getUSAsCacheStatus, ensureWarmed as warmUSAs } from '@/lib/usaSpendingCache';
-import { getGrantsGovCacheStatus, ensureWarmed as warmGrantsGov } from '@/lib/grantsGovCache';
+import { getGrantCacheDelta, ensureWarmed as warmGrants } from '@/lib/grantCache';
 import { getSamCacheStatus, ensureWarmed as warmSam } from '@/lib/samGovCache';
 import { getUsdmCacheStatus, ensureWarmed as warmUsdm } from '@/lib/usdmCache';
 import { getUsgsDvCacheStatus, ensureWarmed as warmUsgsDv } from '@/lib/usgsDvCache';
@@ -44,6 +44,7 @@ import { getErddapSatCacheStatus, ensureWarmed as warmErddapSat } from '@/lib/er
 import { getNasaStreamCacheStatus, ensureWarmed as warmNasaStream } from '@/lib/nasaStreamCache';
 import { getNwmCacheStatus, ensureWarmed as warmNwm } from '@/lib/nwmCache';
 import { getIpacCacheStatus, ensureWarmed as warmIpac } from '@/lib/ipacCache';
+import { geteDNACacheStatus, ensureeDNAWarmed } from '@/lib/ednaCache';
 import { getNceiCacheStatus, ensureWarmed as warmNcei } from '@/lib/nceiCache';
 import { getHabsosCacheStatus, ensureWarmed as warmHabsos } from '@/lib/habsosCache';
 import { getBeaconCacheStatus, ensureWarmed as warmBeacon } from '@/lib/beaconCache';
@@ -116,6 +117,7 @@ import { getPhmsaPipelineCacheStatus, ensureWarmed as warmPhmsaPipeline } from '
 import { getNexradQpeCacheStatus, ensureWarmed as warmNexradQpe } from '@/lib/nexradQpeCache';
 import { getEpaOppPesticideCacheStatus, ensureWarmed as warmEpaOppPesticide } from '@/lib/epaOppPesticideCache';
 import { getHypoxiaCacheStatus, ensureWarmed as warmHypoxia } from '@/lib/hypoxiaCache';
+import { getForceProtectionCacheStatus, ensureWarmed as warmForceProtection } from '@/lib/forceProtectionCache';
 
 function staleness(built: string | null | undefined): { stale: boolean; ageHours: number | null } {
   if (!built) return { stale: true, ageHours: null };
@@ -135,7 +137,7 @@ export async function GET(request: NextRequest) {
     [warmEcho, warmFrs, warmPfas, warmStateReports, warmBwb],
     [warmCdcNwss, warmNdbc, warmNasaCmr, warmNars, warmDataGov, warmUsace],
     [warmNwisIv, warmUsgsAlerts, warmNwsAlerts, warmNwps, warmCoops, warmSnotel],
-    [warmTri, warmUSAs, warmGrantsGov, warmSam, warmSentinelHealth, warmSentinelQueue, warmSentinelScores],
+    [warmTri, warmUSAs, warmGrants, warmSam, warmSentinelHealth, warmSentinelQueue, warmSentinelScores],
     [warmFema, warmSuperfund, warmUsdm, warmUsgsDv, warmCoopsDerived, warmErddapSat],
     [warmNasaStream, warmNwm, warmIpac, warmNcei, warmHabsos, warmGlerl, warmHefs, warmBeacon, warmSsoCso, warmFirms, warmSeismic, warmDam, warmEmbassyAqi],
     [warmNfipClaims, warmHazMit, warmUsbr, warmEchoEffluent, warmRcra, warmSems, warmAdvocacy],
@@ -148,7 +150,7 @@ export async function GET(request: NextRequest) {
     [warmWqxModern, warmStnFlood, warmDmrViolations, warmHabForecast, warmStreamStats, warmEReporting],
     [warmCdcPlaces, warmCoastwatch, warmIcisAir, warmSsurgo, warmNadpPfas, warmMs4Permit],
     [warmNlcd, warmEchoBiosolids, warmCoopsPredictions, warmVolcano, warmOshaWater, warmSwdi],
-    [warmNassLivestock, warmNassCrops, warmCongress, warmPhmsaPipeline, warmNexradQpe, warmEpaOppPesticide, warmHypoxia],
+    [warmNassLivestock, warmNassCrops, warmCongress, warmPhmsaPipeline, warmNexradQpe, warmEpaOppPesticide, warmHypoxia, warmForceProtection],
   ];
   for (const batch of warmBatches) {
     await Promise.allSettled(batch.map(fn => fn()));
@@ -180,7 +182,7 @@ export async function GET(request: NextRequest) {
   const snotel = getSnotelCacheStatus();
   const tri = getTriCacheStatus();
   const usaSpending = getUSAsCacheStatus();
-  const grantsGov = getGrantsGovCacheStatus();
+  const grantsGov = getGrantCacheDelta();
   const sam = getSamCacheStatus();
   const fema = getFemaCacheStatus();
   const superfund = getSuperfundCacheStatus();
@@ -191,6 +193,7 @@ export async function GET(request: NextRequest) {
   const nasaStream = getNasaStreamCacheStatus();
   const nwm = getNwmCacheStatus();
   const ipac = getIpacCacheStatus();
+  const edna = await geteDNACacheStatus();
   const ncei = getNceiCacheStatus();
   const habsos = getHabsosCacheStatus();
   const beacon = getBeaconCacheStatus();
@@ -259,6 +262,7 @@ export async function GET(request: NextRequest) {
   const nexradQpe = getNexradQpeCacheStatus();
   const epaOppPesticide = getEpaOppPesticideCacheStatus();
   const hypoxia = getHypoxiaCacheStatus();
+  const forceProtection = getForceProtectionCacheStatus();
 
   const caches = {
     wqp: {
@@ -413,6 +417,10 @@ export async function GET(request: NextRequest) {
     ipac: {
       ...ipac,
       ...staleness(ipac.loaded ? (ipac as any).built : null),
+    },
+    edna: {
+      ...edna,
+      ...staleness(edna.loaded ? (edna as any).built : null),
     },
     ncei: {
       ...ncei,
@@ -685,6 +693,10 @@ export async function GET(request: NextRequest) {
     hypoxia: {
       ...hypoxia,
       ...staleness(hypoxia.loaded ? (hypoxia as any).built : null),
+    },
+    forceProtection: {
+      ...forceProtection,
+      ...staleness(forceProtection.loaded ? (forceProtection as any).built : null),
     },
   };
 

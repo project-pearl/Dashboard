@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import {
   ensureWarmed,
   getIndicesForHuc,
+  getIndicesForHuc8,
   getAllIndices,
   getCacheStatus,
   getStateCompositeScore,
@@ -13,9 +14,10 @@ export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/indices
- *   ?state=MD             → all HUC indices for a state
- *   ?huc8=02070001        → single HUC detail
- *   ?top=10&sort=composite → top-N riskiest HUCs
+ *   ?state=MD                   → all HUC indices for a state
+ *   ?huc12=020700020301         → single HUC-12 detail
+ *   ?huc8=02070001              → all HUC-12s within HUC-8 (backwards compat)
+ *   ?top=10&sort=composite      → top-N riskiest HUCs
  */
 export async function GET(request: Request) {
   await ensureWarmed();
@@ -23,6 +25,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const state = searchParams.get('state');
   const huc8 = searchParams.get('huc8');
+  const huc12 = searchParams.get('huc12');
   const top = searchParams.get('top');
   const sort = searchParams.get('sort') || 'composite';
 
@@ -49,15 +52,24 @@ export async function GET(request: Request) {
     return NextResponse.json({ stateScores: withGrades, meta: cacheStatus });
   }
 
-  // Single HUC lookup
-  if (huc8) {
-    const indices = getIndicesForHuc(huc8);
+  // Single HUC-12 lookup
+  if (huc12) {
+    const indices = getIndicesForHuc(huc12);
     if (!indices) {
       return NextResponse.json({ hucIndices: [], meta: { ...cacheStatus, totalHucs: 0 } });
     }
     return NextResponse.json({
       hucIndices: [indices],
       meta: { ...cacheStatus, totalHucs: 1 },
+    });
+  }
+
+  // HUC-8 lookup (backwards compatibility - returns all HUC-12s within that HUC-8)
+  if (huc8) {
+    const indices = getIndicesForHuc8(huc8);
+    return NextResponse.json({
+      hucIndices: indices,
+      meta: { ...cacheStatus, totalHucs: indices.length },
     });
   }
 

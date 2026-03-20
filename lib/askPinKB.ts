@@ -564,6 +564,20 @@ export const SECTION_KB: Record<string, SectionKB> = {
     ],
   },
 
+  'edna-detections': {
+    explanation: 'Environmental DNA (eDNA) species detection data from water samples. Shows actual species presence including endangered, threatened, and invasive species detected through genetic material in water.',
+    lookFor: 'High biodiversity scores indicate healthy ecosystems. Endangered species detections signal sensitive habitats. Invasive species detections indicate ecological stress and management needs.',
+    action: 'Prioritize areas with endangered species detections for protection. Address invasive species detections with management interventions. Use high biodiversity areas as restoration success models.',
+    faq: [
+      { q: 'What is eDNA monitoring?', keywords: ['edna', 'environmental dna', 'genetic', 'what is'],
+        a: 'Environmental DNA (eDNA) detects species by analyzing genetic material they leave in water - from skin, scales, waste, etc. It can detect species presence without physically catching them, making it ideal for rare or elusive species.' },
+      { q: 'How accurate are eDNA detections?', keywords: ['accurate', 'reliable', 'confidence', 'false positive'],
+        a: 'eDNA is highly sensitive and can detect species at very low densities. High confidence detections are verified through multiple sampling methods. Detection does not always mean a breeding population exists.' },
+      { q: 'What species does eDNA detect?', keywords: ['species', 'what animals', 'fish', 'detect'],
+        a: 'eDNA primarily detects aquatic species: fish, amphibians, mollusks, crustaceans, and aquatic invertebrates. Each detection includes threat status (endangered, threatened, invasive, or native) based on USFWS and invasive species databases.' },
+    ],
+  },
+
   disclaimer: {
     explanation: 'Platform disclaimer noting data sources, refresh schedules, and appropriate use of dashboard information.',
     lookFor: 'Review periodically to ensure you understand data limitations and appropriate use.',

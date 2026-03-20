@@ -1,6 +1,7 @@
 import type { IndexScore } from './types';
 import type { HucData } from './hucDataCollector';
 import { computeConfidence, applyConfidenceRegression } from './confidence';
+import { geteDNAData, type eDNAData } from '../ednaCache';
 
 // ── Embedded USFWS T&E Species Counts by State ──────────────────────────────
 // Source: USFWS ECOS species-by-state reports (2024-2025)
@@ -63,16 +64,20 @@ const STATE_TE_DATA: Record<string, { total: number; aquatic: number; critHab: n
  * Ecological Health Index (0-100, higher = more ecological stress)
  *
  * Components:
- *   Aquatic T&E Baseline (30%): state aquatic T&E species count
- *   Total T&E + CritHab (15%): total species + critical habitat density
- *   ATTAINS Impairment Stress (35%): impairment ratio + cause complexity
- *   Recovery Gap (20%): TMDL coverage deficit
+ *   Aquatic T&E Baseline (20%): state aquatic T&E species count (USFWS ECOS)
+ *   eDNA Biodiversity Reality Check (25%): actual species detections vs baseline
+ *   Total T&E + CritHab (10%): total species + critical habitat density
+ *   ATTAINS Impairment Stress (30%): impairment ratio + cause complexity
+ *   Recovery Gap (15%): TMDL coverage deficit
  */
-export function computeEcologicalHealth(data: HucData): IndexScore {
+export async function computeEcologicalHealth(data: HucData): Promise<IndexScore> {
   const now = new Date().toISOString();
-  const { stateAbbr, attainsWaterbodies } = data;
+  const { stateAbbr, attainsWaterbodies, huc12 } = data;
 
   const te = STATE_TE_DATA[stateAbbr];
+
+  // Get eDNA data for this HUC12
+  const ednaData = huc12 ? await geteDNAData(huc12) : null;
 
   // No state data → neutral with low confidence
   if (!te) {
@@ -86,15 +91,34 @@ export function computeEcologicalHealth(data: HucData): IndexScore {
     };
   }
 
-  // ── 1. Aquatic T&E Baseline (30%) ──
+  // ── 1. Aquatic T&E Baseline (20%) ── USFWS state-level data
   const aquaticScore = Math.min(100, (te.aquatic / 80) * 100);
 
-  // ── 2. Total T&E + Critical Habitat (15%) ──
+  // ── 2. eDNA Biodiversity Reality Check (25%) ── Actual species detections
+  let ednaScore = 50; // neutral default
+  let ednaDataAvailable = false;
+
+  if (ednaData && ednaData.totalDetections > 0) {
+    ednaDataAvailable = true;
+
+    // Biodiversity component (60% of eDNA score)
+    const biodiversityStress = Math.max(0, 100 - ednaData.biodiversityIndex);
+
+    // Threatened species detection penalty (25% of eDNA score)
+    const threatPenalty = Math.min(100, (ednaData.endangeredCount / Math.max(ednaData.uniqueSpecies, 1)) * 100);
+
+    // Invasive species detection penalty (15% of eDNA score)
+    const invasivePenalty = Math.min(100, (ednaData.invasiveCount / Math.max(ednaData.uniqueSpecies, 1)) * 100);
+
+    ednaScore = (biodiversityStress * 0.6) + (threatPenalty * 0.25) + (invasivePenalty * 0.15);
+  }
+
+  // ── 3. Total T&E + Critical Habitat (10%) ── Static baseline
   const totalNorm = Math.min(100, (te.total / 200) * 100);
   const critHabNorm = Math.min(100, (te.critHab / 80) * 100);
   const teCritScore = (totalNorm + critHabNorm) / 2;
 
-  // ── 3. ATTAINS Impairment Stress (35%) ──
+  // ── 4. ATTAINS Impairment Stress (30%) ──
   let impairmentStress = 50; // neutral fallback
   if (attainsWaterbodies.length > 0) {
     const impaired = attainsWaterbodies.filter(wb =>
@@ -106,7 +130,7 @@ export function computeEcologicalHealth(data: HucData): IndexScore {
     impairmentStress = (impairmentRatio * 0.7 + causeStress * 0.3) * 100;
   }
 
-  // ── 4. Recovery Gap (20%) ──
+  // ── 5. Recovery Gap (15%) ──
   let recoveryGap = 50; // neutral fallback
   if (attainsWaterbodies.length > 0) {
     const completed = attainsWaterbodies.filter(wb => wb.tmdlStatus === 'completed').length;
@@ -115,18 +139,23 @@ export function computeEcologicalHealth(data: HucData): IndexScore {
     recoveryGap = total > 0 ? (1 - completed / total) * 100 : 50;
   }
 
-  // ── Weighted composite ──
+  // ── Weighted composite (now includes eDNA) ──
   const rawScore =
-    aquaticScore * 0.30 +
-    teCritScore * 0.15 +
-    impairmentStress * 0.35 +
-    recoveryGap * 0.20;
+    aquaticScore * 0.20 +      // USFWS baseline (reduced from 30%)
+    ednaScore * 0.25 +         // eDNA reality check (NEW)
+    teCritScore * 0.10 +       // T&E + CritHab (reduced from 15%)
+    impairmentStress * 0.30 +  // ATTAINS (reduced from 35%)
+    recoveryGap * 0.15;        // Recovery gap (reduced from 20%)
 
   // ── Confidence ──
-  const dataPoints = attainsWaterbodies.length + 1; // +1 for state baseline
+  let dataPoints = attainsWaterbodies.length + 1; // +1 for state baseline
   const sources = new Set<string>();
   sources.add('usfws'); // always present
   if (attainsWaterbodies.length > 0) sources.add('attains');
+  if (ednaDataAvailable) {
+    sources.add('edna');
+    dataPoints += ednaData!.totalDetections; // Add eDNA detection count
+  }
 
   const confidence = computeConfidence('ecologicalHealth', dataPoints, [], sources.size);
   const value = Math.round(Math.max(0, Math.min(100, applyConfidenceRegression(rawScore, confidence))));

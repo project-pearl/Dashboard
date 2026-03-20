@@ -17,7 +17,7 @@ import { ensureWarmed as warmEcho, getEchoCache } from '@/lib/echoCache';
 import { ensureWarmed as warmPfas, getPfasCache } from '@/lib/pfasCache';
 import { ensureWarmed as warmTri, getTriCache } from '@/lib/triCache';
 import { ensureWarmed as warmAttains, getAttainsCache } from '@/lib/attainsCache';
-import { ensureWarmed as warmIndices, getIndicesForHuc } from '@/lib/indices/indicesCache';
+import { ensureWarmed as warmIndices, getIndicesForHuc8 } from '@/lib/indices/indicesCache';
 
 // Scoring
 import { computeWaterRiskScore, type RiskScoreInput } from '@/lib/waterRiskScore';
@@ -154,9 +154,17 @@ export async function GET(request: NextRequest) {
   const val = <T,>(r: PromiseSettledResult<T | null>): T | null =>
     r.status === 'fulfilled' ? r.value : null;
 
-  // HUC-8 lookup for indices
+  // HUC-8 lookup for indices (aggregated from HUC-12s)
   const hucMatch = findNearestHuc8(lat, lng);
-  const hucIndices = hucMatch ? getIndicesForHuc(hucMatch.huc8) : null;
+  const huc12Indices = hucMatch ? getIndicesForHuc8(hucMatch.huc8) : [];
+  // For water risk score, we only need composite and confidence values
+  // Cast to HucIndices for backwards compatibility - only composite/confidence used
+  const hucComposite = huc12Indices.length > 0 && hucMatch ? {
+    composite: Math.round(huc12Indices.reduce((s, idx) => s + idx.composite, 0) / huc12Indices.length),
+    compositeConfidence: Math.min(...huc12Indices.map(idx => idx.compositeConfidence)),
+    stateAbbr: huc12Indices[0].stateAbbr,
+    huc8: hucMatch.huc8,
+  } as any : null;
 
   // ATTAINS state-level data
   let attainsData: { impaired: number; total: number; topCauses: string[] } | null = null;
@@ -203,7 +211,7 @@ export async function GET(request: NextRequest) {
 
   const scoreInput: RiskScoreInput = {
     wqpGrade,
-    hucIndices,
+    hucIndices: hucComposite,
     sdwis: sdwisVal ? {
       systems: sdwisVal.systems,
       violations: sdwisVal.violations,
@@ -236,7 +244,7 @@ export async function GET(request: NextRequest) {
       ...(hucMatch ? { huc8: hucMatch.huc8, hucDistance: hucMatch.distance } : {}),
     },
     ...result,
-    hucIndices: hucIndices || null,
+    hucIndices: hucComposite || null,
     raw: {
       wqpRecords: wqpRecords || [],
       sdwis: sdwisVal ? { systems: sdwisVal.systems, violations: sdwisVal.violations } : null,

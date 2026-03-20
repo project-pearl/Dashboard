@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from '@/components/ui/sheet';
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import {
   Search, CheckCircle, AlertTriangle, XCircle, Download, FileText,
   Clock, Database, Shield, Activity, Cpu, FlaskConical, ExternalLink,
-  ChevronDown, ChevronUp,
+  ChevronDown, ChevronUp, Loader2, Globe,
 } from 'lucide-react';
 import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
 import { cn } from '@/lib/utils';
@@ -40,24 +40,159 @@ export interface ProvenanceRecord {
   epaMethod: string;
   qappSection?: string;
   lineage: LineageStep[];
+  // Live data fields
+  isLive?: boolean;
+  agency?: string;
+  apiEndpoint?: string;
+  refreshSchedule?: string;
+  dataDescription?: string;
+  totalRecords?: number;
 }
 
-// ─── Demo provenance data factory ────────────────────────────────────────────
+// ─── Live provenance data from API ──────────────────────────────────────────
 
-function generateProvenanceRecord(
+interface LiveCacheInfo {
+  cacheKey: string;
+  loaded: boolean;
+  built: string | null;
+  recordCount: number;
+  source: string | null;
+  staleness: number | null; // minutes since last build
+}
+
+interface LiveProvenanceResponse {
+  metric: string;
+  agency: string;
+  apiEndpoint: string;
+  refreshSchedule: string;
+  epaMethod: string;
+  dataDescription: string;
+  caches: LiveCacheInfo[];
+  allCachesLoaded: boolean;
+  oldestBuild: string | null;
+  newestBuild: string | null;
+  totalRecords: number;
+  error?: string;
+}
+
+function stalenessStatus(minutes: number | null): ValidationStatus {
+  if (minutes === null) return 'fail';
+  if (minutes < 120) return 'pass';   // < 2 hours
+  if (minutes < 1440) return 'flag';  // < 24 hours
+  return 'fail';                       // > 24 hours
+}
+
+function formatTimestamp(iso: string | null): string {
+  if (!iso) return 'Never built';
+  try {
+    return new Date(iso).toLocaleString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+    });
+  } catch {
+    return iso;
+  }
+}
+
+function formatStaleness(minutes: number | null): string {
+  if (minutes === null) return 'No data';
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes} min ago`;
+  if (minutes < 1440) return `${Math.round(minutes / 60)} hr ago`;
+  return `${Math.round(minutes / 1440)} days ago`;
+}
+
+function buildLiveRecord(
+  metricName: string,
+  displayValue: string,
+  unit: string | undefined,
+  data: LiveProvenanceResponse,
+): ProvenanceRecord {
+  const lineage: LineageStep[] = [];
+
+  // Step 1: Federal API source
+  lineage.push({
+    label: 'Federal API Source',
+    description: `Data sourced from ${data.apiEndpoint}`,
+    timestamp: data.oldestBuild ? formatTimestamp(data.oldestBuild) : 'Unknown',
+    sourceSystem: data.agency,
+    method: data.refreshSchedule,
+    status: data.allCachesLoaded ? 'pass' : 'flag',
+    detail: `${data.dataDescription}`,
+  });
+
+  // Step 2: Individual cache statuses
+  for (const cache of data.caches) {
+    const staleStatus = stalenessStatus(cache.staleness);
+    lineage.push({
+      label: `Cache: ${cache.cacheKey}`,
+      description: cache.loaded
+        ? `${cache.recordCount.toLocaleString()} records loaded from ${cache.source || 'disk/blob'}`
+        : 'Cache not loaded — data unavailable',
+      timestamp: cache.built ? formatTimestamp(cache.built) : 'Never built',
+      sourceSystem: `PIN ${cache.cacheKey}Cache`,
+      method: cache.loaded ? `${cache.source || 'persisted'} storage` : 'Not available',
+      status: cache.loaded ? staleStatus : 'fail',
+      detail: cache.staleness !== null
+        ? `Last rebuilt: ${formatStaleness(cache.staleness)} | ${cache.recordCount.toLocaleString()} records`
+        : 'No build timestamp available',
+    });
+  }
+
+  // Step 3: QA/QC validation
+  const allFresh = data.caches.every(c => c.staleness !== null && c.staleness < 1440);
+  lineage.push({
+    label: 'QA/QC Validation',
+    description: 'Automated range checks, rate-of-change validation, and cross-source consistency',
+    timestamp: formatTimestamp(data.newestBuild),
+    sourceSystem: 'PIN QA Engine',
+    method: data.epaMethod,
+    status: allFresh ? 'pass' : 'flag',
+    detail: allFresh
+      ? `All ${data.caches.length} source caches within freshness threshold | ${data.epaMethod}`
+      : `${data.caches.filter(c => !c.loaded || (c.staleness !== null && c.staleness > 1440)).length} cache(s) stale or unavailable`,
+  });
+
+  // Step 4: Composite scoring
+  lineage.push({
+    label: 'Display Value',
+    description: 'Final computed value rendered on dashboard',
+    timestamp: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+    sourceSystem: 'PIN Dashboard',
+    method: 'Real-time render from cached data',
+    status: 'pass',
+    detail: `Displayed: ${displayValue}${unit ? ' ' + unit : ''} | Total backing records: ${data.totalRecords.toLocaleString()}`,
+  });
+
+  return {
+    metricName,
+    displayValue,
+    unit,
+    sensorSource: data.apiEndpoint,
+    sensorModel: data.agency,
+    lastCalibration: data.newestBuild ? formatTimestamp(data.newestBuild) : 'N/A',
+    nextCalibrationDue: data.refreshSchedule,
+    epaMethod: data.epaMethod,
+    qappSection: undefined,
+    lineage,
+    isLive: true,
+    agency: data.agency,
+    apiEndpoint: data.apiEndpoint,
+    refreshSchedule: data.refreshSchedule,
+    dataDescription: data.dataDescription,
+    totalRecords: data.totalRecords,
+  };
+}
+
+// ─── Fallback: generated record when API is unavailable ─────────────────────
+
+function generateFallbackRecord(
   metricName: string,
   displayValue: string,
   unit?: string,
 ): ProvenanceRecord {
-  const now = new Date();
-  const fmt = (d: Date) => d.toISOString().replace('T', ' ').slice(0, 19);
-  const ago = (mins: number) => {
-    const d = new Date(now.getTime() - mins * 60_000);
-    return fmt(d);
-  };
-
   const methodMap: Record<string, string> = {
-    'Dissolved Oxygen': 'ASTM D888 / EPA Method 360.1',
+    'Dissolved Oxygen': 'EPA Method 360.1 / ASTM D888',
     'Total Nitrogen': 'EPA Method 351.2',
     'Total Phosphorus': 'EPA Method 365.1',
     'Turbidity': 'EPA Method 180.1 / ASTM D6910',
@@ -66,79 +201,31 @@ function generateProvenanceRecord(
     'TSS': 'EPA Method 160.2',
     'Temperature': 'ASTM D1498',
     'Flow Rate': 'USGS continuous discharge',
-    'Water Quality Score': 'PEARL Composite (EPA QA/R-5)',
-    'Sustainability Score': 'PEARL ESG Framework v2.1',
+    'Water Quality Score': 'PIN 14-Layer Composite Index',
     'Compliance Score': 'EPA NPDES Method 40 CFR §122.26',
   };
-
-  const epaMethod = methodMap[metricName] || 'EPA QA/R-5 Composite';
 
   return {
     metricName,
     displayValue,
     unit,
-    sensorSource: 'YSI EXO2 Multiparameter Sonde',
-    sensorModel: 'EXO2-S / Hach FP360',
-    lastCalibration: '2026-02-12 08:00:00',
-    nextCalibrationDue: '2026-02-19 08:00:00',
-    epaMethod,
-    qappSection: 'PEARL-QAPP-2025 §4.3',
+    sensorSource: 'Federal API (status unavailable)',
+    sensorModel: 'EPA / USGS / NOAA',
+    lastCalibration: 'Unavailable — API did not respond',
+    nextCalibrationDue: 'Check cache-status endpoint',
+    epaMethod: methodMap[metricName] || 'EPA QA/R-5 Composite',
     lineage: [
       {
-        label: 'Sensor Reading',
-        description: 'Raw analog signal captured by probe',
-        timestamp: ago(8),
-        sourceSystem: 'YSI EXO2 Sonde',
-        method: 'Continuous 1-min interval',
-        status: 'pass',
-        detail: `Raw value: ${displayValue}${unit ? ' ' + unit : ''} ± 0.01`,
-      },
-      {
-        label: 'Data Logger',
-        description: 'Timestamped, GPS-tagged, stored on-board',
-        timestamp: ago(7),
-        sourceSystem: 'Campbell CR1000X',
-        method: 'RS-485 / SDI-12 digital',
-        status: 'pass',
-        detail: 'GPS lock: 39.2904° N, 76.6122° W | HDOP: 0.9',
-      },
-      {
-        label: 'Transmission',
-        description: 'Encrypted cellular upload to cloud',
-        timestamp: ago(6),
-        sourceSystem: 'Verizon LTE Gateway',
-        method: 'TLS 1.3 encrypted / MQTT',
-        status: 'pass',
-        detail: 'Payload hash: SHA-256 verified',
-      },
-      {
-        label: 'QA/QC Validation',
-        description: 'Automated range, rate-of-change, and pattern checks',
-        timestamp: ago(4),
-        sourceSystem: 'PEARL QA Engine v3.2',
-        method: epaMethod,
-        status: 'pass',
-        detail: 'Range ✓ | Rate-of-change ✓ | Pattern ✓ | Drift: 0.2%',
-      },
-      {
-        label: 'Derived Metric',
-        description: 'Calculated from validated readings with bias correction',
-        timestamp: ago(2),
-        sourceSystem: 'PEARL Analytics Engine',
-        method: 'Rolling 15-min avg + bias correction',
-        status: 'pass',
-        detail: `Computed: ${displayValue}${unit ? ' ' + unit : ''} (confidence: 98.7%)`,
-      },
-      {
-        label: 'Display Value',
-        description: 'Final value rendered on dashboard',
-        timestamp: ago(1),
-        sourceSystem: 'PEARL Dashboard',
-        method: 'Real-time render pipeline',
-        status: 'pass',
-        detail: `Displayed: ${displayValue}${unit ? ' ' + unit : ''}`,
+        label: 'Data Source',
+        description: 'Live provenance data unavailable — showing fallback',
+        timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
+        sourceSystem: 'PIN API',
+        method: 'Fallback mode',
+        status: 'flag' as const,
+        detail: 'The /api/provenance endpoint did not respond. This is a placeholder lineage.',
       },
     ],
+    isLive: false,
   };
 }
 
@@ -169,11 +256,13 @@ function statusBadge(status: ValidationStatus) {
 
 function StepIcon({ label }: { label: string }) {
   const cls = 'h-4 w-4 text-blue-600';
+  if (label.includes('Federal') || label.includes('Source')) return <Globe className={cls} />;
+  if (label.includes('Cache')) return <Database className={cls} />;
+  if (label.includes('QA')) return <FlaskConical className={cls} />;
+  if (label.includes('Display') || label.includes('Derived')) return <Shield className={cls} />;
   if (label.includes('Sensor')) return <Activity className={cls} />;
   if (label.includes('Logger')) return <Database className={cls} />;
   if (label.includes('Transmission')) return <Cpu className={cls} />;
-  if (label.includes('QA')) return <FlaskConical className={cls} />;
-  if (label.includes('Derived')) return <Shield className={cls} />;
   return <FileText className={cls} />;
 }
 
@@ -190,12 +279,13 @@ async function exportProvenancePDF(record: ProvenanceRecord) {
   pdf.addMetadata('Metric', record.metricName);
   pdf.addMetadata('Display Value', `${record.displayValue}${record.unit ? ' ' + record.unit : ''}`);
   if (record.waterbody) pdf.addMetadata('Waterbody', record.waterbody);
-  pdf.addMetadata('Sensor Source', record.sensorSource);
-  pdf.addMetadata('Sensor Model', record.sensorModel);
+  pdf.addMetadata('Data Source', record.sensorSource);
+  pdf.addMetadata('Agency', record.sensorModel);
   pdf.addMetadata('EPA Method', record.epaMethod);
-  pdf.addMetadata('Last Calibration', record.lastCalibration);
-  pdf.addMetadata('Next Cal. Due', record.nextCalibrationDue);
-  if (record.qappSection) pdf.addMetadata('QAPP Reference', record.qappSection);
+  pdf.addMetadata('Last Build', record.lastCalibration);
+  pdf.addMetadata('Refresh Schedule', record.nextCalibrationDue);
+  if (record.totalRecords) pdf.addMetadata('Backing Records', record.totalRecords.toLocaleString());
+  if (record.isLive) pdf.addMetadata('Data Status', 'LIVE — sourced from federal API cache metadata');
   pdf.addMetadata('Generated', new Date().toISOString().replace('T', ' ').slice(0, 19));
 
   pdf.addSpacer(5);
@@ -226,14 +316,16 @@ async function exportProvenancePDF(record: ProvenanceRecord) {
 
   pdf.addSpacer(5);
   pdf.addDivider();
-  pdf.addText('This document certifies the full data provenance chain for regulatory audit purposes.', { fontSize: 8 });
-  pdf.addText('Generated by Project PEARL — EPA QAPP-compliant monitoring platform.', { fontSize: 8 });
+  if (record.isLive) {
+    pdf.addText('This audit trail is sourced from live federal API cache metadata — not simulated data.', { fontSize: 8 });
+  }
+  pdf.addText('Generated by PIN — Pearl Intelligence Network.', { fontSize: 8 });
 
-  const filename = `PEARL_Provenance_${record.metricName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
+  const filename = `PIN_Provenance_${record.metricName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
   pdf.download(filename);
 }
 
-// ─── ProvenanceIcon (exported for use in management centers) ────────────────────
+// ─── ProvenanceIcon (exported for use in management centers) ────────────────
 
 interface ProvenanceIconProps {
   metricName: string;
@@ -244,7 +336,31 @@ interface ProvenanceIconProps {
 
 export function ProvenanceIcon({ metricName, displayValue, unit, className }: ProvenanceIconProps) {
   const [open, setOpen] = useState(false);
-  const record = generateProvenanceRecord(metricName, displayValue, unit);
+  const [record, setRecord] = useState<ProvenanceRecord | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    setLoading(true);
+
+    fetch(`/api/provenance?metric=${encodeURIComponent(metricName)}`)
+      .then(res => res.ok ? res.json() : null)
+      .then((data: LiveProvenanceResponse | null) => {
+        if (cancelled) return;
+        if (data && data.caches?.length > 0) {
+          setRecord(buildLiveRecord(metricName, displayValue, unit, data));
+        } else {
+          setRecord(generateFallbackRecord(metricName, displayValue, unit));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setRecord(generateFallbackRecord(metricName, displayValue, unit));
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
+  }, [open, metricName, displayValue, unit]);
 
   return (
     <>
@@ -262,7 +378,14 @@ export function ProvenanceIcon({ metricName, displayValue, unit, className }: Pr
         <Search className="h-3 w-3" />
       </button>
 
-      <DataProvenancePanel open={open} onOpenChange={setOpen} record={record} />
+      {record && <DataProvenancePanel open={open} onOpenChange={setOpen} record={record} loading={loading} />}
+      {!record && open && (
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetContent side="right" className="w-full sm:max-w-lg flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+          </SheetContent>
+        </Sheet>
+      )}
     </>
   );
 }
@@ -273,9 +396,10 @@ interface DataProvenancePanelProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   record: ProvenanceRecord;
+  loading?: boolean;
 }
 
-export function DataProvenancePanel({ open, onOpenChange, record }: DataProvenancePanelProps) {
+export function DataProvenancePanel({ open, onOpenChange, record, loading }: DataProvenancePanelProps) {
   const [expandedStep, setExpandedStep] = useState<number | null>(null);
   const [exporting, setExporting] = useState(false);
 
@@ -298,13 +422,28 @@ export function DataProvenancePanel({ open, onOpenChange, record }: DataProvenan
           <SheetTitle className="text-white text-lg flex items-center gap-2">
             <Shield className="h-5 w-5" />
             Data Provenance Audit
+            {record.isLive && (
+              <Badge variant="outline" className="ml-2 border-green-300 text-green-100 text-2xs">LIVE DATA</Badge>
+            )}
+            {!record.isLive && (
+              <Badge variant="outline" className="ml-2 border-amber-300 text-amber-100 text-2xs">FALLBACK</Badge>
+            )}
           </SheetTitle>
           <SheetDescription className="text-blue-100">
-            Full chain-of-custody for <span className="font-semibold text-white">{record.metricName}</span>
+            {record.isLive
+              ? <>Chain-of-custody for <span className="font-semibold text-white">{record.metricName}</span> — sourced from live cache metadata</>
+              : <>Audit trail for <span className="font-semibold text-white">{record.metricName}</span></>
+            }
           </SheetDescription>
         </SheetHeader>
 
         <div className="p-5 space-y-5">
+
+          {loading && (
+            <div className="flex items-center gap-2 text-xs text-blue-500 mb-2">
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading live provenance data...
+            </div>
+          )}
 
           {/* Metric summary card */}
           <div className="rounded-lg border-2 border-blue-200 bg-blue-50 p-4">
@@ -318,17 +457,17 @@ export function DataProvenancePanel({ open, onOpenChange, record }: DataProvenan
               </div>
               <div className="text-right space-y-1">
                 {statusBadge(record.lineage.every(s => s.status === 'pass') ? 'pass' : record.lineage.some(s => s.status === 'fail') ? 'fail' : 'flag')}
-                <div className="text-2xs text-blue-500 mt-1">All {record.lineage.length} steps verified</div>
+                <div className="text-2xs text-blue-500 mt-1">{record.lineage.length} steps verified</div>
               </div>
             </div>
           </div>
 
-          {/* Sensor / Calibration info */}
+          {/* Source info — shows different cards for live vs fallback */}
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-lg border border-slate-200 bg-white p-3">
               <div className="flex items-center gap-1.5 mb-2">
-                <Activity className="h-4 w-4 text-blue-600" />
-                <span className="text-xs font-semibold text-slate-700">Sensor Source</span>
+                <Globe className="h-4 w-4 text-blue-600" />
+                <span className="text-xs font-semibold text-slate-700">Data Source</span>
               </div>
               <div className="text-xs text-slate-600 space-y-1">
                 <div>{record.sensorSource}</div>
@@ -345,38 +484,30 @@ export function DataProvenancePanel({ open, onOpenChange, record }: DataProvenan
             <div className="rounded-lg border border-green-200 bg-green-50 p-3">
               <div className="flex items-center gap-1.5 mb-2">
                 <Clock className="h-4 w-4 text-green-600" />
-                <span className="text-xs font-semibold text-green-700">Last Calibration</span>
+                <span className="text-xs font-semibold text-green-700">{record.isLive ? 'Last Cache Build' : 'Last Calibration'}</span>
               </div>
               <div className="text-xs text-green-600 font-medium">{record.lastCalibration}</div>
             </div>
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
               <div className="flex items-center gap-1.5 mb-2">
                 <Clock className="h-4 w-4 text-amber-600" />
-                <span className="text-xs font-semibold text-amber-700">Next Cal. Due</span>
+                <span className="text-xs font-semibold text-amber-700">{record.isLive ? 'Refresh Schedule' : 'Next Cal. Due'}</span>
               </div>
               <div className="text-xs text-amber-600 font-medium">{record.nextCalibrationDue}</div>
             </div>
           </div>
 
-          {/* QAPP link */}
-          {record.qappSection && (
-            <div className="rounded-lg border border-purple-200 bg-purple-50 p-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-purple-600" />
-                <div>
-                  <div className="text-xs font-semibold text-purple-700">QAPP Reference</div>
-                  <div className="text-2xs text-purple-500">{record.qappSection}</div>
-                </div>
+          {/* Total records badge (live only) */}
+          {record.isLive && record.totalRecords !== undefined && record.totalRecords > 0 && (
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 flex items-center gap-3">
+              <Database className="h-5 w-5 text-blue-600" />
+              <div>
+                <div className="text-xs font-semibold text-blue-700">Backing Data Records</div>
+                <div className="text-lg font-bold text-blue-900">{record.totalRecords.toLocaleString()}</div>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs border-purple-300 text-purple-700 hover:bg-purple-100"
-                onClick={() => window.open('https://www.epa.gov/quality/quality-assurance-project-plan-qapp', '_blank')}
-              >
-                <ExternalLink className="h-3 w-3 mr-1" />
-                View QAPP
-              </Button>
+              {record.dataDescription && (
+                <div className="text-2xs text-blue-500 ml-auto max-w-[200px]">{record.dataDescription}</div>
+              )}
             </div>
           )}
 
@@ -478,7 +609,7 @@ export function DataProvenancePanel({ open, onOpenChange, record }: DataProvenan
               {exporting ? 'Generating PDF…' : 'Export Provenance Chain (PDF)'}
             </Button>
             <p className="text-2xs text-slate-400 text-center mt-2">
-              One-click audit-ready PDF for regulatory review
+              Audit-ready PDF for regulatory review
             </p>
           </div>
 
@@ -487,10 +618,14 @@ export function DataProvenancePanel({ open, onOpenChange, record }: DataProvenan
             <div className="flex items-start gap-3">
               <Shield className="h-5 w-5 flex-shrink-0 mt-0.5" />
               <div>
-                <h4 className="text-xs font-bold mb-1">EPA QAPP Compliant</h4>
+                <h4 className="text-xs font-bold mb-1">
+                  {record.isLive ? 'Live Federal Data Provenance' : 'Data Provenance'}
+                </h4>
                 <p className="text-2xs opacity-90">
-                  All data follows EPA QA/R-5 quality assurance requirements. Chain of custody is
-                  digitally signed, immutable, and available 24/7 for MDE audit access.
+                  {record.isLive
+                    ? 'This audit trail is sourced from live cache metadata — showing actual build timestamps, record counts, and data freshness from federal API integrations.'
+                    : 'Provenance data is currently unavailable from the cache status API. Showing fallback information.'
+                  }
                 </p>
               </div>
             </div>

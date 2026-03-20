@@ -3,7 +3,7 @@ import { ensureWarmed as warmWqp } from '@/lib/wqpCache';
 import { ensureWarmed as warmIcis } from '@/lib/icisCache';
 import { ensureWarmed as warmSdwis } from '@/lib/sdwisCache';
 import { ensureWarmed as warmAttains } from '@/lib/attainsCache';
-import { collectForHuc, getAllHuc8s } from '@/lib/indices/hucDataCollector';
+import { collectForHuc, getAllHuc12s } from '@/lib/indices/hucDataCollector';
 import { computePermitRiskExposure } from '@/lib/indices/permitRiskExposure';
 import { computeInfrastructureFailure } from '@/lib/indices/infrastructureFailure';
 import { computePearlLoadVelocity } from '@/lib/indices/pearlLoadVelocity';
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     // Warm all source caches in parallel
     await Promise.all([warmWqp(), warmIcis(), warmSdwis(), warmAttains(), warmIndices()]);
 
-    const allHucs = getAllHuc8s();
+    const allHucs = getAllHuc12s();
     const results: Record<string, HucIndices> = {};
     const historyEntries: Record<string, ScoreHistoryEntry> = {};
     const todayISO = new Date().toISOString().slice(0, 10);
@@ -66,8 +66,8 @@ export async function GET(request: NextRequest) {
     for (let i = 0; i < allHucs.length; i += HUC_BATCH_SIZE) {
       const batch = allHucs.slice(i, i + HUC_BATCH_SIZE);
 
-      const batchResults = await Promise.all(batch.map(async (huc8) => {
-        const data = collectForHuc(huc8);
+      const batchResults = await Promise.all(batch.map(async (huc12) => {
+        const data = collectForHuc(huc12);
         // collectForHuc now always returns data (with empty arrays for sparse HUCs)
 
         // Run all 9 index engines
@@ -77,12 +77,12 @@ export async function GET(request: NextRequest) {
         const permitRiskExposure = computePermitRiskExposure(data);
         const perCapitaLoad = computePerCapitaLoad(data);
         const waterfrontExposure = computeWaterfrontExposure(data);
-        const ecologicalHealth = computeEcologicalHealth(data);
+        const ecologicalHealth = await computeEcologicalHealth(data);
         const ejVulnerability = computeEjVulnerability(data);
         const governanceResponse = computeGovernanceResponse(data);
 
-        // Apply tidal modifiers for coastal HUCs
-        if (isCoastalHuc(huc8)) {
+        // Apply tidal modifiers for coastal HUCs (use parent HUC-8)
+        if (isCoastalHuc(data.huc8)) {
           applyTidalModifiers({
             pearlLoadVelocity, infrastructureFailure, watershedRecovery,
             permitRiskExposure, perCapitaLoad,
@@ -117,11 +117,12 @@ export async function GET(request: NextRequest) {
         );
 
         // Projections from score history
-        const history = getScoreHistory(huc8);
+        const history = getScoreHistory(huc12);
         const { projection7d, projection30d } = computeProjections(history, composite, compositeConfidence);
 
         const hucIndices: HucIndices = {
-          huc8,
+          huc12,
+          huc8: data.huc8,
           stateAbbr: data.stateAbbr,
           pearlLoadVelocity,
           infrastructureFailure,
@@ -138,12 +139,12 @@ export async function GET(request: NextRequest) {
           projection30d,
         };
 
-        return { huc8, hucIndices, composite };
+        return { huc12, hucIndices, composite };
       }));
 
       for (const result of batchResults) {
-        results[result.huc8] = result.hucIndices;
-        historyEntries[result.huc8] = { date: todayISO, composite: result.composite };
+        results[result.huc12] = result.hucIndices;
+        historyEntries[result.huc12] = { date: todayISO, composite: result.composite };
         totalConfidence += result.hucIndices.compositeConfidence;
         scoredCount++;
       }

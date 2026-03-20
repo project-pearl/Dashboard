@@ -142,49 +142,88 @@ function cacheSource(cacheName: string): { name: string; agency: string; freshne
 // Each evaluator reads from pre-warmed caches via synchronous getter functions
 // and returns StoryFinding[] based on threshold rules.
 
-function evaluateSdwis(): StoryFinding[] {
+function evaluateSdwis(state?: string | null): StoryFinding[] {
   const findings: StoryFinding[] = [];
   try {
-    const { getSdwisAllData } = require('./sdwisCache');
-    const data = getSdwisAllData();
-    if (!data) return findings;
+    if (state) {
+      const { getSdwisForState } = require('./sdwisCache');
+      const data = getSdwisForState(state);
+      if (!data) return findings;
 
-    const healthBased = data.violations?.filter((v: any) =>
-      v.violationType === 'Health-Based' || v.contaminantGroup === 'Health-Based'
-    ) ?? [];
-    const totalViolations = data.violations?.length ?? 0;
+      const healthBased = data.violations?.filter((v: any) =>
+        v.violationType === 'Health-Based' || v.contaminantGroup === 'Health-Based'
+      ) ?? [];
+      const totalViolations = data.violations?.length ?? 0;
 
-    if (healthBased.length > 0) {
-      findings.push({
-        id: mkId('sdwis'), severity: 'critical', category: 'take-action',
-        title: `${healthBased.length} health-based drinking water violation${healthBased.length > 1 ? 's' : ''}`,
-        detail: `Health-based violations in public water systems require immediate attention. These indicate potential risk to public health.`,
-        metric: { label: 'Health-Based Violations', value: healthBased.length },
-        sources: ['sdwis'],
-      });
-    }
-    if (totalViolations > 20) {
-      findings.push({
-        id: mkId('sdwis'), severity: 'warning', category: 'take-action',
-        title: `${totalViolations} total drinking water violations`,
-        detail: `Elevated violation count across public water systems. Review for patterns and systemic issues.`,
-        metric: { label: 'Total Violations', value: totalViolations },
-        sources: ['sdwis'],
-      });
-    } else if (totalViolations > 0 && healthBased.length === 0) {
-      findings.push({
-        id: mkId('sdwis'), severity: 'info', category: 'monitor',
-        title: `${totalViolations} drinking water violation${totalViolations > 1 ? 's' : ''} (non-health-based)`,
-        detail: `Minor or monitoring/reporting violations detected. No immediate health risk but should be tracked.`,
-        metric: { label: 'Violations', value: totalViolations },
-        sources: ['sdwis'],
-      });
+      if (healthBased.length > 0) {
+        findings.push({
+          id: mkId('sdwis'), severity: 'critical', category: 'take-action',
+          title: `${healthBased.length} health-based drinking water violation${healthBased.length > 1 ? 's' : ''} in ${state}`,
+          detail: `Health-based violations in ${state} public water systems require immediate attention. These indicate potential risk to public health.`,
+          metric: { label: 'Health-Based Violations', value: healthBased.length },
+          sources: ['sdwis'],
+        });
+      }
+      if (totalViolations > 20) {
+        findings.push({
+          id: mkId('sdwis'), severity: 'warning', category: 'take-action',
+          title: `${totalViolations} total drinking water violations in ${state}`,
+          detail: `Elevated violation count across ${state} public water systems. Review for patterns and systemic issues.`,
+          metric: { label: 'Total Violations', value: totalViolations },
+          sources: ['sdwis'],
+        });
+      } else if (totalViolations > 0 && healthBased.length === 0) {
+        findings.push({
+          id: mkId('sdwis'), severity: 'info', category: 'monitor',
+          title: `${totalViolations} drinking water violation${totalViolations > 1 ? 's' : ''} (non-health-based) in ${state}`,
+          detail: `Minor or monitoring/reporting violations detected in ${state}. No immediate health risk but should be tracked.`,
+          metric: { label: 'Violations', value: totalViolations },
+          sources: ['sdwis'],
+        });
+      }
+    } else {
+      // Federal/national level data
+      const { getSdwisAllData } = require('./sdwisCache');
+      const data = getSdwisAllData();
+      if (!data) return findings;
+
+      const healthBased = data.violations?.filter((v: any) =>
+        v.violationType === 'Health-Based' || v.contaminantGroup === 'Health-Based'
+      ) ?? [];
+      const totalViolations = data.violations?.length ?? 0;
+
+      if (healthBased.length > 0) {
+        findings.push({
+          id: mkId('sdwis'), severity: 'critical', category: 'take-action',
+          title: `${healthBased.length} health-based drinking water violation${healthBased.length > 1 ? 's' : ''}`,
+          detail: `Health-based violations in public water systems require immediate attention. These indicate potential risk to public health.`,
+          metric: { label: 'Health-Based Violations', value: healthBased.length },
+          sources: ['sdwis'],
+        });
+      }
+      if (totalViolations > 20) {
+        findings.push({
+          id: mkId('sdwis'), severity: 'warning', category: 'take-action',
+          title: `${totalViolations} total drinking water violations`,
+          detail: `Elevated violation count across public water systems. Review for patterns and systemic issues.`,
+          metric: { label: 'Total Violations', value: totalViolations },
+          sources: ['sdwis'],
+        });
+      } else if (totalViolations > 0 && healthBased.length === 0) {
+        findings.push({
+          id: mkId('sdwis'), severity: 'info', category: 'monitor',
+          title: `${totalViolations} drinking water violation${totalViolations > 1 ? 's' : ''} (non-health-based)`,
+          detail: `Minor or monitoring/reporting violations detected. No immediate health risk but should be tracked.`,
+          metric: { label: 'Violations', value: totalViolations },
+          sources: ['sdwis'],
+        });
+      }
     }
   } catch { /* cache not loaded */ }
   return findings;
 }
 
-function evaluateEcho(): StoryFinding[] {
+function evaluateEcho(state?: string | null): StoryFinding[] {
   const findings: StoryFinding[] = [];
   try {
     const { getEchoAllData } = require('./echoCache');
@@ -240,7 +279,7 @@ function evaluateEcho(): StoryFinding[] {
   return findings;
 }
 
-function evaluateAttains(): StoryFinding[] {
+function evaluateAttains(state?: string | null): StoryFinding[] {
   const findings: StoryFinding[] = [];
   try {
     const { getAttainsCacheSummary } = require('./attainsCache');
@@ -265,7 +304,7 @@ function evaluateAttains(): StoryFinding[] {
   return findings;
 }
 
-function evaluateDam(): StoryFinding[] {
+function evaluateDam(state?: string | null): StoryFinding[] {
   const findings: StoryFinding[] = [];
   try {
     const { getDamAll } = require('./damCache');
@@ -300,7 +339,7 @@ function evaluateDam(): StoryFinding[] {
   return findings;
 }
 
-function evaluateUsdm(): StoryFinding[] {
+function evaluateUsdm(state?: string | null): StoryFinding[] {
   const findings: StoryFinding[] = [];
   try {
     const { getUsdmAllStates } = require('./usdmCache');
@@ -342,7 +381,7 @@ function evaluateUsdm(): StoryFinding[] {
   return findings;
 }
 
-function evaluateNwisIv(): StoryFinding[] {
+function evaluateNwisIv(state?: string | null): StoryFinding[] {
   const findings: StoryFinding[] = [];
   try {
     const { getNwpsAllGauges } = require('./nwpsCache');
@@ -375,35 +414,60 @@ function evaluateNwisIv(): StoryFinding[] {
   return findings;
 }
 
-function evaluateFema(): StoryFinding[] {
+function evaluateFema(state?: string | null): StoryFinding[] {
   const findings: StoryFinding[] = [];
   try {
-    const { getFemaDeclarationsAll } = require('./femaCache');
-    const declarations = getFemaDeclarationsAll();
-    if (!declarations || declarations.length === 0) return findings;
+    if (state) {
+      const { getFemaDeclarations } = require('./femaCache');
+      const declarations = getFemaDeclarations(state);
+      if (!declarations || declarations.length === 0) return findings;
 
-    // Count recent declarations (last 90 days)
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 90);
-    const recent = declarations.filter((d: any) => {
-      const dt = new Date(d.declarationDate || d.incidentBeginDate || '');
-      return dt >= cutoff;
-    });
-
-    if (recent.length > 0) {
-      findings.push({
-        id: mkId('fema'), severity: 'critical', category: 'monitor',
-        title: `${recent.length} active FEMA disaster declaration${recent.length > 1 ? 's' : ''} (last 90 days)`,
-        detail: `Active federal disaster declarations may affect water infrastructure and operations.`,
-        metric: { label: 'Active Declarations', value: recent.length },
-        sources: ['fema'],
+      // Count recent declarations (last 90 days)
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 90);
+      const recent = declarations.filter((d: any) => {
+        const dt = new Date(d.declarationDate || d.incidentBeginDate || '');
+        return dt >= cutoff;
       });
+
+      if (recent.length > 0) {
+        findings.push({
+          id: mkId('fema'), severity: 'critical', category: 'monitor',
+          title: `${recent.length} active FEMA disaster declaration${recent.length > 1 ? 's' : ''} in ${state} (last 90 days)`,
+          detail: `Active federal disaster declarations in ${state} may affect water infrastructure and operations.`,
+          metric: { label: 'Active Declarations', value: recent.length },
+          sources: ['fema'],
+        });
+      }
+    } else {
+      // Federal/national level data
+      const { getFemaDeclarationsAll } = require('./femaCache');
+      const declarations = getFemaDeclarationsAll();
+      if (!declarations || declarations.length === 0) return findings;
+
+      // Count recent declarations (last 90 days)
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 90);
+      const recent = declarations.filter((d: any) => {
+        const dt = new Date(d.declarationDate || d.incidentBeginDate || '');
+        return dt >= cutoff;
+      });
+
+      if (recent.length > 0) {
+        findings.push({
+          id: mkId('fema'), severity: 'critical', category: 'monitor',
+          title: `${recent.length} active FEMA disaster declaration${recent.length > 1 ? 's' : ''} (last 90 days)`,
+          detail: `Active federal disaster declarations may affect water infrastructure and operations.`,
+          metric: { label: 'Active Declarations', value: recent.length },
+          sources: ['fema'],
+        });
+      }
     }
   } catch { /* cache not loaded */ }
   return findings;
 }
 
-function evaluateAirQuality(): StoryFinding[] {
+function evaluateAirQuality(state?: string | null): StoryFinding[] {
   const findings: StoryFinding[] = [];
   try {
     const { getAirQualityAllData } = require('./airQualityCache');
@@ -438,7 +502,7 @@ function evaluateAirQuality(): StoryFinding[] {
   return findings;
 }
 
-function evaluateEjscreen(): StoryFinding[] {
+function evaluateEjscreen(state?: string | null): StoryFinding[] {
   const findings: StoryFinding[] = [];
   try {
     const { getEjscreenAllData } = require('./ejscreenCache');
@@ -463,7 +527,7 @@ function evaluateEjscreen(): StoryFinding[] {
   return findings;
 }
 
-function evaluateDodPfas(): StoryFinding[] {
+function evaluateDodPfas(state?: string | null): StoryFinding[] {
   const findings: StoryFinding[] = [];
   try {
     const { getDodPfasAllSites } = require('./dodPfasCache');
@@ -497,7 +561,7 @@ function evaluateDodPfas(): StoryFinding[] {
   return findings;
 }
 
-function evaluateWqp(): StoryFinding[] {
+function evaluateWqp(state?: string | null): StoryFinding[] {
   const findings: StoryFinding[] = [];
   try {
     const { getWqpAllRecords } = require('./wqpCache');
@@ -515,7 +579,7 @@ function evaluateWqp(): StoryFinding[] {
   return findings;
 }
 
-function evaluateNwsAlerts(): StoryFinding[] {
+function evaluateNwsAlerts(state?: string | null): StoryFinding[] {
   const findings: StoryFinding[] = [];
   try {
     const { getNwsAlertAll } = require('./nwsAlertCache');
@@ -542,7 +606,7 @@ function evaluateNwsAlerts(): StoryFinding[] {
   return findings;
 }
 
-function evaluatePfas(): StoryFinding[] {
+function evaluatePfas(state?: string | null): StoryFinding[] {
   const findings: StoryFinding[] = [];
   try {
     const { getPfasAllResults } = require('./pfasCache');
@@ -564,7 +628,7 @@ function evaluatePfas(): StoryFinding[] {
   return findings;
 }
 
-function evaluateIcis(): StoryFinding[] {
+function evaluateIcis(state?: string | null): StoryFinding[] {
   const findings: StoryFinding[] = [];
   try {
     const { getIcisAllData } = require('./icisCache');
@@ -586,7 +650,7 @@ function evaluateIcis(): StoryFinding[] {
   return findings;
 }
 
-function evaluateFirms(): StoryFinding[] {
+function evaluateFirms(state?: string | null): StoryFinding[] {
   const findings: StoryFinding[] = [];
   try {
     const { getFirmsAllDetections } = require('./firmsCache');
@@ -612,7 +676,7 @@ function evaluateFirms(): StoryFinding[] {
 
 // ── Domain evaluator registry ────────────────────────────────────────────────
 
-const EVALUATORS: Record<DomainKey, () => StoryFinding[]> = {
+const EVALUATORS: Record<DomainKey, (state?: string | null) => StoryFinding[]> = {
   sdwis: evaluateSdwis,
   echo: evaluateEcho,
   attains: evaluateAttains,
@@ -663,7 +727,7 @@ export async function generateLensStory(
   for (const domain of domains) {
     const evaluator = EVALUATORS[domain];
     if (!evaluator) continue;
-    const domainFindings = safeGet(evaluator, []);
+    const domainFindings = safeGet(() => evaluator(state), []);
     allFindings.push(...domainFindings);
     for (const f of domainFindings) {
       for (const s of f.sources) sourceSet.add(s);

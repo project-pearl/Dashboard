@@ -927,27 +927,63 @@ export function getStateGrants(stateAbbr: string): GrantOpportunity[] {
   });
 }
 
-/** Returns live Grants.gov opportunities mapped to GrantOpportunity interface */
+/** Returns live grant opportunities mapped to GrantOpportunity interface */
 export function getLiveGrantOpportunities(): GrantOpportunity[] {
-  // Lazy import to avoid circular deps — grantsGovCache is server-only
+  // Lazy import to avoid circular deps — grantCache is server-only
   try {
-    const { getGrantsGovOpen } = require('./grantsGovCache');
-    const opps = getGrantsGovOpen();
-    return opps.map((o: any): GrantOpportunity => {
-      const floor = o.awardFloor || 0;
-      const ceiling = o.awardCeiling || 0;
+    const { getGrantsOpen } = require('./grantCache');
+    const grants = getGrantsOpen();
+
+    return grants.map((g: any): GrantOpportunity => {
+      const min = g.fundingAmount?.min || 0;
+      const max = g.fundingAmount?.max || 0;
+      const total = g.fundingAmount?.total || 0;
       const fmtDollars = (n: number) => n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `$${(n / 1_000).toFixed(0)}K` : `$${n}`;
-      const amount = ceiling > 0 ? (floor > 0 ? `${fmtDollars(floor)}–${fmtDollars(ceiling)}` : `Up to ${fmtDollars(ceiling)}`) : 'See listing';
+      const amount = max > min ? `${fmtDollars(min)}–${fmtDollars(max)}` :
+                   total > 0 ? `Up to ${fmtDollars(total)}` : 'See listing';
+
       return {
-        name: o.title,
-        source: o.agencyCode || o.agency || 'Grants.gov',
+        name: g.title,
+        source: g.agency || 'Federal',
         amount,
-        maxAmount: Math.round(ceiling / 1000) || 0,
+        maxAmount: Math.round((max || total) / 1000) || 0,
         fit: 'medium' as const,
-        deadline: o.closeDate || undefined,
-        description: o.description || '',
-        url: o.url,
-        grantsGovId: o.opportunityId,
+        deadline: g.closeDate || undefined,
+        description: g.description || '',
+        url: g.applicationUrl,
+        grantsGovId: g.id,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+/** Async version of getLiveGrantOpportunities for proper usage */
+export async function getLiveGrantOpportunitiesAsync(): Promise<GrantOpportunity[]> {
+  try {
+    const { getGrantOpportunities } = require('./grantCache');
+    const result = await getGrantOpportunities('federal');
+    const grants = result.grants || [];
+
+    return grants.filter((g: any) => g.status === 'open').map((g: any): GrantOpportunity => {
+      const min = g.fundingAmount?.min || 0;
+      const max = g.fundingAmount?.max || 0;
+      const total = g.fundingAmount?.total || 0;
+      const fmtDollars = (n: number) => n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `$${(n / 1_000).toFixed(0)}K` : `$${n}`;
+      const amount = max > min ? `${fmtDollars(min)}–${fmtDollars(max)}` :
+                   total > 0 ? `Up to ${fmtDollars(total)}` : 'See listing';
+
+      return {
+        name: g.title,
+        source: g.agency || 'Federal',
+        amount,
+        maxAmount: Math.round((max || total) / 1000) || 0,
+        fit: 'medium' as const,
+        deadline: g.closeDate || undefined,
+        description: g.description || '',
+        url: g.applicationUrl,
+        grantsGovId: g.id,
       };
     });
   } catch {
@@ -959,24 +995,80 @@ export function getLiveGrantOpportunities(): GrantOpportunity[] {
 /** Returns forecasted/upcoming grant opportunities not yet open, with expected open dates */
 export function getUpcomingGrantOpportunities(): (GrantOpportunity & { openDate?: string })[] {
   try {
-    const { getGrantsGovForecasted } = require('./grantsGovCache');
-    const opps = getGrantsGovForecasted();
-    return opps.map((o: any): GrantOpportunity & { openDate?: string } => {
-      const floor = o.awardFloor || 0;
-      const ceiling = o.awardCeiling || 0;
+    const { getGrantsAll } = require('./grantCache');
+    const grants = getGrantsAll();
+
+    // Get grants that are closing soon
+    const upcomingGrants = grants.filter((g: any) => {
+      if (!g.closeDate) return false;
+      const closeDate = new Date(g.closeDate);
+      const now = new Date();
+      const daysUntilClose = Math.ceil((closeDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+      return daysUntilClose <= 30 && daysUntilClose > 0; // Closing within 30 days
+    });
+
+    return upcomingGrants.map((g: any): GrantOpportunity & { openDate?: string } => {
+      const min = g.fundingAmount?.min || 0;
+      const max = g.fundingAmount?.max || 0;
+      const total = g.fundingAmount?.total || 0;
       const fmtDollars = (n: number) => n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `$${(n / 1_000).toFixed(0)}K` : `$${n}`;
-      const amount = ceiling > 0 ? (floor > 0 ? `${fmtDollars(floor)}–${fmtDollars(ceiling)}` : `Up to ${fmtDollars(ceiling)}`) : 'See listing';
+      const amount = max > min ? `${fmtDollars(min)}–${fmtDollars(max)}` :
+                   total > 0 ? `Up to ${fmtDollars(total)}` : 'See listing';
+
       return {
-        name: o.title,
-        source: o.agencyCode || o.agency || 'Grants.gov',
+        name: g.title,
+        source: g.agency || 'Federal',
         amount,
-        maxAmount: Math.round(ceiling / 1000) || 0,
+        maxAmount: Math.round((max || total) / 1000) || 0,
         fit: 'medium' as const,
-        deadline: o.closeDate || undefined,
-        description: o.description || '',
-        url: o.url,
-        grantsGovId: o.opportunityId,
-        openDate: o.openDate || undefined,
+        deadline: g.closeDate || undefined,
+        description: g.description || '',
+        url: g.applicationUrl,
+        grantsGovId: g.id,
+        openDate: g.openDate || undefined,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+/** Async version of getUpcomingGrantOpportunities for proper usage */
+export async function getUpcomingGrantOpportunitiesAsync(): Promise<(GrantOpportunity & { openDate?: string })[]> {
+  try {
+    const { getGrantOpportunities, getUpcomingDeadlines } = require('./grantCache');
+    const result = await getGrantOpportunities('federal');
+    const grants = result.grants || [];
+
+    // Get grants that are closing soon or not yet open
+    const upcomingGrants = grants.filter((g: any) => {
+      if (g.status === 'closed') return true; // Forecasted grants
+      if (!g.closeDate) return false;
+      const closeDate = new Date(g.closeDate);
+      const now = new Date();
+      const daysUntilClose = Math.ceil((closeDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+      return daysUntilClose <= 30; // Closing within 30 days
+    });
+
+    return upcomingGrants.map((g: any): GrantOpportunity & { openDate?: string } => {
+      const min = g.fundingAmount?.min || 0;
+      const max = g.fundingAmount?.max || 0;
+      const total = g.fundingAmount?.total || 0;
+      const fmtDollars = (n: number) => n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `$${(n / 1_000).toFixed(0)}K` : `$${n}`;
+      const amount = max > min ? `${fmtDollars(min)}–${fmtDollars(max)}` :
+                   total > 0 ? `Up to ${fmtDollars(total)}` : 'See listing';
+
+      return {
+        name: g.title,
+        source: g.agency || 'Federal',
+        amount,
+        maxAmount: Math.round((max || total) / 1000) || 0,
+        fit: 'medium' as const,
+        deadline: g.closeDate || undefined,
+        description: g.description || '',
+        url: g.applicationUrl,
+        grantsGovId: g.id,
+        openDate: g.openDate || undefined,
       };
     });
   } catch {
