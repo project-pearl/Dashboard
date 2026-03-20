@@ -73,6 +73,7 @@ import LensDataStory from '@/components/LensDataStory';
 import { useDataSummaries } from '@/hooks/useDataSummaries';
 import { DataStatCard } from '@/components/DataStatCard';
 import { daysUntil, deadlineStatus, deadlineRowStyle, deadlineTextColor, daysLabel } from '@/lib/formatDate';
+import { RealPolicyTracker } from './RealPolicyTracker';
 
 
 const GrantOpportunityMatcher = dynamic(
@@ -149,13 +150,13 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Overview',
     description: 'State operational dashboard — morning check before the day starts',
     defaultOverlay: 'risk',
-    sections: new Set(['regprofile', 'operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'briefing-actions', 'triage-queue', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'correlation-breakthroughs', 'lens-data-story']),
+    sections: new Set(['regprofile', 'operational-health', 'alertfeed', 'map-grid', 'top10', 'quick-access', 'correlation-breakthroughs', 'lens-data-story']),
   },
   briefing: {
     label: 'AI Briefing',
     description: 'AI-generated overnight summary and action items',
     defaultOverlay: 'risk',
-    sections: new Set(['insights', 'briefing-actions', 'triage-queue', 'briefing-qa', 'ask-pin-universal', 'lens-data-story']),
+    sections: new Set(['insights', 'briefing-actions', 'briefing-qa', 'ask-pin-universal', 'lens-data-story']),
   },
   'political-briefing': {
     label: 'Political Briefing',
@@ -2745,6 +2746,34 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
 
             // ── Policy Tracker sections ────────────────────────────────────
             case 'policy-federal': return DS(
+              <RealPolicyTracker
+                jurisdiction="federal"
+                entityType="state"
+                maxRules={15}
+                showFilters={true}
+              />
+            );
+
+            case 'policy-state': return DS(
+              <RealPolicyTracker
+                jurisdiction={adminState}
+                entityType="state"
+                maxRules={10}
+                showFilters={true}
+              />
+            );
+
+            case 'policy-epa': return DS(
+              <RealPolicyTracker
+                jurisdiction="federal"
+                entityType="state"
+                maxRules={12}
+                showFilters={true}
+              />
+
+            /*
+            // ── Original hardcoded policy sections (REPLACED BY REALPSOLICYTRACKER) ────
+            case 'policy-federal-DISABLED': return DS(
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -2934,6 +2963,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                 </CardContent>
               </Card>
             );
+            */
 
             // ── Compliance sections ────────────────────────────────────────
             case 'compliance-permits': return DS(
@@ -3322,24 +3352,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <CardDescription>HRSA shortage areas overlapping with water quality violations</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {[
-                      { label: 'Total HPSAs', value: '—', bg: 'bg-purple-50 border-purple-200' },
-                      { label: 'High Severity', value: '—', bg: 'bg-red-50 border-red-200' },
-                      { label: 'Rural %', value: '—', bg: 'bg-green-50 border-green-200' },
-                      { label: 'Near Violations', value: '—', bg: 'bg-amber-50 border-amber-200' },
-                    ].map(k => (
-                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
-                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
-                      </div>
-                    ))}
+                  <div className="text-center py-8 text-slate-500">
+                    <div className="text-sm">Awaiting data — HRSA HPSA designations</div>
+                    <div className="text-xs mt-1">Healthcare professional shortage area integration</div>
                   </div>
-                  <div className="mt-4 rounded-lg border border-purple-200 bg-purple-50/40 p-3">
-                    <div className="text-2xs font-bold uppercase tracking-wider text-purple-700 mb-1">HPSA Coverage</div>
-                    <div className="text-xs text-slate-700">Healthcare shortage data loaded from HRSA HPSA designations. Cross-referenced with SDWIS county violations.</div>
-                  </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: HRSA HPSA designations, SDWIS violations</p>
                 </CardContent>
               </Card>
             );
@@ -3354,24 +3370,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <CardDescription>Waterborne illness outbreaks and violation correlation</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {[
-                      { label: 'Total Outbreaks', value: '—', bg: 'bg-orange-50 border-orange-200' },
-                      { label: 'Total Cases', value: '—', bg: 'bg-red-50 border-red-200' },
-                      { label: 'Hospitalizations', value: '—', bg: 'bg-pink-50 border-pink-200' },
-                      { label: 'Violation-Correlated', value: '—', bg: 'bg-amber-50 border-amber-200' },
-                    ].map(k => (
-                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
-                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
-                      </div>
-                    ))}
+                  <div className="text-center py-8 text-slate-500">
+                    <div className="text-sm">Awaiting data — CDC outbreak surveillance</div>
+                    <div className="text-xs mt-1">Waterborne illness outbreak tracking and correlation</div>
                   </div>
-                  <div className="mt-4 rounded-lg border border-orange-200 bg-orange-50/40 p-3">
-                    <div className="text-2xs font-bold uppercase tracking-wider text-orange-700 mb-1">Tracking Status</div>
-                    <div className="text-xs text-slate-700">Outbreak surveillance data populated by rebuild-outbreaks cron. Live data appears when cache is warmed.</div>
-                  </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: CDC waterborne illness surveillance, SDWIS correlation</p>
                 </CardContent>
               </Card>
             );
@@ -3386,32 +3388,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <CardDescription>Environmental health metrics and risk scoring</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {[
-                      { label: 'Avg. AQI', value: '—', bg: 'bg-teal-50 border-teal-200', desc: 'Air Quality Index' },
-                      { label: 'Violation Density', value: '—', bg: 'bg-blue-50 border-blue-200', desc: 'Per capita' },
-                      { label: 'EJ Percentile', value: '—', bg: 'bg-amber-50 border-amber-200', desc: 'EPA EJScreen' },
-                    ].map(k => (
-                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
-                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
-                        <div className="text-2xs text-slate-400 mt-0.5">{k.desc}</div>
-                      </div>
-                    ))}
+                  <div className="text-center py-8 text-slate-500">
+                    <div className="text-sm">Awaiting data — EPA EJScreen integration</div>
+                    <div className="text-xs mt-1">Environmental health correlation and risk scoring</div>
                   </div>
-                  <div className="mt-4 grid grid-cols-3 gap-2">
-                    {[
-                      { label: 'Low Risk', color: 'bg-green-200', pct: '60%' },
-                      { label: 'Moderate', color: 'bg-amber-200', pct: '28%' },
-                      { label: 'High Risk', color: 'bg-red-200', pct: '12%' },
-                    ].map(r => (
-                      <div key={r.label} className="text-center">
-                        <div className={`h-2 rounded-full ${r.color} mb-1`} />
-                        <div className="text-2xs text-slate-500">{r.label} ({r.pct})</div>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA EJScreen, CDC Environmental Tracking</p>
                 </CardContent>
               </Card>
             );
@@ -4323,23 +4303,39 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             );
 
             case 'flood-status': return DS(
-              <FloodStatusSummary
-                forecasts={floodForecast.forecasts}
-                summary={floodForecast.summary}
-                updatedAt={floodForecast.updatedAt}
-                isLoading={floodForecast.isLoading}
-                onViewDetails={() => setViewLens('disaster' as ViewLens)}
-              />
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Waves className="w-5 h-5 text-blue-500" />
+                    River Flood Status
+                  </CardTitle>
+                  <CardDescription>Real-time river level monitoring and flood alerts</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8 text-slate-500">
+                    <div className="text-sm">Awaiting data — USGS Water Data</div>
+                    <div className="text-xs mt-1">Real-time river gauge and flood forecast integration</div>
+                  </div>
+                </CardContent>
+              </Card>
             );
 
             case 'flood-risk-summary': return DS(
-              <FloodRiskSummary
-                basins={floodRisk.basins}
-                national={floodRisk.national}
-                updatedAt={floodRisk.updatedAt}
-                isLoading={floodRisk.isLoading}
-                onViewDetails={() => setViewLens('disaster' as ViewLens)}
-              />
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-orange-500" />
+                    Flood Risk
+                  </CardTitle>
+                  <CardDescription>Basin-level flood vulnerability assessment</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8 text-slate-500">
+                    <div className="text-sm">Awaiting data — NOAA Flood Risk Assessment</div>
+                    <div className="text-xs mt-1">Hydrologic modeling and risk scoring integration</div>
+                  </div>
+                </CardContent>
+              </Card>
             );
 
             case 'weather-alerts': return DS(
@@ -6425,32 +6421,23 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               );
             }
 
-            case 'pfas-analytics-panel': {
-              const d = dataSummaries.epaPfas;
-              return (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <div className="text-2xl font-bold text-red-600">{summariesLoading ? '...' : d.loaded ? d.facilities.toLocaleString() : '\u2014'}</div>
-                      <div className="text-xs text-gray-500">PFAS Facilities</div>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <div className="text-2xl font-bold text-orange-600">{summariesLoading ? '...' : d.loaded ? d.exceedances.toLocaleString() : '\u2014'}</div>
-                      <div className="text-xs text-gray-500">Exceedances</div>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <div className="text-2xl font-bold text-purple-600">{summariesLoading ? '...' : d.loaded ? d.nearMilitary : '\u2014'}</div>
-                      <div className="text-xs text-gray-500">Near Military</div>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <div className="text-2xl font-bold text-blue-600">{summariesLoading ? '...' : d.loaded ? d.states : '\u2014'}</div>
-                      <div className="text-xs text-gray-500">States</div>
-                    </div>
+            case 'pfas-analytics-panel': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="w-5 w-5 text-orange-500" />
+                    PFAS Analytics
+                  </CardTitle>
+                  <CardDescription>EPA PFAS facility analysis and contamination tracking</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8 text-slate-500">
+                    <div className="text-sm">Awaiting data — EPA PFAS analytics</div>
+                    <div className="text-xs mt-1">Facility analysis and contamination tracking integration</div>
                   </div>
-                  {!summariesLoading && !d.loaded && <div className="flex items-center gap-2 text-xs text-slate-500"><span>⏳</span><span>Awaiting data — EPA PFAS Analytics</span><Badge variant="outline" className="text-2xs bg-amber-50 text-amber-700 border-amber-200">Data Pending</Badge></div>}
-                </div>
-              );
-            }
+                </CardContent>
+              </Card>
+            );
 
             case 'nws-forecast-panel': {
               const d = dataSummaries.nwsForecast;
