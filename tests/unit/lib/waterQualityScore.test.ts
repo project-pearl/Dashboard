@@ -20,6 +20,9 @@ import {
   type WaterbodyType,
   type ParameterCondition,
   type GradeLetter,
+  type FreshnessGrade,
+  ageToFreshnessGrade,
+  freshnessGradeStyle,
   type CoverageLevel,
 } from '@/lib/waterQualityScore';
 
@@ -638,6 +641,8 @@ describe('waterQualityScore', () => {
       expect(result.label).toBe('Fresh');
       expect(result.populated).toBe(16);
       expect(result.total).toBe(16);
+      expect(result.grade).toBe('A');
+      expect(result.avgAgeDays).toBeLessThan(1);
     });
 
     it('returns moderate score for partial coverage', () => {
@@ -668,6 +673,64 @@ describe('waterQualityScore', () => {
     it('respects custom totalPossibleParams', () => {
       const result = computeFreshnessScore({ p1: now(), p2: now() }, 5);
       expect(result.total).toBe(5);
+    });
+  });
+
+  // ─── ageToFreshnessGrade ──────────────────────────────────────────────────────
+
+  describe('ageToFreshnessGrade', () => {
+    it('returns A for data less than 1 year', () => {
+      expect(ageToFreshnessGrade(now())).toBe('A');
+      expect(ageToFreshnessGrade(daysAgo(30))).toBe('A');
+      expect(ageToFreshnessGrade(daysAgo(200))).toBe('A');
+      expect(ageToFreshnessGrade(daysAgo(364))).toBe('A');
+    });
+
+    it('returns B for data 1-2 years old', () => {
+      expect(ageToFreshnessGrade(daysAgo(366))).toBe('B');
+      expect(ageToFreshnessGrade(daysAgo(500))).toBe('B');
+      expect(ageToFreshnessGrade(daysAgo(729))).toBe('B');
+    });
+
+    it('returns C for data 2-3 years old', () => {
+      expect(ageToFreshnessGrade(daysAgo(730))).toBe('C');
+      expect(ageToFreshnessGrade(daysAgo(1000))).toBe('C');
+      expect(ageToFreshnessGrade(daysAgo(1094))).toBe('C');
+    });
+
+    it('returns D for data 3-4 years old', () => {
+      expect(ageToFreshnessGrade(daysAgo(1095))).toBe('D');
+      expect(ageToFreshnessGrade(daysAgo(1400))).toBe('D');
+      expect(ageToFreshnessGrade(daysAgo(1459))).toBe('D');
+    });
+
+    it('returns E for data 4-5 years old', () => {
+      expect(ageToFreshnessGrade(daysAgo(1460))).toBe('E');
+      expect(ageToFreshnessGrade(daysAgo(1700))).toBe('E');
+      expect(ageToFreshnessGrade(daysAgo(1824))).toBe('E');
+    });
+
+    it('returns F for data 5+ years old', () => {
+      expect(ageToFreshnessGrade(daysAgo(1825))).toBe('F');
+      expect(ageToFreshnessGrade(daysAgo(2000))).toBe('F');
+      expect(ageToFreshnessGrade(daysAgo(3000))).toBe('F');
+    });
+
+    it('returns F for null or invalid timestamps', () => {
+      expect(ageToFreshnessGrade(null)).toBe('F');
+      expect(ageToFreshnessGrade(undefined)).toBe('F');
+      expect(ageToFreshnessGrade('invalid')).toBe('F');
+    });
+  });
+
+  describe('freshnessGradeStyle', () => {
+    it('returns appropriate styles for each grade', () => {
+      expect(freshnessGradeStyle('A')).toMatchObject({ color: 'text-green-700' });
+      expect(freshnessGradeStyle('B')).toMatchObject({ color: 'text-emerald-700' });
+      expect(freshnessGradeStyle('C')).toMatchObject({ color: 'text-yellow-700' });
+      expect(freshnessGradeStyle('D')).toMatchObject({ color: 'text-orange-700' });
+      expect(freshnessGradeStyle('E')).toMatchObject({ color: 'text-red-600' });
+      expect(freshnessGradeStyle('F')).toMatchObject({ color: 'text-red-700' });
     });
   });
 

@@ -230,6 +230,7 @@ export interface MonitoringCoverage {
   dataAgeDays: number | null;
   freshnessLabel: string;
   freshnessConfidence: string;
+  freshnessGrade: FreshnessGrade | null; // Letter grade based on average data age
   liveKeyParamCount: number;
   referenceKeyParamCount: number;
   liveKeyParams: string[];
@@ -345,6 +346,13 @@ export function assessCoverage(
 
   const style = COVERAGE_STYLES[level];
 
+  // Calculate freshness grade based on average age across all parameters
+  let freshnessGrade: FreshnessGrade | null = null;
+  if (dataAgeMs !== null) {
+    const avgTimestamp = new Date(Date.now() - dataAgeMs).toISOString();
+    freshnessGrade = ageToFreshnessGrade(avgTimestamp);
+  }
+
   return {
     ...style,
     keyParamsPresent: count,
@@ -357,6 +365,7 @@ export function assessCoverage(
     dataAgeDays,
     freshnessLabel: getFreshnessLabel(dataAgeMs),
     freshnessConfidence: getFreshnessConfidence(dataAgeMs),
+    freshnessGrade,
     liveKeyParamCount: liveKeyParams.length,
     referenceKeyParamCount: referenceKeyParams.length,
     liveKeyParams,
@@ -369,7 +378,9 @@ export function assessCoverage(
 
 // ─── Water Quality Grade ─────────────────────────────────────────────────────
 
-export type GradeLetter = 'A+' | 'A' | 'A-' | 'B+' | 'B' | 'B-' | 'C+' | 'C' | 'C-' | 'D+' | 'D' | 'D-' | 'F';
+export type GradeLetter = 'A+' | 'A' | 'A-' | 'B+' | 'B' | 'B-' | 'C+' | 'C' | 'C-' | 'D+' | 'D' | 'D-' | 'E' | 'F';
+
+export type FreshnessGrade = 'A' | 'B' | 'C' | 'D' | 'E' | 'F';
 
 export interface WaterQualityGrade {
   canBeGraded: boolean;
@@ -403,6 +414,26 @@ export function scoreToLetter(score: number): GradeLetter {
   if (score >= 67) return 'D+';
   if (score >= 63) return 'D';
   if (score >= 60) return 'D-';
+  if (score >= 30) return 'E';
+  return 'F';
+}
+
+/**
+ * Convert data age to freshness letter grade
+ * A = <1 year, B = <2 years, C = <3 years, D = <4 years, E = <5 years, F = 5+ years
+ */
+export function ageToFreshnessGrade(lastSampled: string | null | undefined): FreshnessGrade {
+  if (!lastSampled) return 'F';
+  const ts = new Date(lastSampled).getTime();
+  if (isNaN(ts)) return 'F';
+  const days = (Date.now() - ts) / (24 * 60 * 60 * 1000);
+  const years = days / 365;
+
+  if (years < 1) return 'A';
+  if (years < 2) return 'B';
+  if (years < 3) return 'C';
+  if (years < 4) return 'D';
+  if (years < 5) return 'E';
   return 'F';
 }
 
@@ -414,8 +445,23 @@ function gradeStyle(letter: GradeLetter | null): { color: string; bgColor: strin
     case 'B': return { color: 'text-emerald-700',  bgColor: 'bg-emerald-100',  borderColor: 'border-emerald-300' };
     case 'C': return { color: 'text-yellow-700',   bgColor: 'bg-yellow-100',   borderColor: 'border-yellow-300' };
     case 'D': return { color: 'text-orange-700',   bgColor: 'bg-orange-100',   borderColor: 'border-orange-300' };
+    case 'E': return { color: 'text-red-600',      bgColor: 'bg-red-50',       borderColor: 'border-red-200' };
     case 'F': return { color: 'text-red-700',      bgColor: 'bg-red-100',      borderColor: 'border-red-300' };
     default:  return { color: 'text-slate-500',    bgColor: 'bg-slate-100',    borderColor: 'border-slate-300' };
+  }
+}
+
+/**
+ * Style function specifically for freshness grades
+ */
+export function freshnessGradeStyle(grade: FreshnessGrade): { color: string; bgColor: string; borderColor: string } {
+  switch (grade) {
+    case 'A': return { color: 'text-green-700',   bgColor: 'bg-green-100',   borderColor: 'border-green-300' };
+    case 'B': return { color: 'text-emerald-700',  bgColor: 'bg-emerald-100',  borderColor: 'border-emerald-300' };
+    case 'C': return { color: 'text-yellow-700',   bgColor: 'bg-yellow-100',   borderColor: 'border-yellow-300' };
+    case 'D': return { color: 'text-orange-700',   bgColor: 'bg-orange-100',   borderColor: 'border-orange-300' };
+    case 'E': return { color: 'text-red-600',      bgColor: 'bg-red-50',       borderColor: 'border-red-200' };
+    case 'F': return { color: 'text-red-700',      bgColor: 'bg-red-100',      borderColor: 'border-red-300' };
   }
 }
 
@@ -860,6 +906,8 @@ export interface FreshnessResult {
   populated: number;   // params with data
   total: number;       // total possible param slots
   label: string;       // "Fresh" | "Aging" | "Stale"
+  grade: FreshnessGrade | null; // Letter grade based on average data age
+  avgAgeDays: number | null;    // Average age across all parameters in days
 }
 
 export function computeFreshnessScore(
@@ -872,18 +920,41 @@ export function computeFreshnessScore(
   const coveragePct = (populated / Math.max(1, totalPossibleParams)) * 100;
 
   let recencyPct = 0;
+  let avgAgeDays: number | null = null;
+  let grade: FreshnessGrade | null = null;
+
   if (populated > 0) {
     let recencySum = 0;
+    let ageSum = 0;
+    let validAges = 0;
+
     for (const [, ts] of entries) {
       recencySum += paramRecencyScore(ts);
+
+      if (ts) {
+        const tsDate = new Date(ts).getTime();
+        if (!isNaN(tsDate)) {
+          const ageDays = (Date.now() - tsDate) / (24 * 60 * 60 * 1000);
+          ageSum += ageDays;
+          validAges++;
+        }
+      }
     }
+
     recencyPct = recencySum / populated;
+
+    if (validAges > 0) {
+      avgAgeDays = Math.round(ageSum / validAges);
+      // Use the average timestamp for letter grading
+      const avgTimestamp = new Date(Date.now() - (avgAgeDays * 24 * 60 * 60 * 1000)).toISOString();
+      grade = ageToFreshnessGrade(avgTimestamp);
+    }
   }
 
   const score = Math.round(coveragePct * 0.6 + recencyPct * 0.4);
   const label = score >= 70 ? 'Fresh' : score >= 40 ? 'Aging' : 'Stale';
 
-  return { score, populated, total: totalPossibleParams, label };
+  return { score, populated, total: totalPossibleParams, label, grade, avgAgeDays };
 }
 
 // ─── Per-Card Age Tint ───────────────────────────────────────────────────────
