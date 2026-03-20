@@ -104,7 +104,6 @@ import SentinelIntelFeed from '@/components/federal/SentinelIntelFeed';
 import EscalationSummary from '@/components/federal/EscalationSummary';
 import InstallationSupplyChain from '@/components/federal/InstallationSupplyChain';
 import ThreatFusionCard from '@/components/federal/ThreatFusionCard';
-import ForceProtectionIntel from '@/components/federal/ForceProtectionIntel';
 import NPDESAnnualReportGenerator from '@/components/NPDESAnnualReportGenerator';
 
 import hucNamesData from '@/data/huc8-names.json';
@@ -362,7 +361,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['ntas-status', 'at-risk-facilities', 'military-installations', 'sentinel-briefing', 'fire-detection', 'fire-health-advisory', 'briefing-qa', 'flood-impact-analysis', 'pfas-analytics-panel', 'nws-forecast-panel', 'cyber-risk-panel', 'lens-data-story', 'installation-supply-chain', 'threat-fusion', 'force-protection-intel']),
+    sections: new Set(['ntas-status', 'at-risk-facilities', 'military-installations', 'sentinel-briefing', 'fire-detection', 'fire-health-advisory', 'briefing-qa', 'flood-impact-analysis', 'pfas-analytics-panel', 'nws-forecast-panel', 'cyber-risk-panel', 'lens-data-story', 'installation-supply-chain', 'threat-fusion']),
   },
   'fire-air-quality': {
     label: 'Fire & Air Quality',
@@ -5204,8 +5203,6 @@ export function FederalManagementCenter(props: Props) {
         case 'escalation-summary': return DS(<EscalationSummary hucNames={hucNames} />);
 
         case 'installation-supply-chain': return DS(<InstallationSupplyChain />);
-
-        case 'force-protection-intel': return DS(<ForceProtectionIntel />);
 
         case 'threat-fusion': return null; // rendered above hero for military-installations lens
 
