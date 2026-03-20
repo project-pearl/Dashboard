@@ -252,6 +252,20 @@ export const SECTION_KB: Record<string, SectionKB> = {
     ],
   },
 
+  'npdes-annual-report': {
+    explanation: 'Automated generator for comprehensive NPDES annual compliance reports. Aggregates permits, violations, DMRs, enforcement actions, and inspections data from ICIS into standardized EPA-format annual reports.',
+    lookFor: 'Trends in compliance rates, violation patterns, enforcement effectiveness, and DMR submission timeliness. State-by-state comparisons and year-over-year changes.',
+    action: 'Configure report parameters (reporting year, output format, included sections) and generate annual reports for EPA program oversight, state delegation reviews, and congressional reporting requirements.',
+    faq: [
+      { q: 'What data sources are included?', keywords: ['data', 'sources', 'what', 'included'],
+        a: 'Annual reports compile data from EPA ICIS including permit records, discharge monitoring reports (DMRs), violation records, enforcement actions, inspection findings, and civil penalty assessments.' },
+      { q: 'What output formats are available?', keywords: ['format', 'formats', 'output', 'available'],
+        a: 'Reports can be generated in PDF (formatted for distribution), Excel (for data analysis), or Word (for editing). All formats include the same comprehensive data aggregation and trend analysis.' },
+      { q: 'How often should reports be generated?', keywords: ['often', 'frequency', 'when', 'generate'],
+        a: 'Annual reports are typically generated for completed calendar years. Quarterly interim reports can be useful for mid-year program reviews and trend tracking.' },
+    ],
+  },
+
   sdwis: {
     explanation: 'Drinking water safety data from EPA SDWIS. Shows public water system violations, health-based exceedances, and monitoring/reporting failures nationwide.',
     lookFor: 'Health-based violations (MCL exceedances) are the most serious. Systems with recurring violations or treatment technique failures need urgent attention.',
@@ -534,6 +548,20 @@ export const SECTION_KB: Record<string, SectionKB> = {
     lookFor: 'Multiple overlapping water quality issues at the same location. Discrepancies between monitoring data and compliance records.',
     action: 'Use location reports for site-specific decision-making, environmental review, and stakeholder communications.',
     faq: [],
+  },
+
+  'asset-inventory-national': {
+    explanation: 'National aggregation of water infrastructure assets including pipes, catch basins, storm drains, treatment plants, pump stations, and storage tanks. Shows condition ratings, replacement values, and maintenance priorities.',
+    lookFor: 'Focus on assets past useful life percentages, replacement values in billions, and state rankings. Critical replacement needs above 25% indicate urgent investment requirements.',
+    action: 'Prioritize federal funding (BIL, SRF) to states with highest critical replacement percentages. Use condition grades to identify infrastructure investment gaps.',
+    faq: [
+      { q: 'What assets are tracked?', keywords: ['assets', 'tracked', 'inventory', 'types'],
+        a: 'Distribution pipes (1.2M miles), catch basins (340K units), storm drains (280K miles), treatment plants (16K facilities), pump stations (45K units), and storage tanks (68K units).' },
+      { q: 'How is condition determined?', keywords: ['condition', 'grade', 'rating', 'how'],
+        a: 'Condition grades (A through D) are based on ASCE Infrastructure Report Card methodology, combining age, maintenance records, performance metrics, and inspection data from utility asset management systems.' },
+      { q: 'What does past useful life mean?', keywords: ['useful life', 'critical', 'replacement'],
+        a: 'Assets past useful life have exceeded their expected service duration and are at elevated risk of failure. The national average is 24%, with some asset categories like distribution pipes at 28%.' },
+    ],
   },
 
   disclaimer: {

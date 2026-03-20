@@ -104,6 +104,8 @@ import SentinelIntelFeed from '@/components/federal/SentinelIntelFeed';
 import EscalationSummary from '@/components/federal/EscalationSummary';
 import InstallationSupplyChain from '@/components/federal/InstallationSupplyChain';
 import ThreatFusionCard from '@/components/federal/ThreatFusionCard';
+import ForceProtectionIntel from '@/components/federal/ForceProtectionIntel';
+import NPDESAnnualReportGenerator from '@/components/NPDESAnnualReportGenerator';
 
 import hucNamesData from '@/data/huc8-names.json';
 import centroidsData from '@/data/huc8-centroids.json';
@@ -128,7 +130,7 @@ type OverlayId = 'hotspots' | 'ms4' | 'ej' | 'economy' | 'wildlife' | 'trend' | 
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'policy' | 'compliance' |
   'water-quality' | 'public-health' | 'habitat-ecology' | 'agricultural-nps' |
   'infrastructure' | 'monitoring' | 'sentinel-monitoring' | 'disaster-emergency' | 'military-installations' |
-  'fire-air-quality' | 'scorecard' | 'reports' | 'interagency' | 'funding' | 'training' | 'users';
+  'fire-air-quality' | 'scorecard' | 'reports' | 'permits' | 'interagency' | 'funding' | 'training' | 'users';
 
 interface GulfCrosscheckIncident {
   id: string;
@@ -264,13 +266,13 @@ const LENS_CONFIG: Record<ViewLens, {
   },
   infrastructure: {
     label: 'Infrastructure',
-    description: 'Facility map, PFAS, groundwater, and compliance status',
+    description: 'Asset inventory, facility map, PFAS, groundwater, and compliance status',
     defaultOverlay: 'ej',
     showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
     showNetworkHealth: true, showNationalImpact: true, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'groundwater', 'waterfront-exposure', 'infra-green', 'infra-capital', 'infra-construction', 'flood-impact-analysis', 'cyber-risk-panel', 'flood-event-viewer', 'severe-weather-panel', 'lens-data-story']),
+    sections: new Set(['asset-inventory-national', 'networkhealth', 'groundwater', 'waterfront-exposure', 'infra-green', 'infra-capital', 'infra-construction', 'flood-impact-analysis', 'cyber-risk-panel', 'flood-event-viewer', 'severe-weather-panel', 'lens-data-story']),
   },
   monitoring: {
     label: 'Monitoring',
@@ -360,7 +362,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['ntas-status', 'at-risk-facilities', 'military-installations', 'sentinel-briefing', 'fire-detection', 'fire-health-advisory', 'briefing-qa', 'flood-impact-analysis', 'pfas-analytics-panel', 'nws-forecast-panel', 'cyber-risk-panel', 'lens-data-story', 'installation-supply-chain', 'threat-fusion']),
+    sections: new Set(['ntas-status', 'at-risk-facilities', 'military-installations', 'sentinel-briefing', 'fire-detection', 'fire-health-advisory', 'briefing-qa', 'flood-impact-analysis', 'pfas-analytics-panel', 'nws-forecast-panel', 'cyber-risk-panel', 'lens-data-story', 'installation-supply-chain', 'threat-fusion', 'force-protection-intel']),
   },
   'fire-air-quality': {
     label: 'Fire & Air Quality',
@@ -391,6 +393,16 @@ const LENS_CONFIG: Record<ViewLens, {
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
     sections: new Set(['reports-hub', 'global-water-quality', 'congress-legislation', 'lens-data-story']),
+  },
+  permits: {
+    label: 'Permits & Enforcement',
+    description: 'NPDES permitting operations, DMR monitoring, enforcement actions, and annual reporting',
+    defaultOverlay: 'hotspots',
+    showTopStrip: true, showPriorityQueue: true, showCoverageGaps: false,
+    showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
+    showHotspots: false, showSituationSummary: false, showTimeRange: false,
+    showSLA: false, showRestorationPlan: false, collapseStateTable: true,
+    sections: new Set(['icis', 'perm-status', 'perm-inventory', 'perm-pipeline', 'perm-dmr', 'npdes-annual-report', 'perm-inspection', 'perm-enforcement', 'perm-general', 'lens-data-story']),
   },
   interagency: {
     label: 'Cross-Agency',
@@ -5193,6 +5205,8 @@ export function FederalManagementCenter(props: Props) {
 
         case 'installation-supply-chain': return DS(<InstallationSupplyChain />);
 
+        case 'force-protection-intel': return DS(<ForceProtectionIntel />);
+
         case 'threat-fusion': return null; // rendered above hero for military-installations lens
 
         case 'air-quality-briefing': return DS(
@@ -5261,7 +5275,11 @@ export function FederalManagementCenter(props: Props) {
         );
 
         case 'waterfront-exposure': return DS(
-          <WaterfrontExposurePanel selectedState={selectedState} stateRollup={stateRollup} />
+          <WaterfrontExposurePanel
+            selectedState={selectedState}
+            stateRollup={stateRollup}
+            showStateSelector={true}
+          />
         );
 
         // ── Infrastructure / Funding national aggregate cards ──────────────
@@ -5372,6 +5390,111 @@ export function FederalManagementCenter(props: Props) {
                   </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        );
+
+        case 'asset-inventory-national': return DS(
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Wrench className="h-5 w-5 text-slate-600" />
+                  National Asset Inventory — Infrastructure Health
+                </CardTitle>
+                <button className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm hover:bg-slate-50 transition-colors" title="Aggregated infrastructure asset condition and replacement value across all water systems">
+                  <HelpCircle className="w-4 h-4 text-slate-400" />
+                </button>
+              </div>
+              <CardDescription>Asset condition, replacement values, and maintenance priorities across water infrastructure</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-4">
+              {/* National Asset KPIs */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { label: 'Total Assets', value: '2.8M', sub: 'pipes, pumps, tanks, facilities', bg: 'bg-slate-50 border-slate-200' },
+                  { label: 'Replacement Value', value: '$1.2T', sub: 'current replacement cost', bg: 'bg-blue-50 border-blue-200' },
+                  { label: 'Past Useful Life', value: '24%', sub: 'critical replacement need', bg: 'bg-amber-50 border-amber-200' },
+                  { label: 'GIS Mapped', value: '67%', sub: 'digitally inventoried', bg: 'bg-green-50 border-green-200' },
+                ].map(k => (
+                  <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                    <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                    <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                    <div className="text-2xs text-slate-500 mt-1">{k.sub}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Asset Categories */}
+              <div className="rounded-lg border border-slate-200 overflow-hidden">
+                <div className="bg-slate-50 px-4 py-2 border-b border-slate-200">
+                  <h4 className="text-sm font-semibold text-slate-700">Asset Categories & Condition</h4>
+                </div>
+                <div className="p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[
+                      { category: 'Distribution Pipes', count: '1.2M miles', condition: 'C+', replacement: '$480B', critical: '28%' },
+                      { category: 'Catch Basins', count: '340K units', condition: 'B-', replacement: '$18B', critical: '16%' },
+                      { category: 'Storm Drains', count: '280K miles', condition: 'C', replacement: '$95B', critical: '22%' },
+                      { category: 'Treatment Plants', count: '16,000 facilities', condition: 'B', replacement: '$380B', critical: '18%' },
+                      { category: 'Pump Stations', count: '45,000 units', condition: 'C+', replacement: '$65B', critical: '25%' },
+                      { category: 'Storage Tanks', count: '68,000 units', condition: 'B-', replacement: '$42B', critical: '20%' },
+                    ].map(asset => (
+                      <div key={asset.category} className="border border-slate-200 rounded-lg p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <h5 className="text-sm font-semibold text-slate-700">{asset.category}</h5>
+                          <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                            asset.condition.startsWith('B') ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                          }`}>
+                            {asset.condition}
+                          </span>
+                        </div>
+                        <div className="space-y-1 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">Inventory:</span>
+                            <span className="font-medium">{asset.count}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">Replacement:</span>
+                            <span className="font-medium">{asset.replacement}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">Critical:</span>
+                            <span className="font-medium text-amber-700">{asset.critical}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* State Rankings */}
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <h4 className="text-sm font-semibold text-slate-700 mb-3">State Infrastructure Condition Rankings</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-xs font-semibold text-green-700 mb-2">Best Infrastructure Health</div>
+                    {['Utah', 'Colorado', 'Washington', 'Minnesota', 'Virginia'].map((state, i) => (
+                      <div key={state} className="flex items-center justify-between py-1 text-xs">
+                        <span>#{i + 1} {state}</span>
+                        <span className="text-green-600 font-medium">A- to B+</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-amber-700 mb-2">Greatest Infrastructure Need</div>
+                    {['Mississippi', 'West Virginia', 'Louisiana', 'New Mexico', 'Alaska'].map((state, i) => (
+                      <div key={state} className="flex items-center justify-between py-1 text-xs">
+                        <span>#{46 + i} {state}</span>
+                        <span className="text-amber-700 font-medium">D+ to C-</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-2xs text-slate-400 text-right">ASCE Infrastructure Report Card | EPA IRIS | Utility asset management systems</p>
             </CardContent>
           </Card>
         );
@@ -6216,6 +6339,10 @@ export function FederalManagementCenter(props: Props) {
             onDetailOpen={fetchDetails}
             onNavigate={() => setViewLens('compliance')}
           />
+        );
+
+        case 'npdes-annual-report': return DS(
+          <NPDESAnnualReportGenerator />
         );
 
         case 'hab-forecast-panel': return DS(

@@ -33,6 +33,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'fire-air-quality', label: 'Fire & Air Quality', gateMilitary: true },
     { id: 'scorecard', label: 'Scorecard' },
     { id: 'reports', label: 'Reports' },
+    { id: 'permits', label: 'Permits & Enforcement' },
     { id: 'interagency', label: 'Cross-Agency' },
     { id: 'funding', label: 'Funding & Grants' },
     { id: 'users', label: 'Users' },
