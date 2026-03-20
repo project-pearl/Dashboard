@@ -6324,7 +6324,26 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
 
             case 'wqt': return NUTRIENT_TRADING_STATES.has(stateAbbr) ? DS(<>
               <WaterQualityTradingPanel stateAbbr={stateAbbr} mode="state" />
-            </>) : null;
+            </>) : DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-green-500" />
+                    Water Quality Trading
+                  </CardTitle>
+                  <CardDescription>Nutrient credit marketplace and compliance pathways</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8 text-slate-500">
+                    <div className="text-sm">Coming soon for {stateName}</div>
+                    <div className="text-xs mt-1">Nutrient trading program development in progress</div>
+                    <Badge variant="outline" className="text-2xs bg-green-50 text-green-700 border-green-200 mt-2">
+                      Expansion Planned
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            );
 
             case 'training': return DS(
               <RoleTrainingGuide rolePath="/dashboard/state" />
