@@ -404,7 +404,7 @@ export default function DataProvenancePage() {
             headers={['Index', 'Weight', 'Description', 'Calculation']}
             rows={[
               ['Water Quality Grade', '38%', 'EPA-method parameter scoring across DO, pH, nutrients, bacteria, turbidity, TSS', 'Weighted average of parameter scores vs. EPA criteria thresholds (see Section 8.1)'],
-              ['Monitoring Coverage', '8%', 'Fraction of key parameters with live sensor data', '(Live key params / Total key params) × 100'],
+              ['Parameters Measured', '8%', 'Fraction of key parameters with live sensor data', '(Live key params / Total key params) × 100'],
               ['Data Freshness', '20%', 'Recency of most recent sample data across all parameters', 'Older data reduces score progressively'],
               ['Regulatory Compliance', '18%', 'ATTAINS assessment category mapping', 'Cat. 1 = 100, Cat. 2 = 85, Cat. 3 = 50, Cat. 4 = 30, Cat. 5 = 10'],
               ['Trend Direction', '16%', 'Direction and magnitude of water quality trends', '50 + trend value, clamped to 0–100. Positive trends improve score'],
@@ -496,7 +496,7 @@ export default function DataProvenancePage() {
               ['Water Quality Portal (WQP)', 'EPA / USGS / USDA', 'Discrete water quality results (physical, chemical, biological)', 'Daily cache', 'PEARL Load Velocity, Per Capita Load, Water Quality Grade, Data Freshness'],
               ['ECHO / ICIS-NPDES', 'EPA', 'Permit compliance, DMRs, enforcement actions, inspections', 'Daily cache', 'Infrastructure Failure, Permit Risk Exposure, Governance Response, PEARL Load Velocity'],
               ['SDWIS', 'EPA', 'Drinking water systems, violations, enforcement', 'Daily cache', 'Infrastructure Failure, Per Capita Load, EJ Vulnerability'],
-              ['USGS WDFN', 'USGS', 'Real-time streamflow, water level, continuous WQ', '15-min (real-time)', 'Water Quality Grade, Monitoring Coverage, Data Freshness'],
+              ['USGS WDFN', 'USGS', 'Real-time streamflow, water level, continuous WQ', '15-min (real-time)', 'Water Quality Grade, Parameters Measured, Data Freshness'],
               ['EJScreen', 'EPA', 'Environmental justice indices, demographic indicators (API offline since Feb 2025; Census ACS/SDWIS fallback active)', 'Annual (when available)', 'EJ Vulnerability'],
               ['NOAA CO-OPS', 'NOAA', 'Tidal levels, water temperature, salinity, meteorological', '6-min (real-time)', 'Waterfront Exposure, Water Quality Grade'],
               ['NOAA Climate Data Online', 'NOAA NCDC', 'Temperature trends, precipitation variability, drought indices, extreme events', 'Daily cache', 'Climate Vulnerability'],
@@ -520,7 +520,7 @@ export default function DataProvenancePage() {
             headers={['Source', 'Organization', 'Data Type', 'Refresh', 'PIN Indices Served']}
             rows={[
               ['CBP DataHub', 'Chesapeake Bay Program', 'Chlorophyll, nutrients, point-source discharges', 'Monthly', 'Water Quality Grade (Chesapeake region)'],
-              ['State MDE Monitoring', 'State agencies', 'State-operated monitoring station data', 'Varies by state', 'Water Quality Grade, Monitoring Coverage'],
+              ['State MDE Monitoring', 'State agencies', 'State-operated monitoring station data', 'Varies by state', 'Water Quality Grade, Parameters Measured'],
               ['NERRS', 'NOAA', 'National Estuarine Research Reserve System real-time data', '15-min', 'Water Quality Grade'],
             ]}
           />
@@ -638,7 +638,7 @@ export default function DataProvenancePage() {
             <li><span className="font-medium text-slate-700">Non-detects:</span> Results reported as &quot;below detection limit&quot; are stored as DL/2 (half the detection limit) for scoring purposes, consistent with EPA guidance for left-censored environmental data.</li>
             <li>The parameter displays &quot;—&quot; with an &quot;Unassessed&quot; label</li>
             <li>The parameter is excluded from grade calculations and its weight is redistributed among available parameters within the same index class (Group A or Group B), preserving the 62/38 group split</li>
-            <li>Monitoring Coverage and Data Freshness indices reflect the gap, reducing the PIN Water Score</li>
+            <li>Parameters Measured and Data Freshness indices reflect the gap, reducing the PIN Water Score</li>
             <li>If fewer than 3 key parameters have data, the waterbody is shown as &quot;Insufficient Data&quot; rather than graded</li>
           </ul>
           <p className="text-xs text-slate-500 leading-relaxed">

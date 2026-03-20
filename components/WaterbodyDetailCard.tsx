@@ -483,9 +483,9 @@ export function WaterbodyDetailCard({
       idx.push({ name: 'Governance Response', value: Math.max(0, 100 - hucIndices.governanceResponse.value), weight: 0.07 });
     }
 
-    // Monitoring Coverage
+    // Parameters Measured
     const monPct = coverage.keyParamsTotal > 0 ? (coverage.liveKeyParamCount / coverage.keyParamsTotal) * 100 : 0;
-    idx.push({ name: 'Monitoring Coverage', value: monPct, weight: 0.07 });
+    idx.push({ name: 'Parameters Measured', value: monPct, weight: 0.07 });
 
     // Data Freshness
     idx.push({ name: 'Data Freshness', value: freshness.score, weight: 0.07 });

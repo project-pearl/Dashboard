@@ -57,7 +57,7 @@ async function calculateIndexScores(): Promise<{ groupA: IndexBar[]; groupB: Ind
 
     const groupB: IndexBar[] = [
       { label: 'Water Quality Grade', weight: '38%', score: Math.round((attainsHealthy + icisCompliance) / 2), sparkline: generateSparkline(Math.round((attainsHealthy + icisCompliance) / 2)) },
-      { label: 'Monitoring Coverage', weight: '8%', score: Math.round(monitoringCoverage), sparkline: generateSparkline(Math.round(monitoringCoverage)) },
+      { label: 'Parameters Measured', weight: '8%', score: Math.round(monitoringCoverage), sparkline: generateSparkline(Math.round(monitoringCoverage)) },
       { label: 'Data Freshness', weight: '20%', score: Math.round(dataFreshness), sparkline: generateSparkline(Math.round(dataFreshness)) },
       { label: 'Regulatory Compliance', weight: '18%', score: Math.round(icisCompliance), sparkline: generateSparkline(Math.round(icisCompliance)) },
       { label: 'Trend Direction', weight: '16%', score: 53, sparkline: generateSparkline(53) },
@@ -88,7 +88,7 @@ async function calculateIndexScores(): Promise<{ groupA: IndexBar[]; groupB: Ind
       ],
       groupB: [
         { label: 'Water Quality Grade', weight: '38%', score: 64, sparkline: generateSparkline(64) },
-        { label: 'Monitoring Coverage', weight: '8%', score: 72, sparkline: generateSparkline(72) },
+        { label: 'Parameters Measured', weight: '8%', score: 72, sparkline: generateSparkline(72) },
         { label: 'Data Freshness', weight: '20%', score: 81, sparkline: generateSparkline(81) },
         { label: 'Regulatory Compliance', weight: '18%', score: 45, sparkline: generateSparkline(45) },
         { label: 'Trend Direction', weight: '16%', score: 53, sparkline: generateSparkline(53) },

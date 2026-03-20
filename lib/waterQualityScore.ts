@@ -209,7 +209,7 @@ export function scoreParameter(
   };
 }
 
-// ─── Monitoring Coverage ─────────────────────────────────────────────────────
+// ─── Parameters Measured ─────────────────────────────────────────────────────
 
 export type CoverageLevel = 'comprehensive' | 'adequate' | 'limited' | 'minimal' | 'unmonitored';
 
