@@ -46,6 +46,8 @@ export function scoreToGrade(score: number): { letter: string; color: string; bg
         : minor === '-'
         ? { letter, color: 'text-orange-600',   bg: 'bg-orange-50 border-orange-200',     textColor: 'text-orange-700' }
         : { letter, color: 'text-orange-600',   bg: 'bg-orange-50 border-orange-200',     textColor: 'text-orange-700' };
+    case 'E':
+      return { letter, color: 'text-red-600',   bg: 'bg-red-50 border-red-200',           textColor: 'text-red-700' };
     case 'F':
       return { letter, color: 'text-red-700',   bg: 'bg-red-100 border-red-300',          textColor: 'text-red-800' };
     default:

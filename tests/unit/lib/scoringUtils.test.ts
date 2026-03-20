@@ -39,8 +39,14 @@ describe('scoringUtils', () => {
       expect(result.color).toContain('orange');
     });
 
-    it('returns F for score < 60', () => {
+    it('returns E for score 30-59', () => {
       const result = scoreToGrade(50);
+      expect(result.letter).toBe('E');
+      expect(result.color).toContain('red');
+    });
+
+    it('returns F for score < 30', () => {
+      const result = scoreToGrade(25);
       expect(result.letter).toBe('F');
       expect(result.color).toContain('red');
     });
@@ -51,7 +57,8 @@ describe('scoringUtils', () => {
         85: 'text-emerald-700', // B
         75: 'text-yellow-800',  // C
         65: 'text-orange-700',  // D
-        50: 'text-red-800',     // F
+        50: 'text-red-700',     // E
+        25: 'text-red-800',     // F
       };
       for (const [score, color] of Object.entries(expected)) {
         expect(scoreToGrade(Number(score)).textColor).toBe(color);

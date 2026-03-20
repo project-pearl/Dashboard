@@ -274,8 +274,13 @@ describe('waterQualityScore', () => {
       expect(scoreToLetter(60)).toBe('D-');
     });
 
-    it('returns F for < 60', () => {
-      expect(scoreToLetter(59)).toBe('F');
+    it('returns E for 30-59', () => {
+      expect(scoreToLetter(59)).toBe('E');
+      expect(scoreToLetter(30)).toBe('E');
+    });
+
+    it('returns F for < 30', () => {
+      expect(scoreToLetter(29)).toBe('F');
       expect(scoreToLetter(0)).toBe('F');
     });
   });
