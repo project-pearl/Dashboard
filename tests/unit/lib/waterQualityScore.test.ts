@@ -630,14 +630,14 @@ describe('waterQualityScore', () => {
 
     it('returns high score for all-live params', () => {
       const timestamps: Record<string, string> = {};
-      for (let i = 0; i < 15; i++) {
+      for (let i = 0; i < 16; i++) {
         timestamps[`param${i}`] = now();
       }
       const result = computeFreshnessScore(timestamps);
       expect(result.score).toBeGreaterThanOrEqual(90);
       expect(result.label).toBe('Fresh');
-      expect(result.populated).toBe(15);
-      expect(result.total).toBe(15);
+      expect(result.populated).toBe(16);
+      expect(result.total).toBe(16);
     });
 
     it('returns moderate score for partial coverage', () => {

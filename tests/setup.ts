@@ -8,6 +8,7 @@ process.env.BLOB_READ_WRITE_TOKEN = 'test-blob-token';
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
+process.env.ADMIN_EMAILS = 'doug@project-pearl.org,steve@project-pearl.org,gwen@project-pearl.org';
 
 // Suppress unhandled rejections from background cache warming (blob/disk calls
 // against fake CI URLs). Tests still fail on assertion errors — this only
