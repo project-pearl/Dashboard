@@ -117,11 +117,14 @@ export function LayoutEditor({ ccKey, children }: LayoutEditorProps) {
     }
   }, [user?.uid]);
 
-  // ── DnD sensors ──
+  // ── DnD sensors - optimized for better performance ──
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
-    useSensor(KeyboardSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 } // Reduced distance for faster activation
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 150, tolerance: 8 } // Reduced delay, increased tolerance
+    }),
   );
 
   function handleDragEnd(event: DragEndEvent) {
