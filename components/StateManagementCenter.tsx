@@ -29,10 +29,6 @@ import { computeRestorationPlan, resolveAttainsCategory, mergeAttainsCauses, COS
 import { extractHuc8 } from '@/lib/huc8Utils';
 import type { HucIndices } from '@/lib/indices/types';
 import RestorationPlanner from '@/components/RestorationPlanner';
-import { useFloodForecast } from '@/hooks/useFloodForecast';
-import { useFloodRiskOverview } from '@/hooks/useFloodRiskOverview';
-import { FloodForecastCard, FloodStatusSummary } from './FloodForecastCard';
-import { FloodRiskOverviewCard, FloodRiskSummary } from './FloodRiskOverviewCard';
 import { WeatherAlertsSection } from './WeatherAlertsSection';
 import { TriageQueueSection } from './TriageQueueSection';
 import { WaterbodyDetailCard } from '@/components/WaterbodyDetailCard';
@@ -615,8 +611,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
 
   const { waterData: rawWaterData, isLoading: waterLoading, hasRealData } = useWaterData(activeDetailId);
   const waterData = useTierFilter(rawWaterData, 'State');
-  const floodForecast = useFloodForecast(stateAbbr);
-  const floodRisk = useFloodRiskOverview(stateAbbr);
   const { data: dataSummaries, details: summaryDetails, isLoading: summariesLoading, fetchDetails } = useDataSummaries();
 
   // ── Real data: supplies removalEfficiencies, stormEvents, displayData to child components ──
@@ -841,6 +835,11 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
+      {/* Hero Banner */}
+      <HeroBanner role="state" onDoubleClick={() => onToggleDevMode?.()}>
+        {stateName} State Water Quality Management
+      </HeroBanner>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -965,25 +964,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
         </Card>
       </div>
 
-      {/* Flood Forecast */}
-      <FloodForecastCard
-        forecasts={floodForecast.forecasts || []}
-        summary={floodForecast.summary}
-        updatedAt={floodForecast.updatedAt}
-        isLoading={floodForecast.isLoading}
-        error={floodForecast.error}
-        onRefresh={floodForecast.refetch}
-      />
-
-      {/* Flood Risk Overview */}
-      <FloodRiskOverviewCard
-        basins={floodRisk.basins || []}
-        national={floodRisk.national}
-        updatedAt={floodRisk.updatedAt}
-        isLoading={floodRisk.isLoading}
-        error={floodRisk.error}
-        onRefresh={floodRisk.refetch}
-      />
 
     </div>
   );
