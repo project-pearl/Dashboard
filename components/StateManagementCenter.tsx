@@ -3649,9 +3649,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
-            {/* TODO: Future click-throughs for Nutrient Reduction Strategy:
-                - All 4 tiles (N Goal 35%, N Achieved 22%, P Goal 25%, P Achieved 18%) →
-                  progress charts showing trend over time and gap analysis */}
             case 'ag-nutrient': return DS(
               <Card>
                 <CardHeader>
