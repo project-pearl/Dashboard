@@ -2963,7 +2963,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                 </CardContent>
               </Card>
             );
-            */
 
             // ── Compliance sections ────────────────────────────────────────
             case 'compliance-permits': return DS(
