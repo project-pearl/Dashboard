@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { TrendingUp, HelpCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useJurisdictionContext } from '@/lib/jurisdiction-context';
+import { normalizeStateAbbr } from '@/lib/mapUtils';
 
 interface TrendPoint {
   timestamp: string;
@@ -49,7 +50,7 @@ function buildPolyline(
 
 export function AqiTrendChart({ selectedState }: { selectedState?: string }) {
   const { activeJurisdiction } = useJurisdictionContext();
-  const effectiveState = (activeJurisdiction?.parent_state || selectedState || 'MD').toUpperCase();
+  const effectiveState = normalizeStateAbbr(activeJurisdiction?.parent_state || selectedState, 'MD');
 
   const [data, setData] = useState<TrendPoint[]>([]);
   const [loading, setLoading] = useState(true);

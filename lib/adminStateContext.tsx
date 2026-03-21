@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import { useAuth } from '@/lib/authContext';
-import { STATE_NAMES } from '@/lib/mapUtils';
+import { STATE_NAMES, normalizeStateAbbr } from '@/lib/mapUtils';
 
 /** Shared abbreviation→name map (re-exported so FederalManagementCenter etc. don't duplicate it) */
 export const STATE_ABBR_TO_NAME = STATE_NAMES;
@@ -26,23 +26,26 @@ export function AdminStateProvider({ children }: { children: ReactNode }) {
   const [adminState, setAdminStateRaw] = useState<string>(() => {
     if (typeof window === 'undefined') return DEFAULT_STATE;
     try {
-      return localStorage.getItem(STORAGE_KEY) || DEFAULT_STATE;
+      return normalizeStateAbbr(localStorage.getItem(STORAGE_KEY), DEFAULT_STATE);
     } catch {
       return DEFAULT_STATE;
     }
   });
 
   const setAdminState = useCallback((state: string) => {
-    setAdminStateRaw(state);
+    const normalized = normalizeStateAbbr(state, DEFAULT_STATE);
+    setAdminStateRaw(normalized);
     try {
-      localStorage.setItem(STORAGE_KEY, state);
+      localStorage.setItem(STORAGE_KEY, normalized);
     } catch {
       // localStorage unavailable
     }
   }, []);
 
   // Non-admins always see their profile state (read-only)
-  const effectiveState = isAdmin ? adminState : (user?.state || DEFAULT_STATE);
+  const effectiveState = isAdmin
+    ? normalizeStateAbbr(adminState, DEFAULT_STATE)
+    : normalizeStateAbbr(user?.state, DEFAULT_STATE);
 
   return (
     <AdminStateContext.Provider value={{ adminState: effectiveState, setAdminState }}>

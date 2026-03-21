@@ -5,6 +5,7 @@ import { Wind, MapPin, Activity, AlertTriangle, HelpCircle } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useJurisdictionContext } from '@/lib/jurisdiction-context';
+import { normalizeStateAbbr } from '@/lib/mapUtils';
 import { Sparkline } from './Sparkline';
 
 type AirQualityReading = {
@@ -57,7 +58,7 @@ export function AirQualityMonitoringCard({
   description?: string;
 }) {
   const { activeJurisdiction } = useJurisdictionContext();
-  const effectiveState = (activeJurisdiction?.parent_state || fallbackStateAbbr || 'MD').toUpperCase();
+  const effectiveState = normalizeStateAbbr(activeJurisdiction?.parent_state || fallbackStateAbbr, 'MD');
 
   const [loading, setLoading] = useState(true);
   const [reading, setReading] = useState<AirQualityReading | null>(null);
@@ -108,7 +109,7 @@ export function AirQualityMonitoringCard({
   }, [activeJurisdiction, effectiveState, reading?.impactedCounties]);
 
   const band = aqiBand(reading?.usAqi ?? null);
-  const impactedCounties = Array.isArray(reading?.impactedCounties) ? reading.impactedCounties : [];
+  const impactedCounties = Array.isArray(reading?.impactedCounties) ? (reading?.impactedCounties ?? []) : [];
 
   return (
     <Card>

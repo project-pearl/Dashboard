@@ -33,6 +33,27 @@ export const NAME_TO_ABBR: Record<string, string> = Object.entries(STATE_NAMES).
   {} as Record<string, string>
 );
 
+const NAME_TO_ABBR_NORMALIZED: Record<string, string> = Object.entries(NAME_TO_ABBR).reduce(
+  (acc, [name, abbr]) => {
+    acc[name.trim().toLowerCase()] = abbr;
+    return acc;
+  },
+  {} as Record<string, string>
+);
+
+export function normalizeStateAbbr(input: string | null | undefined, fallback = 'MD'): string {
+  const raw = String(input || '').trim();
+  if (!raw) return fallback;
+
+  const upper = raw.toUpperCase();
+  if (STATE_NAMES[upper]) return upper;
+
+  const fromName = NAME_TO_ABBR_NORMALIZED[raw.toLowerCase()];
+  if (fromName) return fromName;
+
+  return fallback;
+}
+
 // ─── GeoJSON feature → state abbreviation ────────────────────────────────────
 export interface GeoFeature {
   id: string;

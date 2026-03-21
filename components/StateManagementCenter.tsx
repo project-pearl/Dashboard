@@ -802,9 +802,9 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
         asOf: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       };
     }
-    const avgScore = Math.round(safeJurisdictionRows.reduce((s: number, r: any) => s + r.score, 0) / safeJurisdictionRows.length);
-    const avgGrade = scoreToGrade(avgScore);
     const safeJurisdictionRows = jurisdictionScoreRows || [];
+    const avgScore = Math.round(safeJurisdictionRows.reduce((s: number, r: any) => s + r.score, 0) / (safeJurisdictionRows.length || 1));
+    const avgGrade = scoreToGrade(avgScore);
     const attentionCount = safeJurisdictionRows.filter((r: any) => r.needsAttention).length;
     const inCompliance = safeJurisdictionRows.filter((r: any) => r.status === 'In Compliance').length;
     const inComplianceRate = Math.round((inCompliance / safeJurisdictionRows.length) * 100);
@@ -930,16 +930,9 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               <MapboxMapShell
                 center={stateCenter}
                 zoom={6}
-                style="mapbox://styles/mapbox/light-v11"
               >
                 <MapboxMarkers
-                  markers={wbMarkers.map(r => ({
-                    lng: r.lon,
-                    lat: r.lat,
-                    popup: `${r.name}: ${r.status}`,
-                    color: r.alertLevel === 'critical' ? '#ef4444' :
-                           r.alertLevel === 'warning' ? '#f59e0b' : '#10b981'
-                  }))}
+                  data={markerData}
                 />
               </MapboxMapShell>
             </div>
