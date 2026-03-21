@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
 import { getPrimaryRoute } from '@/lib/roleRoutes';
@@ -73,7 +73,7 @@ const US_STATES: { abbr: string; name: string }[] = [
 const inputClass = 'w-full px-4 py-3 bg-white/10 border border-white/15 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent transition-all';
 const selectClass = `${inputClass} [&>option]:bg-slate-900 [&>option]:text-white`;
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { loginAsync, signup, isAuthenticated, isLoading, loginError, clearError, user, resolveInviteToken } = useAuth();
@@ -589,5 +589,17 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+        <div className="w-12 h-12 border-4 border-cyan-300/30 border-t-cyan-400 rounded-full animate-spin" />
+      </div>
+    }>
+      <LoginPageContent />
+    </Suspense>
   );
 }
