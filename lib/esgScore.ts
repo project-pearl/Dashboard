@@ -1,5 +1,5 @@
 import { WaterQualityData, WaterQualityParameter } from './types';
-import { getParameterStatus } from './mockData';
+import { getParameterStatus } from './realWaterData';
 import { EJMetrics } from './ejImpact';
 import type { HucIndices } from './indices/types';
 

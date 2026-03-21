@@ -89,16 +89,34 @@ export interface PendingUser {
   createdAt: string;
 }
 
-// ─── Admin list — hardcoded for now, move to DB flag later ──────────────────
+// ─── Admin list — loaded from environment variables for security ──────────────
 
-export const ADMIN_EMAILS = [
-  'doug@project-pearl.org',
-  'steve@project-pearl.org',
-  'gwen@project-pearl.org',
-];
+function getAdminEmails(): string[] {
+  const adminEmailsEnv = process.env.ADMIN_EMAILS || process.env.NEXT_PUBLIC_ADMIN_EMAILS;
+
+  if (adminEmailsEnv) {
+    return adminEmailsEnv.split(',').map(email => email.trim().toLowerCase());
+  }
+
+  // Fallback for development only - log warning
+  if (process.env.NODE_ENV === 'development') {
+    console.warn('⚠️  ADMIN_EMAILS environment variable not set, using development fallback. Set ADMIN_EMAILS in production.');
+    return [
+      'admin@project-pearl.org',
+      'system@project-pearl.org',
+    ];
+  }
+
+  // No admin emails in production without proper configuration
+  console.error('❌ ADMIN_EMAILS environment variable must be set in production');
+  return [];
+}
+
+export const ADMIN_EMAILS = getAdminEmails();
 
 /** Quick check — used by authContext to set isAdmin on login */
 export function checkIsAdmin(email: string): boolean {
+  if (!email || ADMIN_EMAILS.length === 0) return false;
   return ADMIN_EMAILS.includes(email.toLowerCase().trim());
 }
 

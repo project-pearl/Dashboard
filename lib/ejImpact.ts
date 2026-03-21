@@ -1,5 +1,5 @@
 import { WaterQualityParameter } from './types';
-import { getParameterStatus } from './mockData';
+import { getParameterStatus } from './realWaterData';
 
 export interface EJMetrics {
   isEJArea: boolean;

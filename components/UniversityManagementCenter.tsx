@@ -22,7 +22,7 @@ import { scoreToGrade, alertLevelAvgScore, ALERT_LEVEL_SCORES, ecoScoreStyle } f
 import { getEJScore, getEJData } from '@/lib/ejVulnerability';
 import { STATE_AUTHORITIES } from '@/lib/stateWaterData';
 import { useAuth } from '@/lib/authContext';
-import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
+import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/realWaterData';
 
 import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';

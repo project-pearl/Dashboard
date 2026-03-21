@@ -9,7 +9,7 @@ import { getPrimaryRoute } from '@/lib/roleRoutes';
 import type { UserRole } from '@/lib/authTypes';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
-import { calculateOverallScore, applyRegionThresholds, calculateRemovalEfficiency, getRemovalStatus, getRegionMockData } from '@/lib/mockData';
+import { calculateOverallScore, applyRegionThresholds, calculateRemovalEfficiency, getRemovalStatus, getRegionMockData } from '@/lib/realWaterData';
 import { TimeMode, DataMode } from '@/lib/types';
 import { StormEventTable } from '@/components/StormEventTable';
 import { StormDetectionBanner } from '@/components/StormDetectionBanner';

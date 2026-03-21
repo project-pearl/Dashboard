@@ -42,7 +42,7 @@ import { DraggableSection } from './DraggableSection';
 import { GrantOpportunityMatcher } from './GrantOpportunityMatcher';
 import { GrantOutcomesCard } from './GrantOutcomesCard';
 import { EmergingContaminantsTracker } from './EmergingContaminantsTracker';
-import { PolicyTracker } from './PolicyTracker';
+import { RealPolicyTracker } from './RealPolicyTracker';
 import { DataLatencyTracker } from './DataLatencyTracker';
 import { DeltaChangelog } from './DeltaChangelog';
 import { useAdminState, STATE_ABBR_TO_NAME } from '@/lib/adminStateContext';
@@ -4220,7 +4220,12 @@ export function FederalManagementCenter(props: Props) {
 
         case 'policy-tracker': return DS(<>
         {/* ── POLICY & REGULATORY TRACKER ── */}
-        <PolicyTracker />
+        <RealPolicyTracker
+          jurisdiction="federal"
+          entityType="federal"
+          maxRules={25}
+          showFilters={true}
+        />
         </>);
 
         case 'contaminants-tracker': return DS(<>

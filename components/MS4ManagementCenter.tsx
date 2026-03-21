@@ -27,14 +27,14 @@ import { getEJScore, getEJData, ejScoreLabel } from '@/lib/ejVulnerability';
 import { scoreToGrade, alertLevelAvgScore, ALERT_LEVEL_SCORES, ecoScoreStyle, ejScoreStyle } from '@/lib/scoringUtils';
 import { getStateMS4Jurisdictions, getMS4ComplianceSummary, STATE_AUTHORITIES } from '@/lib/stateWaterData';
 import { useAuth } from '@/lib/authContext';
-import { getRegionMockData, calculateRemovalEfficiency, calculateOverallScore } from '@/lib/mockData';
+import { getRegionMockData, calculateRemovalEfficiency, calculateOverallScore } from '@/lib/realWaterData';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 
 import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
 import BoundaryAlertsDashboard from '@/components/BoundaryAlertsDashboard';
-import { EXAMPLE_ALERTS } from '@/lib/example-data';
+import { BoundaryAlert } from '@/lib/types';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
@@ -1003,8 +1003,38 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
     loading: boolean; impairedPct: number; totalAssessed: number;
   }>>({});
 
-  // Boundary alerts state (seeded with example data for now)
-  const [boundaryAlerts, setBoundaryAlerts] = useState(() => EXAMPLE_ALERTS);
+  // Boundary alerts state (TODO: replace with real boundary alert generation)
+  const [boundaryAlerts, setBoundaryAlerts] = useState<BoundaryAlert[]>(() => [
+    {
+      id: "BA-001",
+      timestamp: new Date().toISOString(),
+      severity: "critical" as const,
+      type: "threshold_exceeded" as const,
+      sourceWaterbodyId: "MD-02130805",
+      sourceWaterbodyName: "Patapsco River Upper North Branch",
+      parameter: "E. coli",
+      category: "bacteria" as const,
+      currentValue: 285,
+      threshold: 200,
+      unit: "CFU/100mL",
+      direction: "rising" as const,
+      percentOverThreshold: 42.5,
+      neighborPermitId: "MD0068292",
+      neighborJurisdictionName: "Baltimore County",
+      contactInfo: {
+        name: "Maria Rodriguez",
+        title: "MS4 Program Manager",
+        email: "mrodriguez@baltimorecountymd.gov",
+        phone: "(410) 887-3829"
+      },
+      impairmentCode: "BACT",
+      pollutantSourceCode: "URBAN",
+      notes: [],
+      status: "new" as const,
+      upstreamDistance: 2.4,
+      watershedName: "Patapsco River"
+    }
+  ]);
   const handleAlertStatusChange = (alertId: string, status: import('@/lib/types').AlertStatus) => {
     setBoundaryAlerts(prev => prev.map(a => a.id === alertId ? { ...a, status } : a));
   };

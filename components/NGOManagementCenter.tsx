@@ -24,7 +24,7 @@ import { getEJScore, getEJData, ejScoreLabel } from '@/lib/ejVulnerability';
 import { scoreToGrade, alertLevelAvgScore, ALERT_LEVEL_SCORES, ecoScoreStyle, ejScoreStyle } from '@/lib/scoringUtils';
 import { STATE_AUTHORITIES } from '@/lib/stateWaterData';
 import { useAuth } from '@/lib/authContext';
-import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
+import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/realWaterData';
 import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
