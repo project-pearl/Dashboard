@@ -5,6 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, Flame, CloudRain, Wind, Thermometer, Clock } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { getNwsAlertCache } from '@/lib/nwsAlertCache';
+import { getFirmsCache } from '@/lib/firmsCache';
+import { getAirQualityCache } from '@/lib/airQualityCache';
 
 interface EnvironmentalAlert {
   id: string;
@@ -31,71 +34,98 @@ export function StateEnvironmentalAlerts({ stateAbbr }: StateEnvironmentalAlerts
       try {
         setLoading(true);
 
-        // Mock real-time alerts based on state
-        const mockAlerts: EnvironmentalAlert[] = [];
+        // Get real alert data from multiple sources
+        const nwsAlerts = getNwsAlertCache();
+        const firmsData = getFirmsCache();
+        const airQualityData = getAirQualityCache();
 
-        // California - fire-prone
-        if (stateAbbr === 'CA') {
-          mockAlerts.push({
-            id: '1',
-            type: 'wildfire',
-            severity: 'high',
-            title: 'Red Flag Warning',
-            description: 'Critical fire weather conditions with high winds and low humidity',
-            affectedAreas: ['Los Angeles County', 'Orange County', 'Ventura County'],
-            issuedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-            expiresAt: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
+        const realAlerts: EnvironmentalAlert[] = [];
+
+        // Process NWS weather alerts for this state
+        const stateNwsAlerts = nwsAlerts.filter((alert: any) =>
+          alert.state === stateAbbr || alert.affectedStates?.includes(stateAbbr)
+        );
+
+        stateNwsAlerts.forEach((alert: any, index: number) => {
+          const alertType = alert.event?.toLowerCase();
+          let type: EnvironmentalAlert['type'] = 'severe_weather';
+
+          if (alertType?.includes('flood')) {
+            type = 'flood';
+          } else if (alertType?.includes('fire') || alertType?.includes('flag')) {
+            type = 'wildfire';
+          } else if (alertType?.includes('air') || alertType?.includes('smoke')) {
+            type = 'air_quality';
+          }
+
+          const severity = alert.severity === 'Extreme' ? 'extreme' :
+                          alert.severity === 'Severe' ? 'high' :
+                          alert.severity === 'Moderate' ? 'moderate' : 'low';
+
+          realAlerts.push({
+            id: `nws-${index}`,
+            type,
+            severity: severity as EnvironmentalAlert['severity'],
+            title: alert.event || 'Weather Alert',
+            description: alert.description || alert.headline || 'Weather alert issued for your area',
+            affectedAreas: alert.areaDesc ? alert.areaDesc.split(';').slice(0, 3) : [`${stateAbbr} Region`],
+            issuedAt: alert.effective || alert.onset || new Date().toISOString(),
+            expiresAt: alert.expires || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
             source: 'National Weather Service'
           });
-        }
+        });
 
-        // Florida - hurricane/flood prone
-        if (stateAbbr === 'FL') {
-          mockAlerts.push({
-            id: '2',
-            type: 'severe_weather',
-            severity: 'moderate',
-            title: 'Coastal Flood Advisory',
-            description: 'Minor coastal flooding expected during high tide cycles',
-            affectedAreas: ['Miami-Dade', 'Broward', 'Palm Beach'],
-            issuedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-            expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
-            source: 'National Hurricane Center'
+        // Process FIRMS fire data for state
+        const stateFires = firmsData.filter((fire: any) =>
+          fire.state === stateAbbr && fire.confidence > 75
+        );
+
+        if (stateFires.length > 0) {
+          const activeFires = stateFires.slice(0, 2); // Top 2 active fires
+          activeFires.forEach((fire: any, index: number) => {
+            realAlerts.push({
+              id: `fire-${index}`,
+              type: 'wildfire',
+              severity: fire.bright_ti5 > 350 ? 'high' : 'moderate',
+              title: 'Active Wildfire',
+              description: `Fire detected with ${fire.confidence}% confidence, brightness temperature: ${fire.bright_ti5}K`,
+              affectedAreas: [fire.county || `${fire.latitude?.toFixed(2)}, ${fire.longitude?.toFixed(2)}`],
+              issuedAt: fire.acq_date || new Date().toISOString(),
+              expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
+              source: 'NASA FIRMS'
+            });
           });
         }
 
-        // Texas - multiple hazards
-        if (stateAbbr === 'TX') {
-          mockAlerts.push({
-            id: '3',
+        // Process air quality alerts
+        const stateAirQuality = airQualityData.states[stateAbbr];
+        if (stateAirQuality && stateAirQuality.usAqi && stateAirQuality.usAqi > 100) {
+          const aqiSeverity = stateAirQuality.usAqi > 200 ? 'extreme' :
+                             stateAirQuality.usAqi > 150 ? 'high' :
+                             stateAirQuality.usAqi > 100 ? 'moderate' : 'low';
+
+          realAlerts.push({
+            id: 'aqi-alert',
             type: 'air_quality',
-            severity: 'moderate',
-            title: 'Ozone Action Day',
-            description: 'Elevated ozone levels expected, sensitive groups should limit outdoor activities',
-            affectedAreas: ['Dallas-Fort Worth', 'Houston Metro'],
-            issuedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-            expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
-            source: 'Texas Commission on Environmental Quality'
+            severity: aqiSeverity as EnvironmentalAlert['severity'],
+            title: 'Air Quality Alert',
+            description: `Unhealthy air quality detected. Current AQI: ${stateAirQuality.usAqi}`,
+            affectedAreas: stateAirQuality.impactedCounties.slice(0, 3).map((c: any) => c.name),
+            issuedAt: stateAirQuality.timestamp || new Date().toISOString(),
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            source: stateAirQuality.provider === 'airnow' ? 'EPA AirNow' : 'Open-Meteo'
           });
         }
 
-        // Add a contamination alert for any state
-        if (Math.random() > 0.7) {
-          mockAlerts.push({
-            id: '4',
-            type: 'contamination',
-            severity: 'high',
-            title: 'Drinking Water Advisory',
-            description: 'Elevated bacteria levels detected, boil water before consumption',
-            affectedAreas: ['Jefferson County Water District'],
-            issuedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-            expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
-            source: 'State Health Department'
-          });
-        }
+        // Sort alerts by severity and issue time
+        const severityOrder = { extreme: 4, high: 3, moderate: 2, low: 1 };
+        realAlerts.sort((a, b) => {
+          const severityDiff = severityOrder[b.severity] - severityOrder[a.severity];
+          if (severityDiff !== 0) return severityDiff;
+          return new Date(b.issuedAt).getTime() - new Date(a.issuedAt).getTime();
+        });
 
-        await new Promise(resolve => setTimeout(resolve, 600));
-        setAlerts(mockAlerts);
+        setAlerts(realAlerts.slice(0, 5)); // Show top 5 alerts
       } catch (error) {
         console.error('Error fetching environmental alerts:', error);
       } finally {

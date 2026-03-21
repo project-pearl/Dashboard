@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Wind, AlertTriangle, TrendingUp, TrendingDown, Activity } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { getAirQualityCache, type AirQualityStateReading } from '@/lib/airQualityCache';
 
 interface AirQualityData {
   currentAQI: number;
@@ -30,81 +31,67 @@ export function StateAirQualityMonitoring({ stateAbbr }: StateAirQualityMonitori
       try {
         setLoading(true);
 
-        // In real implementation, this would call EPA AirNow + AQS APIs
-        // GET /api/state-air-quality?state=${stateAbbr}
+        // Get real air quality data from cache
+        const airQualityCache = getAirQualityCache();
+        const stateReading: AirQualityStateReading | undefined = airQualityCache.states[stateAbbr];
 
-        // Mock realistic data based on state characteristics
-        const getStateAirData = (state: string): AirQualityData => {
-          const baseData = {
-            monitoringSites: Math.floor(Math.random() * 200) + 50,
-            activeSites: Math.floor(Math.random() * 50) + 30,
-            recentExceedances: Math.floor(Math.random() * 15) + 2,
-            trend: ['improving', 'stable', 'declining'][Math.floor(Math.random() * 3)] as any,
-            lastUpdated: new Date().toISOString(),
-          };
+        if (!stateReading) {
+          console.warn(`No air quality data available for state: ${stateAbbr}`);
+          setData(null);
+          return;
+        }
 
-          // State-specific AQI patterns
-          if (state === 'CA') {
-            return {
-              ...baseData,
-              currentAQI: 85 + Math.floor(Math.random() * 30),
-              aqiCategory: 'Moderate',
-              primaryPollutant: 'PM2.5',
-              monitoringSites: 340,
-              topPollutants: [
-                { name: 'PM2.5', concentration: 28.4, unit: 'μg/m³' },
-                { name: 'Ozone', concentration: 0.085, unit: 'ppm' },
-                { name: 'NO2', concentration: 0.042, unit: 'ppm' }
-              ]
-            };
-          }
-
-          if (state === 'TX') {
-            return {
-              ...baseData,
-              currentAQI: 75 + Math.floor(Math.random() * 40),
-              aqiCategory: 'Moderate',
-              primaryPollutant: 'Ozone',
-              monitoringSites: 280,
-              topPollutants: [
-                { name: 'Ozone', concentration: 0.092, unit: 'ppm' },
-                { name: 'PM2.5', concentration: 22.1, unit: 'μg/m³' },
-                { name: 'SO2', concentration: 0.008, unit: 'ppm' }
-              ]
-            };
-          }
-
-          if (state === 'UT') {
-            return {
-              ...baseData,
-              currentAQI: 90 + Math.floor(Math.random() * 35),
-              aqiCategory: 'Unhealthy for Sensitive Groups',
-              primaryPollutant: 'PM2.5',
-              monitoringSites: 45,
-              topPollutants: [
-                { name: 'PM2.5', concentration: 35.2, unit: 'μg/m³' },
-                { name: 'PM10', concentration: 58.7, unit: 'μg/m³' },
-                { name: 'Ozone', concentration: 0.078, unit: 'ppm' }
-              ]
-            };
-          }
-
-          // Default for other states
-          return {
-            ...baseData,
-            currentAQI: 45 + Math.floor(Math.random() * 30),
-            aqiCategory: 'Good',
-            primaryPollutant: 'PM2.5',
-            topPollutants: [
-              { name: 'PM2.5', concentration: 18.5, unit: 'μg/m³' },
-              { name: 'Ozone', concentration: 0.065, unit: 'ppm' },
-              { name: 'NO2', concentration: 0.025, unit: 'ppm' }
-            ]
-          };
+        const getAQICategory = (aqi: number | null): AirQualityData['aqiCategory'] => {
+          if (!aqi) return 'Good';
+          if (aqi <= 50) return 'Good';
+          if (aqi <= 100) return 'Moderate';
+          if (aqi <= 150) return 'Unhealthy for Sensitive Groups';
+          if (aqi <= 200) return 'Unhealthy';
+          if (aqi <= 300) return 'Very Unhealthy';
+          return 'Hazardous';
         };
 
-        await new Promise(resolve => setTimeout(resolve, 700));
-        setData(getStateAirData(stateAbbr));
+        const getPrimaryPollutant = (reading: AirQualityStateReading): string => {
+          const pollutants = [
+            { name: 'PM2.5', value: reading.pm25 },
+            { name: 'PM10', value: reading.pm10 },
+            { name: 'Ozone', value: reading.ozone },
+            { name: 'NO2', value: reading.no2 },
+            { name: 'SO2', value: reading.so2 },
+            { name: 'CO', value: reading.co }
+          ];
+
+          // Return the pollutant with highest non-null value (simplified logic)
+          const validPollutants = pollutants.filter(p => p.value !== null);
+          if (validPollutants.length === 0) return 'PM2.5';
+
+          return validPollutants.reduce((max, current) =>
+            (current.value || 0) > (max.value || 0) ? current : max
+          ).name;
+        };
+
+        const topPollutants = [
+          { name: 'PM2.5', concentration: reading.pm25 || 0, unit: 'μg/m³' },
+          { name: 'PM10', concentration: reading.pm10 || 0, unit: 'μg/m³' },
+          { name: 'Ozone', concentration: reading.ozone || 0, unit: 'μg/m³' },
+          { name: 'NO2', concentration: reading.no2 || 0, unit: 'μg/m³' },
+          { name: 'SO2', concentration: reading.so2 || 0, unit: 'μg/m³' },
+          { name: 'CO', concentration: reading.co || 0, unit: 'mg/m³' }
+        ].filter(p => p.concentration > 0).slice(0, 3);
+
+        const airQualityData: AirQualityData = {
+          currentAQI: stateReading.usAqi || 50,
+          aqiCategory: getAQICategory(stateReading.usAqi),
+          primaryPollutant: getPrimaryPollutant(stateReading),
+          monitoringSites: stateReading.monitorCount || 0,
+          activeSites: Math.ceil((stateReading.monitorCount || 0) * 0.85), // Estimate active sites
+          recentExceedances: stateReading.usAqi && stateReading.usAqi > 100 ? Math.ceil(stateReading.usAqi / 25) : 0,
+          trend: 'stable', // Would need historical data for trend
+          lastUpdated: stateReading.timestamp || new Date().toISOString(),
+          topPollutants
+        };
+
+        setData(airQualityData);
       } catch (error) {
         console.error('Error fetching air quality data:', error);
       } finally {

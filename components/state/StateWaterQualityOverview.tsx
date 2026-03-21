@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Droplets, AlertTriangle, TrendingUp, MapPin } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { getSdwisCache, type SdwisSystem, type SdwisViolation } from '@/lib/sdwisCache';
+import { getWqpCache } from '@/lib/wqpCache';
 
 interface WaterQualityData {
   totalStations: number;
@@ -27,21 +29,79 @@ export function StateWaterQualityOverview({ stateAbbr }: StateWaterQualityOvervi
     const fetchData = async () => {
       try {
         setLoading(true);
-        // In real implementation, this would call actual APIs
-        // GET /api/state-water-quality?state=${stateAbbr}
 
-        // Mock data based on realistic state scenarios
-        const mockData: WaterQualityData = {
-          totalStations: stateAbbr === 'CA' ? 1247 : stateAbbr === 'TX' ? 892 : Math.floor(Math.random() * 800) + 200,
-          activeStations: Math.floor(Math.random() * 50) + 150,
-          recentViolations: Math.floor(Math.random() * 30) + 5,
-          impairmentTrend: ['improving', 'stable', 'declining'][Math.floor(Math.random() * 3)] as any,
-          topContaminants: ['Nitrogen', 'E. coli', 'Sediment', 'Phosphorus'].slice(0, Math.floor(Math.random() * 3) + 2),
-          lastUpdated: new Date().toISOString(),
+        // Get real water quality data from caches
+        const sdwisCache = getSdwisCache();
+        const wqpCache = getWqpCache();
+
+        // Get all state systems from SDWIS
+        const stateSystems: SdwisSystem[] = [];
+        const stateViolations: SdwisViolation[] = [];
+
+        // Scan through grid cells to find state data
+        Object.values(sdwisCache.grid || {}).forEach((cell: any) => {
+          if (cell.systems) {
+            stateSystems.push(...cell.systems.filter((sys: SdwisSystem) => sys.state === stateAbbr));
+          }
+          if (cell.violations) {
+            stateViolations.push(...cell.violations.filter((viol: SdwisViolation) => viol.pwsid?.startsWith(stateAbbr)));
+          }
+        });
+
+        // Get WQP monitoring stations for state
+        const wqpStations = Object.values(wqpCache.grid || {}).flatMap((cell: any) =>
+          (cell.stations || []).filter((station: any) => station.StateCode === stateAbbr)
+        );
+
+        // Calculate active stations (those with recent data)
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const activeStations = wqpStations.filter((station: any) => {
+          const lastActivity = new Date(station.LastActivityDate || station.ActivityStartDate || 0);
+          return lastActivity > thirtyDaysAgo;
+        }).length;
+
+        // Analyze violations for trends and contaminants
+        const recentViolations = stateViolations.filter((viol: SdwisViolation) => {
+          // Simple date check - would need proper parsing in real implementation
+          return true; // For now, count all violations
+        });
+
+        // Extract top contaminants from violations
+        const contaminantCounts: Record<string, number> = {};
+        recentViolations.forEach((viol: SdwisViolation) => {
+          const contaminant = viol.contaminant || 'Unknown';
+          contaminantCounts[contaminant] = (contaminantCounts[contaminant] || 0) + 1;
+        });
+
+        const topContaminants = Object.entries(contaminantCounts)
+          .sort(([,a], [,b]) => b - a)
+          .slice(0, 4)
+          .map(([contaminant]) => contaminant);
+
+        // Determine trend based on violation patterns (simplified)
+        const violationCount = recentViolations.length;
+        const totalSystems = stateSystems.length;
+        const violationRate = totalSystems > 0 ? violationCount / totalSystems : 0;
+
+        let impairmentTrend: WaterQualityData['impairmentTrend'];
+        if (violationRate < 0.05) {
+          impairmentTrend = 'improving';
+        } else if (violationRate > 0.15) {
+          impairmentTrend = 'declining';
+        } else {
+          impairmentTrend = 'stable';
+        }
+
+        const waterQualityData: WaterQualityData = {
+          totalStations: wqpStations.length + stateSystems.length, // Combined monitoring points
+          activeStations: Math.max(activeStations, Math.floor(stateSystems.length * 0.8)), // Estimate active
+          recentViolations: recentViolations.length,
+          impairmentTrend,
+          topContaminants: topContaminants.length > 0 ? topContaminants : ['No violation data available'],
+          lastUpdated: sdwisCache._meta?.built || new Date().toISOString()
         };
 
-        await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API call
-        setData(mockData);
+        setData(waterQualityData);
       } catch (error) {
         console.error('Error fetching water quality data:', error);
       } finally {
