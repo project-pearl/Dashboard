@@ -110,13 +110,7 @@ export default function TriviaGamePage() {
 
   const nextQuestion = () => {
     if (!room) return;
-    const next = room.currentQuestion + 1;
-    if (next >= sampleQuestions.length) {
-      setGameState('menu');
-      setRoom(null);
-      setSelectedAnswer(null);
-      return;
-    }
+    const next = (room.currentQuestion + 1) % sampleQuestions.length;
     setRoom({ ...room, currentQuestion: next });
     setSelectedAnswer(null);
   };
@@ -305,9 +299,13 @@ export default function TriviaGamePage() {
                 {sampleQuestions[room.currentQuestion].options.map((opt, idx) => (
                   <Button
                     key={idx}
-                    variant={selectedAnswer === idx ? 'default' : 'outline'}
+                    variant="outline"
                     onClick={() => setSelectedAnswer(idx)}
-                    className="w-full justify-start"
+                    className={`w-full justify-start border ${
+                      selectedAnswer === idx
+                        ? 'bg-yellow-300 text-slate-900 border-yellow-400 hover:bg-yellow-200'
+                        : 'bg-white text-slate-900 border-slate-300 hover:bg-slate-100'
+                    }`}
                   >
                     {opt}
                   </Button>
@@ -319,7 +317,7 @@ export default function TriviaGamePage() {
                   className="bg-green-600 hover:bg-green-700"
                   disabled={selectedAnswer === null}
                 >
-                  {room.currentQuestion + 1 >= sampleQuestions.length ? 'Finish' : 'Next Question'}
+                  Next Question
                 </Button>
                 <Button
                   variant="outline"
