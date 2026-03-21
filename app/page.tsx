@@ -697,8 +697,8 @@ export default function Home() {
 
   const data = useMemo(() => {
     if (regionDataLoading || !regionData) return null;
-    if (!selectedRegion) return regionData.ambient;
-    return applyRegionThresholds(regionData.ambient, selectedRegion.thresholds);
+    // Skip applyRegionThresholds for converted data structure - thresholds already applied
+    return regionData.ambient;
   }, [selectedRegion, regionData, regionDataLoading]);
 
   // ── Water Data: Multi-source real data overlay ──────────────────────────
