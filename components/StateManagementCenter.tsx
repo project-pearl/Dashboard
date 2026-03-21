@@ -910,10 +910,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
       </div>
 
       {/* Weather Alerts */}
-      <WeatherAlertsSection />
+      <WeatherAlertsSection userState={stateAbbr} />
 
       {/* Triage Queue */}
-      <TriageQueueSection />
+      <TriageQueueSection scope="state" stateFilter={stateAbbr} user={user} />
 
       {/* Map and Jurisdictions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -930,8 +930,8 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                 style="mapbox://styles/mapbox/light-v11"
               >
                 <MapboxMarkers
-                  markers={regionData.map(r => ({
-                    lng: r.lng,
+                  markers={wbMarkers.map(r => ({
+                    lng: r.lon,
                     lat: r.lat,
                     popup: `${r.name}: ${r.status}`,
                     color: r.alertLevel === 'critical' ? '#ef4444' :
@@ -971,7 +971,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
 
       {/* Flood Forecast */}
       <FloodForecastCard
-        forecasts={floodForecast.data || []}
+        forecasts={floodForecast.forecasts || []}
         summary={floodForecast.summary}
         updatedAt={floodForecast.updatedAt}
         isLoading={floodForecast.isLoading}
@@ -981,7 +981,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
 
       {/* Flood Risk Overview */}
       <FloodRiskOverviewCard
-        basins={floodRisk.data || []}
+        basins={floodRisk.basins || []}
         national={floodRisk.national}
         updatedAt={floodRisk.updatedAt}
         isLoading={floodRisk.isLoading}
