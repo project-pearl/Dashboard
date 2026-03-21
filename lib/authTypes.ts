@@ -93,6 +93,7 @@ export interface PendingUser {
 
 // Admin access is now purely database-driven via the admin_level column in Supabase profiles.
 // No environment variable fallback - all admin management goes through the UI and database.
+// Force rebuild timestamp: 2026-03-21T18:00:00Z
 
 /** Resolve effective admin level from database only — no environment variable fallback */
 export function resolveAdminLevel(dbValue: string | undefined | null, email: string): AdminLevel {
