@@ -3597,7 +3597,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             {/* TODO: Future click-throughs for 319 Program Management:
                 - "18 Active 319 Grants" → grant list with project names, amounts, watersheds
                 - "247 BMPs Installed" → BMP inventory
-                - "142K Load Reduction (lbs)" → reduction by pollutant and project */}
+                - "142K Load Reduction (lbs)" → reduction by pollutant and project */
             case 'ag-319': return DS(
               <Card>
                 <CardHeader>
