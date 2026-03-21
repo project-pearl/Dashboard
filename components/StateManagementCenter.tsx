@@ -970,10 +970,24 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
       </div>
 
       {/* Flood Forecast */}
-      <FloodForecastCard />
+      <FloodForecastCard
+        forecasts={floodForecast.data || []}
+        summary={floodForecast.summary}
+        updatedAt={floodForecast.updatedAt}
+        isLoading={floodForecast.isLoading}
+        error={floodForecast.error}
+        onRefresh={floodForecast.refetch}
+      />
 
       {/* Flood Risk Overview */}
-      <FloodRiskOverviewCard />
+      <FloodRiskOverviewCard
+        basins={floodRisk.data || []}
+        national={floodRisk.national}
+        updatedAt={floodRisk.updatedAt}
+        isLoading={floodRisk.isLoading}
+        error={floodRisk.error}
+        onRefresh={floodRisk.refetch}
+      />
 
     </div>
   );
