@@ -2033,7 +2033,7 @@ export function FederalManagementCenter(props: Props) {
         dataSource = 'none';
       }
 
-      const grade = canGradeState ? scoreToGrade(score) : { letter: 'N/A', color: 'text-slate-400', bg: 'bg-slate-100 border-slate-300' };
+      const grade = canGradeState ? scoreToGrade(score) : { letter: 'N/A', color: 'text-slate-400', bg: 'bg-slate-100 border-slate-300', textColor: 'text-slate-400' };
 
       // Aggregate ATTAINS categories + causes for this state
       const stateAttains = attainsBulk[abbr] || [];

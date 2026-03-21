@@ -143,7 +143,7 @@ export default function ScorecardDashboard({
           <CardContent>
             <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-13 gap-1.5">
               {scorecardData.allStatesAlpha.map(s => {
-                const g = s.canGradeState ? scoreToGrade(s.score) : { letter: 'N/A', color: 'text-slate-400', bg: 'bg-slate-50 border-slate-200' };
+                const g = s.canGradeState ? scoreToGrade(s.score) : { letter: 'N/A', color: 'text-slate-400', bg: 'bg-slate-50 border-slate-200', textColor: 'text-slate-400' };
                 return (
                   <button
                     key={s.abbr}

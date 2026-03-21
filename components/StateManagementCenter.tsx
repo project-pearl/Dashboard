@@ -880,7 +880,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
           <CardContent>
             <div className="text-2xl font-bold">{jurisdictionScoreSummary.avgScore}</div>
             <p className="text-xs text-muted-foreground">
-              Grade: {jurisdictionScoreSummary.avgGrade}
+              Grade: {jurisdictionScoreSummary.avgGrade.letter}
             </p>
           </CardContent>
         </Card>
