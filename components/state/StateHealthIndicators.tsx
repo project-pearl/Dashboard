@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Heart, TrendingUp, TrendingDown, Activity, AlertCircle, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { getHospitalCache, type HospitalFacility } from '@/lib/hospitalCache';
-import { getWaterborneIllnessCache } from '@/lib/waterborneIllnessCache';
+import { getWaterborneOutbreakCache } from '@/lib/waterborneIllnessCache';
 import { getEnvironmentalHealthCache } from '@/lib/environmentalHealthCache';
 
 interface HealthIndicator {
@@ -58,7 +58,7 @@ export function StateHealthIndicators({ stateAbbr }: StateHealthIndicatorsProps)
 
         // Get real health data from multiple caches
         const hospitalCache = getHospitalCache();
-        const waterborneCache = getWaterborneIllnessCache();
+        const waterborneCache = getWaterborneOutbreakCache();
         const envHealthCache = getEnvironmentalHealthCache();
 
         // Filter hospitals for this state

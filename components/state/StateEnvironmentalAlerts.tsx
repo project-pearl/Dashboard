@@ -5,9 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, Flame, CloudRain, Wind, Thermometer, Clock } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { getNwsAlertCache } from '@/lib/nwsAlertCache';
-import { getFirmsCache } from '@/lib/firmsCache';
-import { getAirQualityCache } from '@/lib/airQualityCache';
+import { getNwsAlerts } from '@/lib/nwsAlertCache';
+import { getAirQualityForState } from '@/lib/airQualityCache';
 
 interface EnvironmentalAlert {
   id: string;
@@ -34,19 +33,11 @@ export function StateEnvironmentalAlerts({ stateAbbr }: StateEnvironmentalAlerts
       try {
         setLoading(true);
 
-        // Get real alert data from multiple sources
-        const nwsAlerts = getNwsAlertCache();
-        const firmsData = getFirmsCache();
-        const airQualityData = getAirQualityCache();
-
+        const nwsAlerts = getNwsAlerts(stateAbbr) ?? [];
+        const stateAirQuality = getAirQualityForState(stateAbbr);
         const realAlerts: EnvironmentalAlert[] = [];
 
-        // Process NWS weather alerts for this state
-        const stateNwsAlerts = nwsAlerts.filter((alert: any) =>
-          alert.state === stateAbbr || alert.affectedStates?.includes(stateAbbr)
-        );
-
-        stateNwsAlerts.forEach((alert: any, index: number) => {
+        nwsAlerts.forEach((alert, index) => {
           const alertType = alert.event?.toLowerCase();
           let type: EnvironmentalAlert['type'] = 'severe_weather';
 
@@ -59,8 +50,8 @@ export function StateEnvironmentalAlerts({ stateAbbr }: StateEnvironmentalAlerts
           }
 
           const severity = alert.severity === 'Extreme' ? 'extreme' :
-                          alert.severity === 'Severe' ? 'high' :
-                          alert.severity === 'Moderate' ? 'moderate' : 'low';
+            alert.severity === 'Severe' ? 'high' :
+              alert.severity === 'Moderate' ? 'moderate' : 'low';
 
           realAlerts.push({
             id: `nws-${index}`,
@@ -69,40 +60,16 @@ export function StateEnvironmentalAlerts({ stateAbbr }: StateEnvironmentalAlerts
             title: alert.event || 'Weather Alert',
             description: alert.description || alert.headline || 'Weather alert issued for your area',
             affectedAreas: alert.areaDesc ? alert.areaDesc.split(';').slice(0, 3) : [`${stateAbbr} Region`],
-            issuedAt: alert.effective || alert.onset || new Date().toISOString(),
+            issuedAt: alert.onset || new Date().toISOString(),
             expiresAt: alert.expires || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
             source: 'National Weather Service'
           });
         });
 
-        // Process FIRMS fire data for state
-        const stateFires = firmsData.filter((fire: any) =>
-          fire.state === stateAbbr && fire.confidence > 75
-        );
-
-        if (stateFires.length > 0) {
-          const activeFires = stateFires.slice(0, 2); // Top 2 active fires
-          activeFires.forEach((fire: any, index: number) => {
-            realAlerts.push({
-              id: `fire-${index}`,
-              type: 'wildfire',
-              severity: fire.bright_ti5 > 350 ? 'high' : 'moderate',
-              title: 'Active Wildfire',
-              description: `Fire detected with ${fire.confidence}% confidence, brightness temperature: ${fire.bright_ti5}K`,
-              affectedAreas: [fire.county || `${fire.latitude?.toFixed(2)}, ${fire.longitude?.toFixed(2)}`],
-              issuedAt: fire.acq_date || new Date().toISOString(),
-              expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
-              source: 'NASA FIRMS'
-            });
-          });
-        }
-
-        // Process air quality alerts
-        const stateAirQuality = airQualityData.states[stateAbbr];
         if (stateAirQuality && stateAirQuality.usAqi && stateAirQuality.usAqi > 100) {
           const aqiSeverity = stateAirQuality.usAqi > 200 ? 'extreme' :
-                             stateAirQuality.usAqi > 150 ? 'high' :
-                             stateAirQuality.usAqi > 100 ? 'moderate' : 'low';
+            stateAirQuality.usAqi > 150 ? 'high' :
+              stateAirQuality.usAqi > 100 ? 'moderate' : 'low';
 
           realAlerts.push({
             id: 'aqi-alert',
@@ -110,14 +77,13 @@ export function StateEnvironmentalAlerts({ stateAbbr }: StateEnvironmentalAlerts
             severity: aqiSeverity as EnvironmentalAlert['severity'],
             title: 'Air Quality Alert',
             description: `Unhealthy air quality detected. Current AQI: ${stateAirQuality.usAqi}`,
-            affectedAreas: stateAirQuality.impactedCounties.slice(0, 3).map((c: any) => c.name),
+            affectedAreas: stateAirQuality.impactedCounties.slice(0, 3).map(c => c.name),
             issuedAt: stateAirQuality.timestamp || new Date().toISOString(),
             expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
             source: stateAirQuality.provider === 'airnow' ? 'EPA AirNow' : 'Open-Meteo'
           });
         }
 
-        // Sort alerts by severity and issue time
         const severityOrder = { extreme: 4, high: 3, moderate: 2, low: 1 };
         realAlerts.sort((a, b) => {
           const severityDiff = severityOrder[b.severity] - severityOrder[a.severity];
@@ -125,7 +91,7 @@ export function StateEnvironmentalAlerts({ stateAbbr }: StateEnvironmentalAlerts
           return new Date(b.issuedAt).getTime() - new Date(a.issuedAt).getTime();
         });
 
-        setAlerts(realAlerts.slice(0, 5)); // Show top 5 alerts
+        setAlerts(realAlerts.slice(0, 5));
       } catch (error) {
         console.error('Error fetching environmental alerts:', error);
       } finally {
@@ -134,7 +100,7 @@ export function StateEnvironmentalAlerts({ stateAbbr }: StateEnvironmentalAlerts
     };
 
     fetchAlerts();
-    const interval = setInterval(fetchAlerts, 5 * 60 * 1000); // Refresh every 5 minutes
+    const interval = setInterval(fetchAlerts, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [stateAbbr]);
 
@@ -205,7 +171,7 @@ export function StateEnvironmentalAlerts({ stateAbbr }: StateEnvironmentalAlerts
       <CardContent>
         {alerts.length === 0 ? (
           <div className="text-center py-6 text-muted-foreground">
-            <div className="text-green-600 mb-2">✅</div>
+            <div className="text-green-600 mb-2">OK</div>
             <div>No active environmental alerts</div>
           </div>
         ) : (
@@ -246,7 +212,7 @@ export function StateEnvironmentalAlerts({ stateAbbr }: StateEnvironmentalAlerts
         )}
 
         <div className="mt-4 pt-3 border-t text-xs text-muted-foreground text-center">
-          Auto-refreshes every 5 minutes • {new Date().toLocaleTimeString()}
+          Auto-refreshes every 5 minutes | {new Date().toLocaleTimeString()}
         </div>
       </CardContent>
     </Card>

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Wind, AlertTriangle, TrendingUp, TrendingDown, Activity } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { getAirQualityCache, type AirQualityStateReading } from '@/lib/airQualityCache';
+import { getAirQualityForState, type AirQualityStateReading } from '@/lib/airQualityCache';
 
 interface AirQualityData {
   currentAQI: number;
@@ -30,10 +30,7 @@ export function StateAirQualityMonitoring({ stateAbbr }: StateAirQualityMonitori
     const fetchAirQualityData = async () => {
       try {
         setLoading(true);
-
-        // Get real air quality data from cache
-        const airQualityCache = getAirQualityCache();
-        const stateReading: AirQualityStateReading | undefined = airQualityCache.states[stateAbbr];
+        const stateReading: AirQualityStateReading | null = getAirQualityForState(stateAbbr);
 
         if (!stateReading) {
           console.warn(`No air quality data available for state: ${stateAbbr}`);
@@ -61,7 +58,6 @@ export function StateAirQualityMonitoring({ stateAbbr }: StateAirQualityMonitori
             { name: 'CO', value: reading.co }
           ];
 
-          // Return the pollutant with highest non-null value (simplified logic)
           const validPollutants = pollutants.filter(p => p.value !== null);
           if (validPollutants.length === 0) return 'PM2.5';
 
@@ -71,12 +67,12 @@ export function StateAirQualityMonitoring({ stateAbbr }: StateAirQualityMonitori
         };
 
         const topPollutants = [
-          { name: 'PM2.5', concentration: reading.pm25 || 0, unit: 'μg/m³' },
-          { name: 'PM10', concentration: reading.pm10 || 0, unit: 'μg/m³' },
-          { name: 'Ozone', concentration: reading.ozone || 0, unit: 'μg/m³' },
-          { name: 'NO2', concentration: reading.no2 || 0, unit: 'μg/m³' },
-          { name: 'SO2', concentration: reading.so2 || 0, unit: 'μg/m³' },
-          { name: 'CO', concentration: reading.co || 0, unit: 'mg/m³' }
+          { name: 'PM2.5', concentration: stateReading.pm25 || 0, unit: 'ug/m3' },
+          { name: 'PM10', concentration: stateReading.pm10 || 0, unit: 'ug/m3' },
+          { name: 'Ozone', concentration: stateReading.ozone || 0, unit: 'ug/m3' },
+          { name: 'NO2', concentration: stateReading.no2 || 0, unit: 'ug/m3' },
+          { name: 'SO2', concentration: stateReading.so2 || 0, unit: 'ug/m3' },
+          { name: 'CO', concentration: stateReading.co || 0, unit: 'mg/m3' }
         ].filter(p => p.concentration > 0).slice(0, 3);
 
         const airQualityData: AirQualityData = {
@@ -84,9 +80,9 @@ export function StateAirQualityMonitoring({ stateAbbr }: StateAirQualityMonitori
           aqiCategory: getAQICategory(stateReading.usAqi),
           primaryPollutant: getPrimaryPollutant(stateReading),
           monitoringSites: stateReading.monitorCount || 0,
-          activeSites: Math.ceil((stateReading.monitorCount || 0) * 0.85), // Estimate active sites
+          activeSites: Math.ceil((stateReading.monitorCount || 0) * 0.85),
           recentExceedances: stateReading.usAqi && stateReading.usAqi > 100 ? Math.ceil(stateReading.usAqi / 25) : 0,
-          trend: 'stable', // Would need historical data for trend
+          trend: 'stable',
           lastUpdated: stateReading.timestamp || new Date().toISOString(),
           topPollutants
         };
@@ -100,7 +96,7 @@ export function StateAirQualityMonitoring({ stateAbbr }: StateAirQualityMonitori
     };
 
     fetchAirQualityData();
-    const interval = setInterval(fetchAirQualityData, 10 * 60 * 1000); // Refresh every 10 minutes
+    const interval = setInterval(fetchAirQualityData, 10 * 60 * 1000);
     return () => clearInterval(interval);
   }, [stateAbbr]);
 
@@ -158,17 +154,15 @@ export function StateAirQualityMonitoring({ stateAbbr }: StateAirQualityMonitori
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {/* Current AQI */}
           <div className="text-center">
             <div className={`text-4xl font-bold rounded-lg p-3 ${getAQIColor(data.currentAQI)}`}>
               {data.currentAQI}
             </div>
             <div className="text-sm text-muted-foreground mt-1">
-              {data.aqiCategory} • Primary: {data.primaryPollutant}
+              {data.aqiCategory} | Primary: {data.primaryPollutant}
             </div>
           </div>
 
-          {/* Monitoring Network */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <div className="text-2xl font-bold">{data.monitoringSites.toLocaleString()}</div>
@@ -180,7 +174,6 @@ export function StateAirQualityMonitoring({ stateAbbr }: StateAirQualityMonitori
             </div>
           </div>
 
-          {/* Status Metrics */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Recent Exceedances</span>
@@ -199,7 +192,6 @@ export function StateAirQualityMonitoring({ stateAbbr }: StateAirQualityMonitori
             </div>
           </div>
 
-          {/* Top Pollutants */}
           <div>
             <div className="text-sm font-medium mb-2">Key Pollutant Levels</div>
             <div className="space-y-2">
@@ -215,7 +207,7 @@ export function StateAirQualityMonitoring({ stateAbbr }: StateAirQualityMonitori
           </div>
 
           <div className="pt-2 border-t text-xs text-muted-foreground text-center">
-            Updates every 10 minutes • {new Date(data.lastUpdated).toLocaleTimeString()}
+            Updates every 10 minutes | {new Date(data.lastUpdated).toLocaleTimeString()}
           </div>
         </div>
       </CardContent>
