@@ -1,5 +1,8 @@
 'use client';
 
+// Force dynamic rendering to bypass static generation issues
+export const dynamic = 'force-dynamic';
+
 import React, { useState, useMemo, useEffect } from 'react';
 import AuthGuard from '@/components/AuthGuard';
 import UserMenu from '@/components/UserMenu';
