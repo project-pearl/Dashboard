@@ -857,7 +857,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
         {toastMsg && <div>Toast: {toastMsg}</div>}
 
         {/* ── HERO BANNER ── */
-        <HeroBanner role="state" onDoubleClick={() => onToggleDevMode?.()} />
+        <HeroBanner role="state" onDoubleClick={() => { onToggleDevMode?.(); }} />
 
         {/* ── LENS BRIEFING — always first card below hero ── */
         <LensDataStory lens={viewLens} role="State" state={stateAbbr} />
