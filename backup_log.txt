@@ -1,0 +1,15 @@
+[2026-03-21 14:00:48] Starting backup to: D:/Programming\backup_20260321_140048
+[2026-03-21 14:00:48] Backing up: C:/Users/Doug/DMH-Dashboard
+[2026-03-21 14:06:52] Backup completed for DMH-Dashboard: 31256 files copied, 0 files skipped
+[2026-03-21 14:06:52] Backing up: C:/Users/Doug/clawsome
+[2026-03-21 14:14:58] Backup completed for clawsome: 39855 files copied, 0 files skipped
+[2026-03-21 14:14:58] Backing up: C:/Users/Doug/Dashboard
+[2026-03-21 14:17:11] Error calculating hash for C:/Users/Doug/Dashboard\.next\dev\lock: [Errno 13] Permission denied: 'C:/Users/Doug/Dashboard\\.next\\dev\\lock'
+[2026-03-21 14:22:20] Backup completed for Dashboard: 82447 files copied, 0 files skipped
+[2026-03-21 14:22:20] Backing up: C:/Users/Doug/Pearl Wealth Builder
+[2026-03-21 14:30:47] Backup completed for Pearl Wealth Builder: 49826 files copied, 0 files skipped
+[2026-03-21 14:30:47] Backup completed successfully!
+[2026-03-21 15:10:46] Starting backup to: C:\Users\Doug\AppData\Local\Temp\backup_test_dest_36ibkpc7\backup_20260321_151046
+[2026-03-21 15:10:46] Backing up: C:\Users\Doug\AppData\Local\Temp\backup_test_source_gxivhnj7
+[2026-03-21 15:10:46] Backup completed for backup_test_source_gxivhnj7: 3 files copied, 0 files skipped
+[2026-03-21 15:10:46] Backup completed successfully!

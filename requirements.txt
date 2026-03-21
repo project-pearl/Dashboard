@@ -1,0 +1,24 @@
+# Advanced Backup Tool Requirements
+
+# Core dependencies
+schedule>=1.2.0           # Task scheduling
+psutil>=5.8.0            # System monitoring
+pandas>=1.3.0            # Data analysis
+
+# GUI dependencies (usually included with Python)
+# tkinter (built-in)
+
+# Reporting and visualization
+matplotlib>=3.5.0        # Basic plotting
+plotly>=5.0.0           # Interactive charts
+
+# Optional dependencies for enhanced features
+# smtplib (built-in)      # Email notifications
+# sqlite3 (built-in)      # Database storage
+# json (built-in)         # Configuration files
+# hashlib (built-in)      # File integrity checking
+# shutil (built-in)       # File operations
+# pathlib (built-in)      # Path handling
+# threading (built-in)    # Background operations
+# subprocess (built-in)   # System commands
+# platform (built-in)    # OS detection

@@ -51,6 +51,12 @@ import { useStateReport } from '@/lib/useStateReport';
 import { useUSASpendingData } from '@/lib/useUSASpendingData';
 import { StateDataReportCard } from '@/components/StateDataReportCard';
 import LocationReportCard from '@/components/LocationReportCard';
+import { StateWaterQualityOverview } from '@/components/state/StateWaterQualityOverview';
+import { StateEnvironmentalAlerts } from '@/components/state/StateEnvironmentalAlerts';
+import { StateAirQualityMonitoring } from '@/components/state/StateAirQualityMonitoring';
+import { StatePFASTracker } from '@/components/state/StatePFASTracker';
+import { StateHealthIndicators } from '@/components/state/StateHealthIndicators';
+import { StateInfrastructureStatus } from '@/components/state/StateInfrastructureStatus';
 import { WaterQualityTradingPanel } from '@/components/WaterQualityTradingPanel';
 import { getEpaRegionForState } from '@/lib/epa-regions';
 import { NUTRIENT_TRADING_STATES } from '@/lib/constants';
@@ -1063,7 +1069,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
         );
 
         // ── Air Quality ──
-        case 'mon-air-quality': return DS(<AirQualityMonitoringCard fallbackStateAbbr={stateAbbr} />);
+        case 'mon-air-quality': return DS(<StateAirQualityMonitoring stateAbbr={stateAbbr} />);
 
         // ── Water Quality Trading ──
         case 'wqt': return NUTRIENT_TRADING_STATES.has(stateAbbr) ? DS(
@@ -1225,47 +1231,15 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
         case 'weather-alerts': return DS(<WeatherAlertsSection userState={stateAbbr} />);
 
         // ── Health & Public Safety ──
-        case 'cdc-places-health': return DS(
-          <Card>
-            <CardHeader>
-              <CardTitle>CDC PLACES Health Data</CardTitle>
-              <CardDescription>Health outcomes for {stateAbbr}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Population health measures and chronic disease prevalence.
-              </p>
-            </CardContent>
-          </Card>
-        );
+        case 'cdc-places-health': return DS(<StateHealthIndicators stateAbbr={stateAbbr} />);
 
-        case 'pfas-analytics-panel': return DS(
-          <Card>
-            <CardHeader>
-              <CardTitle>PFAS Analytics</CardTitle>
-              <CardDescription>PFAS contamination tracking in {stateAbbr}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Per- and polyfluoroalkyl substances monitoring and trends.
-              </p>
-            </CardContent>
-          </Card>
-        );
+        case 'pfas-analytics-panel': return DS(<StatePFASTracker stateAbbr={stateAbbr} />);
 
-        case 'cyber-risk-panel': return DS(
-          <Card>
-            <CardHeader>
-              <CardTitle>Cyber Risk Assessment</CardTitle>
-              <CardDescription>Water infrastructure cybersecurity for {stateAbbr}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Critical infrastructure vulnerability assessment.
-              </p>
-            </CardContent>
-          </Card>
-        );
+        case 'state-water-quality-overview': return DS(<StateWaterQualityOverview stateAbbr={stateAbbr} />);
+
+        case 'state-environmental-alerts': return DS(<StateEnvironmentalAlerts stateAbbr={stateAbbr} />);
+
+        case 'cyber-risk-panel': return DS(<StateInfrastructureStatus stateAbbr={stateAbbr} />);
 
         // ── Policy & Legislation ──
         case 'policy-tracker': return DS(

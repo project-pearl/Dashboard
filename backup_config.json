@@ -1,0 +1,16 @@
+{
+  "source_folders": [
+    "C:/Users/Doug/DMH-Dashboard",
+    "C:/Users/Doug/clawsome",
+    "C:/Users/Doug/Dashboard",
+    "C:/Users/Doug/Pearl Wealth Builder"
+  ],
+  "backup_destination": "D:/Programming",
+  "incremental": true,
+  "exclude_patterns": [
+    ".tmp",
+    ".log",
+    "__pycache__",
+    ".git"
+  ]
+}

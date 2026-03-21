@@ -223,6 +223,8 @@ export const DEFAULT_SECTIONS = {
     { id: 'dmr-violations-panel', label: 'DMR Violation Analytics',     order: 87.93, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'hab-forecast-panel',  label: 'HAB Bloom Forecasts',          order: 87.94, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'cdc-places-health',   label: 'CDC PLACES Health Data',       order: 87.95, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'state-water-quality-overview', label: 'State Water Quality Overview', order: 87.951, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'state-environmental-alerts', label: 'Environmental Alerts', order: 87.952, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'severe-weather-panel', label: 'NOAA Severe Weather Events',  order: 87.96, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'nexrad-precip-panel', label: 'Real-Time Radar Precipitation', order: 87.97, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'congress-legislation', label: 'Water Legislation Tracker',   order: 87.98, visible: true, defaultExpanded: true, lensControlled: true },
