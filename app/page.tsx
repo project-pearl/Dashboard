@@ -696,7 +696,10 @@ export default function Home() {
   }
 
   const data = useMemo(() => {
-    if (regionDataLoading || !regionData) return null;
+    if (regionDataLoading || !regionData) {
+      // Return fallback data instead of null to prevent cascading failures
+      return createFallbackData().ambient;
+    }
     // Skip applyRegionThresholds for converted data structure - thresholds already applied
     return regionData.ambient;
   }, [selectedRegion, regionData, regionDataLoading]);
@@ -914,20 +917,10 @@ export default function Home() {
     return displayData;
   }, [displayData]);
 
-  // Only show loading in browser, not during SSR
-  if (typeof window !== 'undefined' && regionDataLoading && !data) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-slate-600">Loading real-time water data...</p>
-        </div>
-      </div>
-    );
-  }
+  // Remove loading guard - data is always available now with fallbacks
 
   const previousPeriodData = useMemo(() => {
-    if (!regionData?.ambient) return null;
+    if (!regionData?.ambient) return createFallbackData().ambient;
     const ambient = regionData.ambient;
     const baseData = {
       ...ambient,
