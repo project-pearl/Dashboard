@@ -3704,7 +3704,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
-            {/* ── Fix 17: New NPS/Agriculture cards ── */}
             case 'ag-nps-breakdown': return DS(
               <Card>
                 <CardHeader>
@@ -4126,7 +4125,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
-            {/* ── Fix 19: New Monitoring cards ── */}
             case 'mon-air-quality': return DS(
               <AirQualityMonitoringCard
                 fallbackStateAbbr={stateAbbr}
@@ -4429,7 +4427,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
-            {/* ── Fix 21: Cross-Agency Alert Correlation ── */}
             case 'disaster-cascade': return DS(
               <Card>
                 <CardHeader>
