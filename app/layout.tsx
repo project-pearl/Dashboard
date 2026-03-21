@@ -80,6 +80,7 @@ export default async function RootLayout({
       <head>
         <script nonce={nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: `(function(){try{var a=localStorage.getItem('pin-accent');if(a&&a!=='teal')document.documentElement.setAttribute('data-accent',a)}catch(e){}})()` }} />
         <script
+          nonce={nonce}
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({

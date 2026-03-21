@@ -131,9 +131,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // EMERGENCY: Cache warming disabled to prevent memory exhaustion
-  // The warming was loading 80+ caches (128MB+ files) causing crashes
-  console.log('[Cache Status] Cache warming disabled - memory conservation mode');
+  // EMERGENCY FIX: Disable cache warming to prevent memory exhaustion
+  // TODO: Implement smarter status checking without loading full cache data
+  console.log('[Cache Status] Warming disabled to prevent memory issues');
 
   const wqp = getWqpCacheStatus();
   const attains = getAttainsCacheStatus();
