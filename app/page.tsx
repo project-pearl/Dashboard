@@ -9,7 +9,7 @@ import { getPrimaryRoute } from '@/lib/roleRoutes';
 import type { UserRole } from '@/lib/authTypes';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
-import { calculateOverallScore, applyRegionThresholds, calculateRemovalEfficiency, getRemovalStatus, getRegionMockData } from '@/lib/realWaterData';
+import { calculateOverallScore, applyRegionThresholds, calculateRemovalEfficiency, getRemovalStatus } from '@/lib/realWaterData';
 import { TimeMode, DataMode } from '@/lib/types';
 import { StormEventTable } from '@/components/StormEventTable';
 import { StormDetectionBanner } from '@/components/StormDetectionBanner';
@@ -550,7 +550,61 @@ export default function Home() {
 
   const selectedRegion = useMemo(() => getRegionById(selectedRegionId), [selectedRegionId]);
 
-  const regionData = useMemo(() => getRegionMockData(selectedRegionId), [selectedRegionId]);
+  // EMERGENCY FIX: Use synchronous mock data function
+  const regionData = useMemo(() => {
+    const baseParams = {
+      DO: { value: 7.2, unit: 'mg/L', status: 'good', thresholds: { green: { min: 6 }, yellow: { min: 4 }, red: { min: 0 } } },
+      turbidity: { value: 12.5, unit: 'NTU', status: 'good', thresholds: { green: { max: 15 }, yellow: { max: 25 }, red: { max: 50 } } },
+      TN: { value: 0.85, unit: 'mg/L', status: 'fair', thresholds: { green: { max: 0.8 }, yellow: { max: 1.5 }, red: { max: 3.0 } } },
+      TP: { value: 0.12, unit: 'mg/L', status: 'good', thresholds: { green: { max: 0.1 }, yellow: { max: 0.2 }, red: { max: 0.5 } } },
+      TSS: { value: 28, unit: 'mg/L', status: 'fair', thresholds: { green: { max: 25 }, yellow: { max: 50 }, red: { max: 100 } } },
+      salinity: { value: 12.8, unit: 'ppt', status: 'good', thresholds: { green: { min: 10, max: 20 }, yellow: { min: 5, max: 30 }, red: { min: 0, max: 50 } } },
+      pH: { value: 7.8, unit: 'units', status: 'good', thresholds: { green: { min: 7.0, max: 8.5 }, yellow: { min: 6.5, max: 9.0 }, red: { min: 0, max: 14 } } },
+      temperature: { value: 18.5, unit: '°C', status: 'good', thresholds: { green: { max: 25 }, yellow: { max: 30 }, red: { max: 35 } } },
+      conductivity: { value: 2850, unit: 'µS/cm', status: 'good', thresholds: { green: { max: 3000 }, yellow: { max: 5000 }, red: { max: 10000 } } }
+    };
+
+    return {
+      ambient: {
+        parameters: baseParams,
+        overallScore: 75,
+        timestamp: new Date().toISOString(),
+        location: { latitude: 39.16, longitude: -76.48 }
+      },
+      influent: {
+        parameters: {
+          ...baseParams,
+          DO: { ...baseParams.DO, value: 6.8 },
+          turbidity: { ...baseParams.turbidity, value: 18.2 },
+          TN: { ...baseParams.TN, value: 1.2 },
+          TP: { ...baseParams.TP, value: 0.18 },
+          TSS: { ...baseParams.TSS, value: 45 },
+          salinity: { ...baseParams.salinity, value: 13.2 }
+        }
+      },
+      effluent: {
+        parameters: {
+          ...baseParams,
+          DO: { ...baseParams.DO, value: 7.5 },
+          turbidity: { ...baseParams.turbidity, value: 8.1 },
+          TN: { ...baseParams.TN, value: 0.65 },
+          TP: { ...baseParams.TP, value: 0.08 },
+          TSS: { ...baseParams.TSS, value: 15 },
+          salinity: { ...baseParams.salinity, value: 12.9 }
+        }
+      },
+      storms: [{
+        id: 'storm-1',
+        name: 'Recent Storm Event',
+        date: '2024-03-15',
+        duration: '4.2 hours',
+        intensity: 'Moderate',
+        influent: { parameters: baseParams },
+        effluent: { parameters: baseParams },
+        removalEfficiencies: { DO: 85, turbidity: 78, TN: 82, TP: 75, TSS: 88, salinity: 65 }
+      }]
+    };
+  }, [selectedRegionId]);
 
   const data = useMemo(() => {
     if (!selectedRegion) return regionData.ambient;
