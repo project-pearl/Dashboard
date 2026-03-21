@@ -108,6 +108,7 @@ export function AirQualityMonitoringCard({
   }, [activeJurisdiction, effectiveState, reading?.impactedCounties]);
 
   const band = aqiBand(reading?.usAqi ?? null);
+  const impactedCounties = Array.isArray(reading?.impactedCounties) ? reading.impactedCounties : [];
 
   return (
     <Card>
@@ -177,8 +178,8 @@ export function AirQualityMonitoringCard({
               </div>
               <div>Provider: {reading.provider} {reading.nearestMonitorDistanceMi != null ? `· nearest monitor ${reading.nearestMonitorDistanceMi.toFixed(1)} mi` : ''}</div>
               <div>
-                Impacted counties: {reading.impactedCounties.slice(0, 3).map((c) => c.name).join(', ') || reading.impactedCounty || 'Not available'}
-                {reading.impactedCounties.length > 3 ? ` +${reading.impactedCounties.length - 3} more` : ''}
+                Impacted counties: {impactedCounties.slice(0, 3).map((c) => c.name).join(', ') || reading.impactedCounty || 'Not available'}
+                {impactedCounties.length > 3 ? ` +${impactedCounties.length - 3} more` : ''}
               </div>
               <div>Estimated impacted ZIPs: {reading.impactedZipCount}</div>
             </div>
@@ -198,4 +199,3 @@ export function AirQualityMonitoringCard({
     </Card>
   );
 }
-
