@@ -3677,10 +3677,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
-            {/* TODO: Future click-throughs for Agricultural Partner Management:
-                - "24 Partner Organizations" → list partners
-                - "8 Active MOUs" → MOU details
-                - "15 Joint Projects" → project list */}
             case 'ag-partners': return DS(
               <Card>
                 <CardHeader>
@@ -4006,11 +4002,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             );
 
             // ── Monitoring sections ────────────────────────────────────────
-            {/* TODO: Future click-throughs for State Monitoring Network:
-                - "186 Ambient" → filtered station list for ambient monitoring
-                - "342 NPDES DMR" → filtered NPDES discharge monitoring stations
-                - "1,842 SDWA" → filtered SDWA compliance stations
-                - "94 Volunteer" → filtered volunteer monitoring sites */}
             case 'mon-network': return DS(
               <Card>
                 <CardHeader>
@@ -4052,9 +4043,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
-            {/* TODO: Future click-throughs for Data Management Operations:
-                - "3 Pending QA" → show which submissions are pending review
-                - "97.3% QA Pass Rate" → show failures and rejection reasons */}
             case 'mon-data-mgmt': return DS(
               <Card>
                 <CardHeader>
@@ -4083,10 +4071,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
-            {/* TODO: Future click-throughs for Network Optimization:
-                - "14 Priority Gaps" → show gap locations on the map (highest priority)
-                - "22 Recommended Stations" → proposed locations with justification
-                - "72% Coverage Score" → coverage model visualization */}
             case 'mon-optimization': return DS(
               <Card>
                 <CardHeader>
@@ -4114,10 +4098,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
-            {/* TODO: Future click-throughs for Continuous Monitoring:
-                - "38 Online Now" → show which stations on a map
-                - "3 Alerts (24H)" → show alert details
-                - "42 Continuous Stations" → list all with status */}
             case 'mon-continuous': return DS(
               <Card>
                 <CardHeader>
@@ -4331,12 +4311,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             );
 
             // ── Disaster sections ──────────────────────────────────────────
-            {/* TODO: Future click-throughs for Active Incidents:
-                - Each incident row → Response Planner pre-loaded with that incident context
-                  (type/severity pre-filled, downstream waterbodies auto-identified,
-                   multi-agency contacts pre-populated, response timeline template,
-                   regulatory notification requirements and deadlines)
-                - "Sewage Bypass — Patapsco WWTP" → affected waterbodies, downstream impacts, agency contacts */}
             case 'disaster-active': return DS(
               <Card>
                 <CardHeader>
@@ -4372,10 +4346,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
-            {/* TODO: Future click-throughs for State Response Operations:
-                - "2 Teams Deployed" → deployment locations and assignments
-                - "18 Sampling Sites" → show on map
-                - "3 Advisories Active" → list advisories with detail */}
             case 'disaster-response': return DS(
               <Card>
                 <CardHeader>
@@ -4404,10 +4374,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
-            {/* TODO: Future click-throughs for Spill Reporting:
-                - "14 Reports (30D)" → spill list with locations, materials, volumes
-                - "4 Under Investigation" → investigation status
-                - "3 Cleanup Active" → cleanup progress */}
             case 'disaster-spill': return DS(
               <Card>
                 <CardHeader>
@@ -4436,10 +4402,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
-            {/* TODO: Future click-throughs for Preparedness:
-                - "12 Emergency Plans" → list plans by type
-                - "Last Drill 45 days ago" → show drill report
-                - "94% Equipment Ready" → show inventory status */}
             case 'disaster-prep': return DS(
               <Card>
                 <CardHeader>
