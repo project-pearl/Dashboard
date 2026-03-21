@@ -853,7 +853,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
     <div className="min-h-screen w-full bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
       <div className="mx-auto max-w-7xl p-4 space-y-6">
 
-        {/* Toast */}
+        {/* Toast - debug build trigger */}
         {toastMsg && <div>Toast: {toastMsg}</div>}
 
         {/* ── HERO BANNER ── */
