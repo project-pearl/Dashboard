@@ -734,7 +734,10 @@ export default function Home() {
     return regionData?.effluent || { parameters: {} };
   }, [regionData]);
 
-  const stormEvents = useMemo(() => regionData?.storms || [], [regionData]);
+  const stormEvents = useMemo(() => {
+    const storms = regionData?.storms;
+    return Array.isArray(storms) ? storms : [];
+  }, [regionData]);
 
   const removalEfficiencies = useMemo(() => {
     // EMERGENCY FIX: Add null checks to prevent build crashes
@@ -1050,7 +1053,7 @@ export default function Home() {
       {
         title: 'DATA PROVENANCE',
         content: [
-          waterData ? `Source: ${(waterData as any).sources?.map((s: any) => s.name).join(', ') || 'PEARL sensors'}` : 'Source: Simulation data',
+          waterData ? `Source: ${Array.isArray((waterData as any).sources) ? (waterData as any).sources.map((s: any) => s.name).join(', ') : 'PEARL sensors'}` : 'Source: Simulation data',
           (waterData as any)?.lastSampled ? `Last sampled: ${new Date((waterData as any).lastSampled).toLocaleString()}` : '',
           'This report is informational. Not an official regulatory determination.',
         ]
@@ -1176,7 +1179,7 @@ export default function Home() {
         content: [
           'This snapshot captures current values at the time of export.',
           'For full time-series trend analysis, use the interactive dashboard or request a CSV export.',
-          waterData ? `Data source: ${(waterData as any).sources?.map((s: any) => s.name).join(', ') || 'PEARL sensors'}` : 'Data source: Simulation',
+          waterData ? `Data source: ${Array.isArray((waterData as any).sources) ? (waterData as any).sources.map((s: any) => s.name).join(', ') : 'PEARL sensors'}` : 'Data source: Simulation',
         ]
       }
     ];
@@ -2140,7 +2143,7 @@ export default function Home() {
                 })()}
 
                 {/* Source Attribution */}
-                {waterData && (waterData as any).sourceDetails?.length > 0 && (
+                {waterData && Array.isArray((waterData as any).sourceDetails) && (waterData as any).sourceDetails.length > 0 && (
                   <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-3 border-t border-slate-200 text-2xs text-slate-500">
                     <span className="font-medium">Data sources:</span>
                     {(waterData as any).sourceDetails.map((sd: any, i: number) => {
