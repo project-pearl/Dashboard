@@ -832,7 +832,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
   // ── Expanded sections ──
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({ waterbodies: true, ms4: true });
   const toggleSection = (id: string) => setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
-  const showSection = useCallback((id: string) => lens.sections.has(id), [lens.sections]);
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
@@ -840,6 +839,14 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
       <HeroBanner role="state" onDoubleClick={() => onToggleDevMode?.()}>
         {stateName} State Water Quality Management
       </HeroBanner>
+
+      <LayoutEditor
+        ccKey="State"
+        role="State"
+        adminLevel={user?.adminLevel || 'none'}
+        onToggleDevMode={onToggleDevMode}
+      >
+      {({ sections, isEditMode, onToggleVisibility }) => (<>
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -860,23 +867,26 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
 
       <LensDataStory lens={viewLens} role="State" state={stateAbbr} />
 
-      {/* Overview Cards */}
-      {showSection('operational-health') && (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Compliance Score</CardTitle>
-            <Gauge className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{jurisdictionScoreSummary.avgScore}</div>
-            <p className="text-xs text-muted-foreground">
-              Grade: {jurisdictionScoreSummary.avgGrade.letter}
-            </p>
-          </CardContent>
-        </Card>
+      <div className={`space-y-6 ${isEditMode ? 'pl-12' : ''}`}>
 
-        <Card>
+      {sections.filter(s => {
+        if (isEditMode) return true;
+        if (!s.visible) return false;
+        if (s.lensControlled && lens.sections) return lens.sections.has(s.id);
+        return true;
+      }).map(section => {
+        const DS = (children: React.ReactNode) => (
+          <DraggableSection key={section.id} id={section.id} label={section.label}
+            isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility} userRole="State">
+            {children}
+          </DraggableSection>
+        );
+        switch (section.id) {
+
+        // ── Shared/Core Sections ──
+        case 'regprofile': return DS(
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">In Compliance</CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
@@ -970,15 +980,310 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
           </CardContent>
         </Card>
       </div>
-      )}
+        );
 
-      {showSection('mon-air-quality') && <AirQualityMonitoringCard fallbackStateAbbr={stateAbbr} />}
-      {showSection('ask-pin-universal') && <AskPinUniversalCard role="State" state={stateAbbr} />}
-      {showSection('correlation-breakthroughs') && <CorrelationBreakthroughsPanel state={stateAbbr} />}
-      {showSection('wqt') && <WaterQualityTradingPanel stateAbbr={stateAbbr} mode="state" />}
-      {showSection('training') && <RoleTrainingGuide rolePath="state" />}
-      {showSection('users-panel') && <UserManagementPanel />}
+        case 'operational-health': return DS(
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Avg Compliance Score</CardTitle>
+                <Gauge className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{jurisdictionScoreSummary.avgScore}</div>
+                <p className="text-xs text-muted-foreground">
+                  Grade: {jurisdictionScoreSummary.avgGrade.letter}
+                </p>
+              </CardContent>
+            </Card>
 
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">In Compliance</CardTitle>
+                <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{jurisdictionScoreSummary.inComplianceRate}%</div>
+                <p className="text-xs text-muted-foreground">
+                  {jurisdictionScoreRows.length - jurisdictionScoreSummary.attentionCount} jurisdictions
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Need Attention</CardTitle>
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{jurisdictionScoreSummary.attentionCount}</div>
+                <p className="text-xs text-muted-foreground">
+                  Jurisdictions below threshold
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Data Coverage</CardTitle>
+                <Activity className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{Math.round(jurisdictionScoreSummary.avgCoverage)}%</div>
+                <p className="text-xs text-muted-foreground">
+                  Average data sources per jurisdiction
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+        // ── Core Components ──
+        case 'alertfeed': return DS(<WeatherAlertsSection userState={stateAbbr} />);
+
+        case 'ask-pin-universal': return DS(<AskPinUniversalCard role="State" state={stateAbbr} />);
+
+        case 'correlation-breakthroughs': return DS(<CorrelationBreakthroughsPanel state={stateAbbr} />);
+
+        case 'map-grid': return DS(
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>State Overview Map</CardTitle>
+                <CardDescription>Water quality monitoring locations</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-96">
+                  <MapboxMapShell
+                    center={stateCenter}
+                    zoom={stateZoom}
+                    overlay={overlay}
+                    onMarkerClick={(id) => setActiveDetailId(id)}
+                    stateFilter={stateAbbr}
+                  >
+                    <MapboxMarkers
+                      data={regionData}
+                      overlay={overlay}
+                      getColor={(wb) => getMarkerColor(overlay, wb)}
+                      onMarkerClick={(id) => setActiveDetailId(id)}
+                      selectedId={activeDetailId}
+                    />
+                  </MapboxMapShell>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Top Jurisdictions</CardTitle>
+                <CardDescription>Compliance performance by jurisdiction</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {jurisdictionScoreRows.map((jurisdiction, i) => (
+                    <div key={jurisdiction.id} className="flex items-center justify-between p-3 rounded-lg border bg-slate-50">
+                      <div>
+                        <div className="font-medium text-sm">{jurisdiction.name}</div>
+                        <div className="text-xs text-slate-600">
+                          Score: {jurisdiction.avgScore} | Grade: {jurisdiction.grade.letter}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`text-sm font-medium ${jurisdiction.grade.color}`}>
+                          {jurisdiction.grade.letter}
+                        </div>
+                        <div className="text-xs text-slate-500 flex items-center gap-1">
+                          <TrendingUp className="h-3 w-3" />
+                          {jurisdiction.trendIcon}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+        // ── Air Quality ──
+        case 'mon-air-quality': return DS(<AirQualityMonitoringCard fallbackStateAbbr={stateAbbr} />);
+
+        // ── Water Quality Trading ──
+        case 'wqt': return NUTRIENT_TRADING_STATES.has(stateAbbr) ? DS(
+          <WaterQualityTradingPanel stateAbbr={stateAbbr} mode="state" />
+        ) : null;
+
+        // ── Training & Users ──
+        case 'training': return DS(<RoleTrainingGuide rolePath="/dashboard/state" />);
+
+        case 'users-panel': {
+          if (user?.adminLevel === 'none') return null;
+          return DS(
+            <UserManagementPanel scopeFilter={{
+              allowedRoles: getInvitableRoles(user?.adminLevel || 'none', user?.role || 'State'),
+              lockedState: user?.adminLevel === 'super_admin' ? undefined : user?.state,
+            }} />
+          );
+        }
+
+        // ── Placeholder for other sections ──
+        case 'insights':
+        case 'briefing-actions':
+        case 'briefing-qa':
+        case 'trends-dashboard':
+        case 'policy-federal':
+        case 'policy-state':
+        case 'policy-epa':
+        case 'icis':
+        case 'sdwis':
+        case 'ms4jurisdictions':
+        case 'compliance-assessment':
+        case 'compliance-analytics':
+        case 'local-panel':
+        case 'groundwater':
+        case 'wq-standards':
+        case 'wq-assessment':
+        case 'wq-stations':
+        case 'usgs-ogc-stations':
+        case 'ngwmn-groundwater':
+        case 'water-availability':
+        case 'wqx-modern-results':
+        case 'dmr-violations-panel':
+        case 'ph-contaminants':
+        case 'ph-health-coord':
+        case 'ph-lab-capacity':
+        case 'ph-mortality-context':
+        case 'ph-healthcare-access':
+        case 'ph-outbreak-tracker':
+        case 'ph-env-health-corr':
+        case 'pfas-analytics-panel':
+        case 'cdc-places-health':
+        case 'hab-ecoscore':
+        case 'hab-attainment':
+        case 'hab-bioassessment':
+        case 'hab-impairment-causes':
+        case 'hab-wildlife':
+        case 'hab-401cert':
+        case 'ag-319':
+        case 'ag-partners':
+        case 'ag-nps-breakdown':
+        case 'ag-nps-tmdl':
+        case 'ag-nps-funding':
+        case 'infra-srf':
+        case 'infra-capital':
+        case 'infra-construction':
+        case 'infra-green':
+        case 'ag-bmp-effectiveness':
+        case 'ag-nutrient':
+        case 'ag-wbp':
+        case 'flood-impact-analysis':
+        case 'cyber-risk-panel':
+        case 'mon-network':
+        case 'mon-data-mgmt':
+        case 'mon-optimization':
+        case 'mon-continuous':
+        case 'mon-latency':
+        case 'mon-report-card':
+        case 'mon-source-health':
+        case 'flood-status':
+        case 'flood-risk-summary':
+        case 'weather-alerts':
+        case 'nws-forecast-panel':
+        case 'hab-forecast-panel':
+        case 'nexrad-precip-panel':
+        case 'severe-weather-panel':
+        case 'disaster-active':
+        case 'disaster-response':
+        case 'disaster-spill':
+        case 'disaster-prep':
+        case 'disaster-cascade':
+        case 'flood-forecast':
+        case 'flood-risk-overview':
+        case 'resolution-planner':
+        case 'flood-event-viewer':
+        case 'tmdl-status':
+        case 'tmdl-303d':
+        case 'tmdl-workspace':
+        case 'tmdl-implementation':
+        case 'tmdl-restoration':
+        case 'tmdl-epa':
+        case 'tmdl-completion-trend':
+        case 'tmdl-cause-breakdown':
+        case 'tmdl-delisting-stories':
+        case 'sc-self-assessment':
+        case 'sc-watershed':
+        case 'sc-peer':
+        case 'sc-epa-ppa':
+        case 'exporthub':
+        case 'rpt-ir-workspace':
+        case 'rpt-regulatory':
+        case 'rpt-adhoc':
+        case 'global-water-quality':
+        case 'congress-legislation':
+        case 'perm-status':
+        case 'perm-inventory':
+        case 'perm-pipeline':
+        case 'perm-dmr':
+        case 'perm-inspection':
+        case 'perm-enforcement':
+        case 'perm-general':
+        case 'perm-snc':
+        case 'perm-waterbody':
+        case 'perm-expiring':
+        case 'perm-dmr-trends':
+        case 'grants':
+        case 'fund-active':
+        case 'fund-srf':
+        case 'fund-pipeline':
+        case 'fund-passthrough':
+        case 'fund-analytics':
+        case 'fund-bil':
+        case 'fund-j40':
+        case 'fund-srf-pipeline':
+        case 'fund-grant-compliance':
+        case 'fund-trend':
+        case 'fund-match':
+        case 'grant-outcomes':
+          return DS(
+            <Card>
+              <CardHeader>
+                <CardTitle>Coming Soon</CardTitle>
+                <CardDescription>This section is under development</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  {section.label} functionality will be available in a future update.
+                </p>
+              </CardContent>
+            </Card>
+          );
+
+        case 'lens-data-story': return null; // rendered above
+
+        case 'disclaimer': return DS(
+          <Card className="border-amber-200 bg-amber-50">
+            <CardHeader>
+              <CardTitle className="text-amber-800">Platform Disclaimer</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-amber-700">
+                This dashboard provides water quality insights for planning purposes.
+                Always consult official regulatory sources for compliance decisions.
+              </p>
+            </CardContent>
+          </Card>
+        );
+
+        default: return null;
+        } // end switch
+      })} {/* end sections.map */}
+
+      </div> {/* end space-y-6 isEditMode wrapper */}
+      </>)}
+
+      </LayoutEditor>
+
+      <DataFreshnessFooter />
 
     </div>
   );
