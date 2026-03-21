@@ -22,7 +22,7 @@ export interface FloodForecastResult {
   refetch: () => Promise<void>;
 }
 
-export function useFloodForecast(): FloodForecastResult {
+export function useFloodForecast(stateAbbr?: string): FloodForecastResult {
   const [forecasts, setForecasts] = useState<FloodForecastGauge[]>([]);
   const [summary, setSummary] = useState({ total: 0, major: 0, moderate: 0, minor: 0, action: 0, currentlyFlooding: 0 });
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
@@ -34,7 +34,8 @@ export function useFloodForecast(): FloodForecastResult {
 
   const fetchForecasts = useCallback(async () => {
     try {
-      const res = await fetch('/api/flood-forecast');
+      const url = stateAbbr ? `/api/flood-forecast?state=${stateAbbr}` : '/api/flood-forecast';
+      const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
 
@@ -59,7 +60,7 @@ export function useFloodForecast(): FloodForecastResult {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [stateAbbr]);
 
   useEffect(() => {
     fetchForecasts();

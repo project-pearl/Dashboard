@@ -31,7 +31,7 @@ const DEFAULT_NATIONAL = {
   totalFlooding: 0, maxRiskScore: 0,
 };
 
-export function useFloodRiskOverview(): FloodRiskOverviewResult {
+export function useFloodRiskOverview(stateAbbr?: string): FloodRiskOverviewResult {
   const [basins, setBasins] = useState<BasinRisk[]>([]);
   const [national, setNational] = useState(DEFAULT_NATIONAL);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
@@ -40,7 +40,8 @@ export function useFloodRiskOverview(): FloodRiskOverviewResult {
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await fetch('/api/flood-risk-overview');
+      const url = stateAbbr ? `/api/flood-risk-overview?state=${stateAbbr}` : '/api/flood-risk-overview';
+      const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setBasins(data.basins);
@@ -52,7 +53,7 @@ export function useFloodRiskOverview(): FloodRiskOverviewResult {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [stateAbbr]);
 
   useEffect(() => {
     fetchData();

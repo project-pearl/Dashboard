@@ -615,8 +615,8 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
 
   const { waterData: rawWaterData, isLoading: waterLoading, hasRealData } = useWaterData(activeDetailId);
   const waterData = useTierFilter(rawWaterData, 'State');
-  const floodForecast = useFloodForecast();
-  const floodRisk = useFloodRiskOverview();
+  const floodForecast = useFloodForecast(stateAbbr);
+  const floodRisk = useFloodRiskOverview(stateAbbr);
   const { data: dataSummaries, details: summaryDetails, isLoading: summariesLoading, fetchDetails } = useDataSummaries();
 
   // ── Real data: supplies removalEfficiencies, stormEvents, displayData to child components ──
