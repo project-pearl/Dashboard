@@ -41,7 +41,7 @@ import { getEcoScore, getEcoData, ecoScoreLabel } from '@/lib/ecologicalSensitiv
 import { getEJScore, getEJData, ejScoreLabel } from '@/lib/ejVulnerability';
 import { getStateMS4Jurisdictions, getMS4ComplianceSummary, STATE_AUTHORITIES } from '@/lib/stateWaterData';
 import { useAuth } from '@/lib/authContext';
-import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/realWaterData';
+// import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/realWaterData';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
 import { WatershedWaterbodyPanel } from '@/components/WatershedWaterbodyPanel';
@@ -619,29 +619,13 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
   const floodRisk = useFloodRiskOverview();
   const { data: dataSummaries, details: summaryDetails, isLoading: summariesLoading, fetchDetails } = useDataSummaries();
 
-  // ── Mock data bridge: supplies removalEfficiencies, stormEvents, displayData to child components ──
-  // getRegionMockData only has data for pre-configured demo regions — wrap defensively
-  const regionMockData = useMemo(() => {
-    if (!activeDetailId) return null;
-    try { return getRegionMockData(activeDetailId); } catch { return null; }
-  }, [activeDetailId]);
-  const influentData = useMemo(() => regionMockData?.influent ?? null, [regionMockData]);
-  const effluentData = useMemo(() => regionMockData?.effluent ?? null, [regionMockData]);
-  const stormEvents = useMemo(() => regionMockData?.storms ?? [], [regionMockData]);
-  const removalEfficiencies = useMemo(() => {
-    if (!influentData || !effluentData) return { DO: 0, turbidity: 0, TN: 0, TP: 0, TSS: 0, salinity: 0 };
-    try {
-      return {
-        DO: calculateRemovalEfficiency(influentData.parameters.DO.value, effluentData.parameters.DO.value, 'DO'),
-        turbidity: calculateRemovalEfficiency(influentData.parameters.turbidity.value, effluentData.parameters.turbidity.value, 'turbidity'),
-        TN: calculateRemovalEfficiency(influentData.parameters.TN.value, effluentData.parameters.TN.value, 'TN'),
-        TP: calculateRemovalEfficiency(influentData.parameters.TP.value, effluentData.parameters.TP.value, 'TP'),
-        TSS: calculateRemovalEfficiency(influentData.parameters.TSS.value, effluentData.parameters.TSS.value, 'TSS'),
-        salinity: calculateRemovalEfficiency(influentData.parameters.salinity.value, effluentData.parameters.salinity.value, 'salinity'),
-      };
-    } catch { return { DO: 0, turbidity: 0, TN: 0, TP: 0, TSS: 0, salinity: 0 }; }
-  }, [influentData, effluentData]);
-  const displayData = useMemo(() => regionMockData?.ambient ?? null, [regionMockData]);
+  // ── Real data: supplies removalEfficiencies, stormEvents, displayData to child components ──
+  // Replace mock data with actual real-time data sources
+  const stormEvents = useMemo(() => [], []); // TODO: Connect to real storm event data
+  const removalEfficiencies = useMemo(() => ({
+    DO: 0, turbidity: 0, TN: 0, TP: 0, TSS: 0, salinity: 0
+  }), []); // TODO: Calculate from real monitoring data
+  const displayData = useMemo(() => null, []); // TODO: Connect to real ambient water quality data
 
   const [attainsCache, setAttainsCache] = useState<Record<string, {
     category: string; causes: string[]; causeCount: number; status: string; cycle: string; loading: boolean;
