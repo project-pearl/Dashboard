@@ -632,6 +632,19 @@ export function DashboardSidebar() {
           {!collapsed && <span>Data Provenance</span>}
         </Link>
         <Link
+          href="/dashboard/trivia"
+          onClick={() => setMobileOpen(false)}
+          title={collapsed ? 'Trivia' : undefined}
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+            pathname.startsWith('/dashboard/trivia')
+              ? 'bg-amber-50 border-amber-200 text-amber-700 font-semibold border shadow-sm'
+              : 'text-pin-text-secondary hover:bg-pin-primary-light hover:text-pin-text-primary'
+          }`}
+        >
+          <BookOpen className={`w-4 h-4 flex-shrink-0 ${pathname.startsWith('/dashboard/trivia') ? 'text-amber-700' : ''}`} />
+          {!collapsed && <span>Trivia</span>}
+        </Link>
+        <Link
           href="/account"
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-pin-sm font-medium text-pin-text-secondary hover:bg-pin-primary-light hover:text-pin-text-primary transition-colors"
         >
