@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { checkIsAdmin, ADMIN_EMAILS } from '@/lib/authTypes';
+import { checkIsAdmin, getADMIN_EMAILS } from '@/lib/authTypes';
 
 export async function GET() {
   try {
@@ -21,7 +21,7 @@ export async function GET() {
       authenticated: true,
       email: user.email,
       isAdmin,
-      adminEmails: ADMIN_EMAILS,
+      adminEmails: getADMIN_EMAILS(),
       adminEmailsEnv: process.env.ADMIN_EMAILS || 'Not set',
       environment: process.env.NODE_ENV
     });

@@ -91,33 +91,56 @@ export interface PendingUser {
 
 // ─── Admin list — loaded from environment variables for security ──────────────
 
+// Cache the admin emails to avoid repeated processing
+let _adminEmailsCache: string[] | null = null;
+
 function getAdminEmails(): string[] {
+  // Return cached result if available
+  if (_adminEmailsCache !== null) {
+    return _adminEmailsCache;
+  }
+
+  // Only access env vars on server side (avoid client-side errors)
+  if (typeof window !== 'undefined') {
+    // Browser context - return empty array (admin checks should be server-side)
+    _adminEmailsCache = [];
+    return _adminEmailsCache;
+  }
+
   const adminEmailsEnv = process.env.ADMIN_EMAILS || process.env.NEXT_PUBLIC_ADMIN_EMAILS;
 
   if (adminEmailsEnv) {
-    return adminEmailsEnv.split(',').map(email => email.trim().toLowerCase());
+    _adminEmailsCache = adminEmailsEnv.split(',').map(email => email.trim().toLowerCase());
+    return _adminEmailsCache;
   }
 
   // Fallback for development only - log warning
   if (process.env.NODE_ENV === 'development') {
     console.warn('⚠️  ADMIN_EMAILS environment variable not set, using development fallback. Set ADMIN_EMAILS in production.');
-    return [
+    _adminEmailsCache = [
       'admin@project-pearl.org',
       'system@project-pearl.org',
     ];
+    return _adminEmailsCache;
   }
 
   // No admin emails in production without proper configuration
   console.error('❌ ADMIN_EMAILS environment variable must be set in production');
-  return [];
+  _adminEmailsCache = [];
+  return _adminEmailsCache;
 }
 
-export const ADMIN_EMAILS = getAdminEmails();
+// Lazy getter function instead of immediate computation
+export function getADMIN_EMAILS(): string[] {
+  return getAdminEmails();
+}
 
 /** Quick check — used by authContext to set isAdmin on login */
 export function checkIsAdmin(email: string): boolean {
-  if (!email || ADMIN_EMAILS.length === 0) return false;
-  return ADMIN_EMAILS.includes(email.toLowerCase().trim());
+  if (!email) return false;
+  const adminEmails = getADMIN_EMAILS();
+  if (adminEmails.length === 0) return false;
+  return adminEmails.includes(email.toLowerCase().trim());
 }
 
 /** Resolve effective admin level — DB column takes precedence, ADMIN_EMAILS as super_admin fallback */
