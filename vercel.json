@@ -109,14 +109,6 @@
       "schedule": "0 15 * * *"
     },
     {
-      "path": "/api/cron/rebuild-nars",
-      "schedule": "0 16 * * 0"
-    },
-    {
-      "path": "/api/cron/rebuild-datagov",
-      "schedule": "0 17 * * 0"
-    },
-    {
       "path": "/api/cron/rebuild-usace",
       "schedule": "0 16 * * *"
     },
@@ -169,14 +161,6 @@
       "schedule": "0 19 * * *"
     },
     {
-      "path": "/api/cron/rebuild-sam",
-      "schedule": "0 20 * * 0"
-    },
-    {
-      "path": "/api/cron/rebuild-usaspending",
-      "schedule": "0 21 * * 0"
-    },
-    {
       "path": "/api/cron/sentinel-poll",
       "schedule": "*/5 * * * *"
     },
@@ -193,28 +177,12 @@
       "schedule": "30 14 * * *"
     },
     {
-      "path": "/api/cron/rebuild-coops-derived",
-      "schedule": "0 15 * * 0"
-    },
-    {
       "path": "/api/cron/rebuild-erddap-sat",
       "schedule": "15 15 * * *"
     },
     {
-      "path": "/api/cron/rebuild-nasa-stream",
-      "schedule": "30 15 * * 0"
-    },
-    {
       "path": "/api/cron/rebuild-nwm",
       "schedule": "0 */6 * * *"
-    },
-    {
-      "path": "/api/cron/rebuild-ipac",
-      "schedule": "0 16 * * 0"
-    },
-    {
-      "path": "/api/cron/rebuild-edna",
-      "schedule": "0 4 * * 2"
     },
     {
       "path": "/api/cron/rebuild-ncei",
@@ -285,26 +253,6 @@
       "schedule": "15 */6 * * *"
     },
     {
-      "path": "/api/cron/rebuild-usgs-water-avail",
-      "schedule": "15 19 * * 0"
-    },
-    {
-      "path": "/api/cron/rebuild-force-protection",
-      "schedule": "15 4 * * 0"
-    },
-    {
-      "path": "/api/cron/rebuild-cyber-risk",
-      "schedule": "30 20 * * 0"
-    },
-    {
-      "path": "/api/cron/rebuild-gemstat",
-      "schedule": "45 20 * * 0"
-    },
-    {
-      "path": "/api/cron/rebuild-copernicus-cds",
-      "schedule": "30 21 * * 0"
-    },
-    {
       "path": "/api/cron/rebuild-embassy-aqi",
       "schedule": "15 * * * *"
     },
@@ -317,20 +265,8 @@
       "schedule": "30 22 * * *"
     },
     {
-      "path": "/api/cron/rebuild-haz-mit",
-      "schedule": "0 22 * * 0"
-    },
-    {
       "path": "/api/cron/rebuild-usbr",
       "schedule": "15 */6 * * *"
-    },
-    {
-      "path": "/api/cron/rebuild-rcra",
-      "schedule": "0 23 * * 0"
-    },
-    {
-      "path": "/api/cron/rebuild-sems",
-      "schedule": "30 23 * * 0"
     },
     {
       "path": "/api/cron/burn-pit-assessment",
@@ -341,16 +277,8 @@
       "schedule": "*/10 * * * *"
     },
     {
-      "path": "/api/cron/rebuild-ejscreen",
-      "schedule": "0 23 * * 0"
-    },
-    {
       "path": "/api/cron/rebuild-campd",
       "schedule": "0 20 * * *"
-    },
-    {
-      "path": "/api/cron/rebuild-climate-normals",
-      "schedule": "30 23 * * 0"
     },
     {
       "path": "/api/cron/rebuild-usgs-wqp",
@@ -359,14 +287,6 @@
     {
       "path": "/api/cron/rebuild-hhs-daily-batch",
       "schedule": "0 1 * * *"
-    },
-    {
-      "path": "/api/cron/rebuild-hhs-weekly-batch",
-      "schedule": "0 2 * * 0"
-    },
-    {
-      "path": "/api/cron/rebuild-demographics-batch",
-      "schedule": "30 20 * * 0"
     },
     {
       "path": "/api/cron/rebuild-echo-batch",
@@ -385,20 +305,32 @@
       "schedule": "15 11 * * *"
     },
     {
-      "path": "/api/cron/rebuild-usda-cdc-batch",
-      "schedule": "30 19 * * 0"
-    },
-    {
-      "path": "/api/cron/rebuild-weekly-infra-batch",
-      "schedule": "0 21 * * 0"
-    },
-    {
       "path": "/api/cron/rebuild-realtime-wx",
       "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/build-briefings",
       "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-sunday-early-batch",
+      "schedule": "0 2 * * 0"
+    },
+    {
+      "path": "/api/cron/rebuild-tuesday-weekly-batch",
+      "schedule": "0 4 * * 2"
+    },
+    {
+      "path": "/api/cron/rebuild-sunday-mid-batch",
+      "schedule": "0 16 * * 0"
+    },
+    {
+      "path": "/api/cron/rebuild-sunday-evening-batch",
+      "schedule": "0 19 * * 0"
+    },
+    {
+      "path": "/api/cron/rebuild-sunday-late-batch",
+      "schedule": "0 23 * * 0"
     }
   ]
 }
