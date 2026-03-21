@@ -94,6 +94,6 @@ export const config = {
      * - _next/image (image optimization)
      * - favicon.ico, icons, manifest, logos, etc.
      */
-    '/((?!_next/static|_next/image|favicon\\.ico|.*\\.png$|.*\\.svg$|.*\\.ico$|manifest\\.json).*)',
+    '/((?!_next/static|_next/image|favicon\\.ico|manifest\\.json|.*\\.png$|.*\\.svg$|.*\\.ico$).*)',
   ],
 };
