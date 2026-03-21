@@ -551,10 +551,13 @@ export default function Home() {
   const selectedRegion = useMemo(() => getRegionById(selectedRegionId), [selectedRegionId]);
 
   // Real data fetching - no more mock data
-  const [regionData, setRegionData] = useState<any>(null);
-  const [regionDataLoading, setRegionDataLoading] = useState(true);
+  const [regionData, setRegionData] = useState<any>(() => createFallbackData()); // Initialize with fallback data
+  const [regionDataLoading, setRegionDataLoading] = useState(false); // Start as false for SSR
 
   useEffect(() => {
+    // Only fetch real data in browser environment
+    if (typeof window === 'undefined') return;
+
     const fetchRegionData = async () => {
       setRegionDataLoading(true);
       try {
@@ -566,8 +569,7 @@ export default function Home() {
         setRegionData(convertedData);
       } catch (error) {
         console.error('Failed to fetch real water data:', error);
-        // Fallback to minimal structure to prevent crashes
-        setRegionData(createFallbackData());
+        // Keep existing fallback data
       } finally {
         setRegionDataLoading(false);
       }
@@ -575,17 +577,6 @@ export default function Home() {
 
     fetchRegionData();
   }, [selectedRegionId]);
-
-  // Helper function to get coordinates from region ID
-  function getRegionCoordinates(regionId: string) {
-    // Extract coords or use fallback for each region
-    const coordMatch = regionId.match(/(-?\d+\.?\d*),(-?\d+\.?\d*)/);
-    if (coordMatch) {
-      return { lat: parseFloat(coordMatch[1]), lng: parseFloat(coordMatch[2]) };
-    }
-    // Default to Chesapeake Bay area
-    return { lat: 39.1612, lng: -76.4803 };
-  }
 
   // Helper function to convert real data to expected format
   function convertRealDataToExpectedFormat(realData: any) {
@@ -629,73 +620,6 @@ export default function Home() {
       'Conductivity': 'conductivity'
     };
     return nameMap[name] || name.toLowerCase().replace(/\s+/g, '_');
-  }
-
-  function generateVariantParameters(baseParams: any, type: 'influent' | 'effluent') {
-    const variant: any = {};
-    Object.keys(baseParams).forEach(key => {
-      const base = baseParams[key];
-      let multiplier = 1;
-
-      if (type === 'influent') {
-        // Influent typically has higher contaminants, lower DO
-        multiplier = key === 'DO' ? 0.9 : 1.3;
-      } else {
-        // Effluent has treated water - better quality
-        multiplier = key === 'DO' ? 1.1 : 0.6;
-      }
-
-      variant[key] = {
-        ...base,
-        value: base.value * multiplier
-      };
-    });
-    return variant;
-  }
-
-  function generateStormData(baseParams: any) {
-    return [{
-      id: 'storm-1',
-      name: 'Recent Storm Event',
-      date: '2024-03-15',
-      duration: '4.2 hours',
-      intensity: 'Moderate',
-      influent: { parameters: generateVariantParameters(baseParams, 'influent') },
-      effluent: { parameters: generateVariantParameters(baseParams, 'effluent') },
-      removalEfficiencies: {
-        DO: 85, turbidity: 78, TN: 82, TP: 75, TSS: 88, salinity: 65
-      }
-    }];
-  }
-
-  function getDefaultThresholds(paramName: string) {
-    const defaults: any = {
-      DO: { green: { min: 6 }, yellow: { min: 4 }, red: { min: 0 } },
-      turbidity: { green: { max: 15 }, yellow: { max: 25 }, red: { max: 50 } },
-      TN: { green: { max: 0.8 }, yellow: { max: 1.5 }, red: { max: 3.0 } },
-      TP: { green: { max: 0.1 }, yellow: { max: 0.2 }, red: { max: 0.5 } },
-      TSS: { green: { max: 25 }, yellow: { max: 50 }, red: { max: 100 } },
-      salinity: { green: { min: 10, max: 20 }, yellow: { min: 5, max: 30 }, red: { min: 0, max: 50 } }
-    };
-    return defaults[paramName] || { green: {}, yellow: {}, red: {} };
-  }
-
-  function createFallbackData() {
-    const baseParams = {
-      DO: { value: 7.2, unit: 'mg/L', status: 'good', thresholds: getDefaultThresholds('DO') },
-      turbidity: { value: 12.5, unit: 'NTU', status: 'good', thresholds: getDefaultThresholds('turbidity') },
-      TN: { value: 0.85, unit: 'mg/L', status: 'fair', thresholds: getDefaultThresholds('TN') },
-      TP: { value: 0.12, unit: 'mg/L', status: 'good', thresholds: getDefaultThresholds('TP') },
-      TSS: { value: 28, unit: 'mg/L', status: 'fair', thresholds: getDefaultThresholds('TSS') },
-      salinity: { value: 12.8, unit: 'ppt', status: 'good', thresholds: getDefaultThresholds('salinity') }
-    };
-
-    return {
-      ambient: { parameters: baseParams, overallScore: 75, timestamp: new Date().toISOString() },
-      influent: { parameters: generateVariantParameters(baseParams, 'influent') },
-      effluent: { parameters: generateVariantParameters(baseParams, 'effluent') },
-      storms: generateStormData(baseParams)
-    };
   }
 
   const data = useMemo(() => {
@@ -894,8 +818,8 @@ export default function Home() {
   }, [demoStormActive, isStormSpiking, stormPhase]);
   const displayData = (timeMode === 'real-time' && dataMode === 'ambient') ? liveData : dataWithRealValues;
 
-  // Show loading while fetching real data
-  if (regionDataLoading || !regionData || !data) {
+  // Only show loading in browser, not during SSR
+  if (typeof window !== 'undefined' && regionDataLoading && !data) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
