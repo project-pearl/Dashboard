@@ -221,10 +221,6 @@
       "schedule": "30 16 * * *"
     },
     {
-      "path": "/api/cron/rebuild-beacon",
-      "schedule": "15 16 * * *"
-    },
-    {
       "path": "/api/cron/rebuild-ssocso",
       "schedule": "30 15 * * *"
     },
