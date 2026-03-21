@@ -592,14 +592,28 @@ export default function Home() {
 
   const stormEvents = useMemo(() => regionData.storms, [regionData]);
 
-  const removalEfficiencies = useMemo(() => ({
-    DO: calculateRemovalEfficiency(influentData.parameters.DO.value, effluentData.parameters.DO.value, 'DO'),
-    turbidity: calculateRemovalEfficiency(influentData.parameters.turbidity.value, effluentData.parameters.turbidity.value, 'turbidity'),
-    TN: calculateRemovalEfficiency(influentData.parameters.TN.value, effluentData.parameters.TN.value, 'TN'),
-    TP: calculateRemovalEfficiency(influentData.parameters.TP.value, effluentData.parameters.TP.value, 'TP'),
-    TSS: calculateRemovalEfficiency(influentData.parameters.TSS.value, effluentData.parameters.TSS.value, 'TSS'),
-    salinity: calculateRemovalEfficiency(influentData.parameters.salinity.value, effluentData.parameters.salinity.value, 'salinity')
-  }), [influentData, effluentData]);
+  const removalEfficiencies = useMemo(() => {
+    // EMERGENCY FIX: Add null checks to prevent build crashes
+    if (!influentData?.parameters || !effluentData?.parameters) {
+      return {
+        DO: 0,
+        turbidity: 0,
+        TN: 0,
+        TP: 0,
+        TSS: 0,
+        salinity: 0
+      };
+    }
+
+    return {
+      DO: calculateRemovalEfficiency(influentData.parameters.DO.value, effluentData.parameters.DO.value, 'DO'),
+      turbidity: calculateRemovalEfficiency(influentData.parameters.turbidity.value, effluentData.parameters.turbidity.value, 'turbidity'),
+      TN: calculateRemovalEfficiency(influentData.parameters.TN.value, effluentData.parameters.TN.value, 'TN'),
+      TP: calculateRemovalEfficiency(influentData.parameters.TP.value, effluentData.parameters.TP.value, 'TP'),
+      TSS: calculateRemovalEfficiency(influentData.parameters.TSS.value, effluentData.parameters.TSS.value, 'TSS'),
+      salinity: calculateRemovalEfficiency(influentData.parameters.salinity.value, effluentData.parameters.salinity.value, 'salinity')
+    };
+  }, [influentData, effluentData]);
 
   const selectedStormEvent = useMemo(() => {
     return stormEvents.find(event => event.id === selectedStormEventId) || stormEvents[0];
@@ -2113,43 +2127,43 @@ export default function Home() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <RemovalEfficiencyGauge
                     parameterName="Dissolved Oxygen"
-                    influentValue={influentData.parameters.DO.value}
-                    effluentValue={effluentData.parameters.DO.value}
+                    influentValue={influentData?.parameters?.DO?.value || 0}
+                    effluentValue={effluentData?.parameters?.DO?.value || 0}
                     efficiency={removalEfficiencies.DO}
                     unit="mg/L"
                   />
                   <RemovalEfficiencyGauge
                     parameterName="Turbidity"
-                    influentValue={influentData.parameters.turbidity.value}
-                    effluentValue={effluentData.parameters.turbidity.value}
+                    influentValue={influentData?.parameters?.turbidity?.value || 0}
+                    effluentValue={effluentData?.parameters?.turbidity?.value || 0}
                     efficiency={removalEfficiencies.turbidity}
                     unit="NTU"
                   />
                   <RemovalEfficiencyGauge
                     parameterName="Total Nitrogen"
-                    influentValue={influentData.parameters.TN.value}
-                    effluentValue={effluentData.parameters.TN.value}
+                    influentValue={influentData?.parameters?.TN?.value || 0}
+                    effluentValue={effluentData?.parameters?.TN?.value || 0}
                     efficiency={removalEfficiencies.TN}
                     unit="mg/L"
                   />
                   <RemovalEfficiencyGauge
                     parameterName="Total Phosphorus"
-                    influentValue={influentData.parameters.TP.value}
-                    effluentValue={effluentData.parameters.TP.value}
+                    influentValue={influentData?.parameters?.TP?.value || 0}
+                    effluentValue={effluentData?.parameters?.TP?.value || 0}
                     efficiency={removalEfficiencies.TP}
                     unit="mg/L"
                   />
                   <RemovalEfficiencyGauge
                     parameterName="Total Suspended Solids"
-                    influentValue={influentData.parameters.TSS.value}
-                    effluentValue={effluentData.parameters.TSS.value}
+                    influentValue={influentData?.parameters?.TSS?.value || 0}
+                    effluentValue={effluentData?.parameters?.TSS?.value || 0}
                     efficiency={removalEfficiencies.TSS}
                     unit="mg/L"
                   />
                   <RemovalEfficiencyGauge
                     parameterName="Salinity"
-                    influentValue={influentData.parameters.salinity.value}
-                    effluentValue={effluentData.parameters.salinity.value}
+                    influentValue={influentData?.parameters?.salinity?.value || 0}
+                    effluentValue={effluentData?.parameters?.salinity?.value || 0}
                     efficiency={removalEfficiencies.salinity}
                     unit="ppt"
                   />
@@ -2261,44 +2275,44 @@ export default function Home() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <RemovalEfficiencyGauge
                       parameterName="Dissolved Oxygen"
-                      influentValue={selectedStormEvent.influent.parameters.DO.value}
-                      effluentValue={selectedStormEvent.effluent.parameters.DO.value}
-                      efficiency={selectedStormEvent.removalEfficiencies.DO}
+                      influentValue={selectedStormEvent?.influent?.parameters?.DO?.value || 0}
+                      effluentValue={selectedStormEvent?.effluent?.parameters?.DO?.value || 0}
+                      efficiency={selectedStormEvent?.removalEfficiencies?.DO || 0}
                       unit="mg/L"
                     />
                     <RemovalEfficiencyGauge
                       parameterName="Turbidity"
-                      influentValue={selectedStormEvent.influent.parameters.turbidity.value}
-                      effluentValue={selectedStormEvent.effluent.parameters.turbidity.value}
-                      efficiency={selectedStormEvent.removalEfficiencies.turbidity}
+                      influentValue={selectedStormEvent?.influent?.parameters?.turbidity?.value || 0}
+                      effluentValue={selectedStormEvent?.effluent?.parameters?.turbidity?.value || 0}
+                      efficiency={selectedStormEvent?.removalEfficiencies?.turbidity || 0}
                       unit="NTU"
                     />
                     <RemovalEfficiencyGauge
                       parameterName="Total Nitrogen"
-                      influentValue={selectedStormEvent.influent.parameters.TN.value}
-                      effluentValue={selectedStormEvent.effluent.parameters.TN.value}
-                      efficiency={selectedStormEvent.removalEfficiencies.TN}
+                      influentValue={selectedStormEvent?.influent?.parameters?.TN?.value || 0}
+                      effluentValue={selectedStormEvent?.effluent?.parameters?.TN?.value || 0}
+                      efficiency={selectedStormEvent?.removalEfficiencies?.TN || 0}
                       unit="mg/L"
                     />
                     <RemovalEfficiencyGauge
                       parameterName="Total Phosphorus"
-                      influentValue={selectedStormEvent.influent.parameters.TP.value}
-                      effluentValue={selectedStormEvent.effluent.parameters.TP.value}
-                      efficiency={selectedStormEvent.removalEfficiencies.TP}
+                      influentValue={selectedStormEvent?.influent?.parameters?.TP?.value || 0}
+                      effluentValue={selectedStormEvent?.effluent?.parameters?.TP?.value || 0}
+                      efficiency={selectedStormEvent?.removalEfficiencies?.TP || 0}
                       unit="mg/L"
                     />
                     <RemovalEfficiencyGauge
                       parameterName="Total Suspended Solids"
-                      influentValue={selectedStormEvent.influent.parameters.TSS.value}
-                      effluentValue={selectedStormEvent.effluent.parameters.TSS.value}
-                      efficiency={selectedStormEvent.removalEfficiencies.TSS}
+                      influentValue={selectedStormEvent?.influent?.parameters?.TSS?.value || 0}
+                      effluentValue={selectedStormEvent?.effluent?.parameters?.TSS?.value || 0}
+                      efficiency={selectedStormEvent?.removalEfficiencies?.TSS || 0}
                       unit="mg/L"
                     />
                     <RemovalEfficiencyGauge
                       parameterName="Salinity"
-                      influentValue={selectedStormEvent.influent.parameters.salinity.value}
-                      effluentValue={selectedStormEvent.effluent.parameters.salinity.value}
-                      efficiency={selectedStormEvent.removalEfficiencies.salinity}
+                      influentValue={selectedStormEvent?.influent?.parameters?.salinity?.value || 0}
+                      effluentValue={selectedStormEvent?.effluent?.parameters?.salinity?.value || 0}
+                      efficiency={selectedStormEvent?.removalEfficiencies?.salinity || 0}
                       unit="ppt"
                     />
                   </div>
@@ -2312,11 +2326,11 @@ export default function Home() {
             <CollapsibleSection id="esg-score" title="Sustainability Score Dashboard" icon="📊" collapsed={isCollapsed('esg-score')} onToggle={toggleSection}>
             {(() => {
             // Calculate ESG scores for Corporate dashboard
-            const doScore = Math.min(100, (displayData.parameters.DO.value / 9) * 100);
-            const turbScore = Math.max(0, 100 - (displayData.parameters.turbidity.value / 50) * 100);
-            const tnScore = Math.max(0, 100 - (displayData.parameters.TN.value / 1.5) * 100);
-            const tpScore = Math.max(0, 100 - (displayData.parameters.TP.value / 0.15) * 100);
-            const tssScore = Math.max(0, 100 - (displayData.parameters.TSS.value / 100) * 100);
+            const doScore = Math.min(100, ((displayData?.parameters?.DO?.value || 0) / 9) * 100);
+            const turbScore = Math.max(0, 100 - ((displayData?.parameters?.turbidity?.value || 0) / 50) * 100);
+            const tnScore = Math.max(0, 100 - ((displayData?.parameters?.TN?.value || 0) / 1.5) * 100);
+            const tpScore = Math.max(0, 100 - ((displayData?.parameters?.TP?.value || 0) / 0.15) * 100);
+            const tssScore = Math.max(0, 100 - ((displayData?.parameters?.TSS?.value || 0) / 100) * 100);
             const waterQuality = Math.round((doScore * 2 + turbScore + tnScore + tpScore + tssScore) / 6);
             
             const tssEff = Math.min(100, removalEfficiencies.TSS || 0);
@@ -2325,9 +2339,12 @@ export default function Home() {
             const turbEff = Math.min(100, removalEfficiencies.turbidity || 0);
             const loadReduction = Math.round((tssEff * 1.5 + tnEff + tpEff + turbEff) / 4.5);
             
-            const doEcosystem = displayData.parameters.DO.value >= 6 ? 100 : displayData.parameters.DO.value >= 4 ? 60 : 20;
-            const tnEcosystem = displayData.parameters.TN.value <= 0.8 ? 100 : displayData.parameters.TN.value <= 1.5 ? 65 : 30;
-            const tpEcosystem = displayData.parameters.TP.value <= 0.05 ? 100 : displayData.parameters.TP.value <= 0.15 ? 65 : 25;
+            const doValue = displayData?.parameters?.DO?.value || 0;
+            const tnValue = displayData?.parameters?.TN?.value || 0;
+            const tpValue = displayData?.parameters?.TP?.value || 0;
+            const doEcosystem = doValue >= 6 ? 100 : doValue >= 4 ? 60 : 20;
+            const tnEcosystem = tnValue <= 0.8 ? 100 : tnValue <= 1.5 ? 65 : 30;
+            const tpEcosystem = tpValue <= 0.05 ? 100 : tpValue <= 0.15 ? 65 : 25;
             const ecosystemHealth = Math.round((doEcosystem + tnEcosystem + tpEcosystem) / 3);
             
             const overallESG = Math.round(waterQuality * 0.35 + loadReduction * 0.40 + ecosystemHealth * 0.25);
