@@ -832,6 +832,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
   // ── Expanded sections ──
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({ waterbodies: true, ms4: true });
   const toggleSection = (id: string) => setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
+  const showSection = useCallback((id: string) => lens.sections.has(id), [lens.sections]);
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
@@ -844,9 +845,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">{stateName} State Management Center</h1>
-          <p className="text-slate-600">Comprehensive water quality oversight for {stateName}</p>
+          <p className="text-slate-600">{lens.description}</p>
         </div>
         <div className="flex items-center gap-4">
+          <Badge variant="outline">{lens.label}</Badge>
           <Badge variant="secondary">
             {jurisdictionScoreRows.length} Jurisdictions
           </Badge>
@@ -856,7 +858,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
         </div>
       </div>
 
+      <LensDataStory lens={viewLens} role="State" state={stateAbbr} />
+
       {/* Overview Cards */}
+      {showSection('operational-health') && (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -910,14 +915,16 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
           </CardContent>
         </Card>
       </div>
+      )}
 
       {/* Weather Alerts */}
-      <WeatherAlertsSection userState={stateAbbr} />
+      {showSection('alertfeed') && <WeatherAlertsSection userState={stateAbbr} />}
 
       {/* Triage Queue */}
-      <TriageQueueSection scope="state" stateFilter={stateAbbr} user={user} />
+      {showSection('quick-access') && <TriageQueueSection scope="state" stateFilter={stateAbbr} user={user} />}
 
       {/* Map and Jurisdictions */}
+      {showSection('map-grid') && (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
@@ -963,6 +970,14 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
           </CardContent>
         </Card>
       </div>
+      )}
+
+      {showSection('mon-air-quality') && <AirQualityMonitoringCard fallbackStateAbbr={stateAbbr} />}
+      {showSection('ask-pin-universal') && <AskPinUniversalCard role="State" state={stateAbbr} />}
+      {showSection('correlation-breakthroughs') && <CorrelationBreakthroughsPanel state={stateAbbr} />}
+      {showSection('wqt') && <WaterQualityTradingPanel stateAbbr={stateAbbr} mode="state" />}
+      {showSection('training') && <RoleTrainingGuide rolePath="state" />}
+      {showSection('users-panel') && <UserManagementPanel />}
 
 
     </div>
