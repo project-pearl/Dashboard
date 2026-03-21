@@ -10,7 +10,7 @@ import { useAuth } from '@/lib/authContext';
 import { useRouter } from 'next/navigation';
 import { getPrimaryRoute } from '@/lib/roleRoutes';
 import type { UserRole } from '@/lib/authTypes';
-import dynamic from 'next/dynamic';
+// Removed dynamic import due to conflict with export const dynamic
 import Image from 'next/image';
 import { calculateOverallScore, applyRegionThresholds, calculateRemovalEfficiency, getRemovalStatus, fetchRealTimeWaterQuality } from '@/lib/realWaterData';
 import { TimeMode, DataMode } from '@/lib/types';
