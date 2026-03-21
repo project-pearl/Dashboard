@@ -13,7 +13,7 @@ import { setHuc14Cache, appendHuc14History, buildLockManager } from '@/lib/indic
 import { getHuc14Coverage, HIGH_VALUE_REGIONS, getPremiumTierStats } from '@/lib/indices/huc14Regions';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 1800; // 30 minutes for premium processing
+export const maxDuration = 800; // 13.33 minutes (pro plan limit)
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
