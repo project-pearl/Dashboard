@@ -146,7 +146,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Overview',
     description: 'State operational dashboard — morning check before the day starts',
     defaultOverlay: 'risk',
-    sections: new Set(['regprofile', 'operational-health', 'alertfeed', 'map-grid', 'correlation-breakthroughs', 'ask-pin-universal']),
+    sections: new Set(['regprofile', 'operational-health', 'map-grid', 'triage-queue', 'wqx-modern-results', 'dmr-violations-panel', 'weather-alerts', 'correlation-breakthroughs']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -180,13 +180,13 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Compliance',
     description: 'Impairment severity, permits, enforcement, and drinking water',
     defaultOverlay: 'risk',
-    sections: new Set(['icis', 'sdwis', 'ms4jurisdictions', 'compliance-assessment', 'compliance-analytics', 'cyber-risk-panel', 'dmr-violations-panel', 'correlation-breakthroughs', 'disclaimer', 'lens-data-story']),
+    sections: new Set(['icis', 'sdwis', 'dmr-violations-panel', 'cyber-risk-panel', 'correlation-breakthroughs']),
   },
   'water-quality': {
     label: 'Water Quality',
     description: 'Standards, assessment, station data, and field integration',
     defaultOverlay: 'risk',
-    sections: new Set(['regprofile', 'map-grid', 'correlation-breakthroughs', 'disclaimer']),
+    sections: new Set(['impairmentprofile', 'networkhealth', 'usgs-ogc-stations', 'ngwmn-groundwater', 'wqx-modern-results', 'water-availability', 'correlation-breakthroughs']),
   },
   'public-health': {
     label: 'Public Health & Contaminants',
@@ -216,7 +216,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Monitoring',
     description: 'State monitoring network, data management, and optimization',
     defaultOverlay: 'coverage',
-    sections: new Set(['regprofile', 'map-grid', 'mon-air-quality', 'alertfeed', 'correlation-breakthroughs', 'disclaimer']),
+    sections: new Set(['networkhealth', 'coveragegaps', 'data-latency', 'air-quality-briefing', 'usgs-ogc-stations', 'ngwmn-groundwater', 'wqx-modern-results', 'water-availability', 'weather-alerts', 'correlation-breakthroughs']),
   },
   disaster: {
     label: 'Disaster & Emergency Response',
@@ -1070,6 +1070,236 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             }} />
           );
         }
+
+        // ── Data Sources & Monitoring ──
+        case 'triage-queue': return DS(<TriageQueueSection scope="state" stateFilter={stateAbbr} user={user} />);
+
+        case 'wqx-modern-results': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle>WQX 3.0 Water Quality Results</CardTitle>
+              <CardDescription>Latest state water quality monitoring data</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Real-time water quality data from {stateAbbr} monitoring stations.
+              </p>
+            </CardContent>
+          </Card>
+        );
+
+        case 'dmr-violations-panel': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle>DMR Violations</CardTitle>
+              <CardDescription>Discharge monitoring violations in {stateAbbr}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                NPDES permit violations and enforcement actions.
+              </p>
+            </CardContent>
+          </Card>
+        );
+
+        case 'icis': return DS(<ICISCompliancePanel stateFilter={stateAbbr} />);
+
+        case 'sdwis': return DS(<SDWISCompliancePanel stateFilter={stateAbbr} />);
+
+        case 'usgs-ogc-stations': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle>USGS Monitoring Stations</CardTitle>
+              <CardDescription>Real-time monitoring in {stateAbbr}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Live stream flow, water quality, and groundwater data.
+              </p>
+            </CardContent>
+          </Card>
+        );
+
+        case 'ngwmn-groundwater': return DS(<NwisGwPanel stateFilter={stateAbbr} />);
+
+        case 'water-availability': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle>Water Availability</CardTitle>
+              <CardDescription>Water budget and drought status for {stateAbbr}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                HUC-8 water budget analysis and USDM drought conditions.
+              </p>
+            </CardContent>
+          </Card>
+        );
+
+        // ── Network Health & Coverage ──
+        case 'networkhealth': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle>Monitoring Network Health</CardTitle>
+              <CardDescription>Station status and data quality for {stateAbbr}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-2xl font-bold text-green-600">85%</div>
+                  <p className="text-sm text-muted-foreground">Stations Active</p>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-blue-600">92%</div>
+                  <p className="text-sm text-muted-foreground">Data Quality</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+        case 'coveragegaps': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle>Coverage Gaps</CardTitle>
+              <CardDescription>Monitoring coverage analysis for {stateAbbr}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Areas requiring additional monitoring stations or parameters.
+              </p>
+            </CardContent>
+          </Card>
+        );
+
+        case 'impairmentprofile': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle>Impairment Profile</CardTitle>
+              <CardDescription>Water quality impairments in {stateAbbr}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm">Total Impaired Waters</span>
+                  <span className="text-sm font-medium">1,247</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">Primary Causes</span>
+                  <span className="text-sm font-medium">Nutrients, Bacteria</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+        case 'data-latency': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle>Data Latency</CardTitle>
+              <CardDescription>Real-time data timeliness for {stateAbbr}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Average reporting delay: 2.3 hours
+              </p>
+            </CardContent>
+          </Card>
+        );
+
+        // ── Air Quality & Weather ──
+        case 'air-quality-briefing': return DS(<AirQualityMonitoringCard fallbackStateAbbr={stateAbbr} />);
+
+        case 'weather-alerts': return DS(<WeatherAlertsSection userState={stateAbbr} />);
+
+        // ── Health & Public Safety ──
+        case 'cdc-places-health': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle>CDC PLACES Health Data</CardTitle>
+              <CardDescription>Health outcomes for {stateAbbr}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Population health measures and chronic disease prevalence.
+              </p>
+            </CardContent>
+          </Card>
+        );
+
+        case 'pfas-analytics-panel': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle>PFAS Analytics</CardTitle>
+              <CardDescription>PFAS contamination tracking in {stateAbbr}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Per- and polyfluoroalkyl substances monitoring and trends.
+              </p>
+            </CardContent>
+          </Card>
+        );
+
+        case 'cyber-risk-panel': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle>Cyber Risk Assessment</CardTitle>
+              <CardDescription>Water infrastructure cybersecurity for {stateAbbr}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Critical infrastructure vulnerability assessment.
+              </p>
+            </CardContent>
+          </Card>
+        );
+
+        // ── Policy & Legislation ──
+        case 'policy-tracker': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle>Policy Tracker</CardTitle>
+              <CardDescription>Regulatory changes affecting {stateAbbr}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Federal and state policy updates, deadlines, and compliance requirements.
+              </p>
+            </CardContent>
+          </Card>
+        );
+
+        case 'congress-legislation': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle>Water Legislation Tracker</CardTitle>
+              <CardDescription>Congressional bills affecting {stateAbbr}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Current and proposed federal water legislation.
+              </p>
+            </CardContent>
+          </Card>
+        );
+
+        // ── Briefing & Analytics ──
+        case 'briefing-qa': return DS(<BriefingQACard state={stateAbbr} />);
+
+        case 'pol-constituent-concerns': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle>Constituent Concerns</CardTitle>
+              <CardDescription>Public water quality issues in {stateAbbr}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Trending public concerns and citizen reports.
+              </p>
+            </CardContent>
+          </Card>
+        );
 
         // ── Future sections ──
 
