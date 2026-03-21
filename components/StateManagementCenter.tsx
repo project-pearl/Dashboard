@@ -146,13 +146,13 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Overview',
     description: 'State operational dashboard — morning check before the day starts',
     defaultOverlay: 'risk',
-    sections: new Set(['regprofile', 'operational-health', 'alertfeed', 'map-grid', 'top10', 'quick-access', 'correlation-breakthroughs', 'lens-data-story']),
+    sections: new Set(['regprofile', 'operational-health', 'alertfeed', 'map-grid', 'correlation-breakthroughs', 'ask-pin-universal']),
   },
   briefing: {
     label: 'AI Briefing',
     description: 'AI-generated overnight summary and action items',
     defaultOverlay: 'risk',
-    sections: new Set(['insights', 'briefing-actions', 'briefing-qa', 'ask-pin-universal', 'lens-data-story']),
+    sections: new Set(['ask-pin-universal', 'correlation-breakthroughs', 'disclaimer']),
   },
   'political-briefing': {
     label: 'Political Briefing',
@@ -186,7 +186,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Water Quality',
     description: 'Standards, assessment, station data, and field integration',
     defaultOverlay: 'risk',
-    sections: new Set(['regprofile', 'local-panel', 'groundwater', 'wq-standards', 'wq-assessment', 'wq-stations', 'usgs-ogc-stations', 'ngwmn-groundwater', 'water-availability', 'wqx-modern-results', 'dmr-violations-panel', 'correlation-breakthroughs', 'disclaimer', 'lens-data-story']),
+    sections: new Set(['regprofile', 'map-grid', 'correlation-breakthroughs', 'disclaimer']),
   },
   'public-health': {
     label: 'Public Health & Contaminants',
@@ -216,7 +216,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Monitoring',
     description: 'State monitoring network, data management, and optimization',
     defaultOverlay: 'coverage',
-    sections: new Set(['groundwater', 'mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'mon-air-quality', 'mon-latency', 'mon-report-card', 'mon-source-health', 'flood-status', 'flood-risk-summary', 'weather-alerts', 'usgs-ogc-stations', 'ngwmn-groundwater', 'nws-forecast-panel', 'water-availability', 'wqx-modern-results', 'hab-forecast-panel', 'nexrad-precip-panel', 'severe-weather-panel', 'correlation-breakthroughs', 'disclaimer', 'lens-data-story']),
+    sections: new Set(['regprofile', 'map-grid', 'mon-air-quality', 'alertfeed', 'correlation-breakthroughs', 'disclaimer']),
   },
   disaster: {
     label: 'Disaster & Emergency Response',
@@ -885,101 +885,46 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
 
         // ── Shared/Core Sections ──
         case 'regprofile': return DS(
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">In Compliance</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{jurisdictionScoreSummary.inComplianceRate}%</div>
-            <p className="text-xs text-muted-foreground">
-              {jurisdictionScoreRows.length - jurisdictionScoreSummary.attentionCount} jurisdictions
-            </p>
-          </CardContent>
-        </Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">In Compliance</CardTitle>
+                <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{jurisdictionScoreSummary.inComplianceRate}%</div>
+                <p className="text-xs text-muted-foreground">
+                  {jurisdictionScoreRows.length - jurisdictionScoreSummary.attentionCount} jurisdictions
+                </p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Need Attention</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{jurisdictionScoreSummary.attentionCount}</div>
-            <p className="text-xs text-muted-foreground">
-              Jurisdictions requiring review
-            </p>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Need Attention</CardTitle>
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{jurisdictionScoreSummary.attentionCount}</div>
+                <p className="text-xs text-muted-foreground">
+                  Jurisdictions requiring review
+                </p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Last Updated</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{jurisdictionScoreSummary.asOf}</div>
-            <p className="text-xs text-muted-foreground">
-              Data refresh
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-      )}
-
-      {/* Weather Alerts */}
-      {showSection('alertfeed') && <WeatherAlertsSection userState={stateAbbr} />}
-
-      {/* Triage Queue */}
-      {showSection('quick-access') && <TriageQueueSection scope="state" stateFilter={stateAbbr} user={user} />}
-
-      {/* Map and Jurisdictions */}
-      {showSection('map-grid') && (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>State Overview Map</CardTitle>
-            <CardDescription>Water quality monitoring locations</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-96">
-              <MapboxMapShell
-                center={stateCenter}
-                zoom={6}
-              >
-                <MapboxMarkers
-                  data={markerData}
-                />
-              </MapboxMapShell>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>MS4 Jurisdictions</CardTitle>
-            <CardDescription>Municipal compliance overview</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-              {(jurisdictionScoreRows || []).slice(0, 10).map((jurisdiction: any) => (
-                <div key={jurisdiction.name} className="flex items-center justify-between p-2 border rounded">
-                  <div>
-                    <div className="font-medium">{jurisdiction.name}</div>
-                    <div className="text-sm text-muted-foreground">{jurisdiction.status}</div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={jurisdiction.needsAttention ? "destructive" : "secondary"}>
-                      {jurisdiction.score}
-                    </Badge>
-                    {jurisdiction.trendIcon}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Last Updated</CardTitle>
+                <Clock className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{jurisdictionScoreSummary.asOf}</div>
+                <p className="text-xs text-muted-foreground">
+                  Data refresh
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         );
 
         case 'operational-health': return DS(
@@ -1126,137 +1071,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
           );
         }
 
-        // ── Placeholder for other sections ──
-        case 'insights':
-        case 'briefing-actions':
-        case 'briefing-qa':
-        case 'trends-dashboard':
-        case 'policy-federal':
-        case 'policy-state':
-        case 'policy-epa':
-        case 'icis':
-        case 'sdwis':
-        case 'ms4jurisdictions':
-        case 'compliance-assessment':
-        case 'compliance-analytics':
-        case 'local-panel':
-        case 'groundwater':
-        case 'wq-standards':
-        case 'wq-assessment':
-        case 'wq-stations':
-        case 'usgs-ogc-stations':
-        case 'ngwmn-groundwater':
-        case 'water-availability':
-        case 'wqx-modern-results':
-        case 'dmr-violations-panel':
-        case 'ph-contaminants':
-        case 'ph-health-coord':
-        case 'ph-lab-capacity':
-        case 'ph-mortality-context':
-        case 'ph-healthcare-access':
-        case 'ph-outbreak-tracker':
-        case 'ph-env-health-corr':
-        case 'pfas-analytics-panel':
-        case 'cdc-places-health':
-        case 'hab-ecoscore':
-        case 'hab-attainment':
-        case 'hab-bioassessment':
-        case 'hab-impairment-causes':
-        case 'hab-wildlife':
-        case 'hab-401cert':
-        case 'ag-319':
-        case 'ag-partners':
-        case 'ag-nps-breakdown':
-        case 'ag-nps-tmdl':
-        case 'ag-nps-funding':
-        case 'infra-srf':
-        case 'infra-capital':
-        case 'infra-construction':
-        case 'infra-green':
-        case 'ag-bmp-effectiveness':
-        case 'ag-nutrient':
-        case 'ag-wbp':
-        case 'flood-impact-analysis':
-        case 'cyber-risk-panel':
-        case 'mon-network':
-        case 'mon-data-mgmt':
-        case 'mon-optimization':
-        case 'mon-continuous':
-        case 'mon-latency':
-        case 'mon-report-card':
-        case 'mon-source-health':
-        case 'flood-status':
-        case 'flood-risk-summary':
-        case 'weather-alerts':
-        case 'nws-forecast-panel':
-        case 'hab-forecast-panel':
-        case 'nexrad-precip-panel':
-        case 'severe-weather-panel':
-        case 'disaster-active':
-        case 'disaster-response':
-        case 'disaster-spill':
-        case 'disaster-prep':
-        case 'disaster-cascade':
-        case 'flood-forecast':
-        case 'flood-risk-overview':
-        case 'resolution-planner':
-        case 'flood-event-viewer':
-        case 'tmdl-status':
-        case 'tmdl-303d':
-        case 'tmdl-workspace':
-        case 'tmdl-implementation':
-        case 'tmdl-restoration':
-        case 'tmdl-epa':
-        case 'tmdl-completion-trend':
-        case 'tmdl-cause-breakdown':
-        case 'tmdl-delisting-stories':
-        case 'sc-self-assessment':
-        case 'sc-watershed':
-        case 'sc-peer':
-        case 'sc-epa-ppa':
-        case 'exporthub':
-        case 'rpt-ir-workspace':
-        case 'rpt-regulatory':
-        case 'rpt-adhoc':
-        case 'global-water-quality':
-        case 'congress-legislation':
-        case 'perm-status':
-        case 'perm-inventory':
-        case 'perm-pipeline':
-        case 'perm-dmr':
-        case 'perm-inspection':
-        case 'perm-enforcement':
-        case 'perm-general':
-        case 'perm-snc':
-        case 'perm-waterbody':
-        case 'perm-expiring':
-        case 'perm-dmr-trends':
-        case 'grants':
-        case 'fund-active':
-        case 'fund-srf':
-        case 'fund-pipeline':
-        case 'fund-passthrough':
-        case 'fund-analytics':
-        case 'fund-bil':
-        case 'fund-j40':
-        case 'fund-srf-pipeline':
-        case 'fund-grant-compliance':
-        case 'fund-trend':
-        case 'fund-match':
-        case 'grant-outcomes':
-          return DS(
-            <Card>
-              <CardHeader>
-                <CardTitle>Coming Soon</CardTitle>
-                <CardDescription>This section is under development</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  {section.label} functionality will be available in a future update.
-                </p>
-              </CardContent>
-            </Card>
-          );
+        // ── Future sections ──
 
         case 'lens-data-story': return null; // rendered above
 
