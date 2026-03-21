@@ -853,7 +853,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
     <div className="min-h-screen w-full bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
       <div className="mx-auto max-w-7xl p-4 space-y-6">
 
-        {/* Toast */}
+        {/* Toast */
         {toastMsg && (
           <div className="fixed top-4 right-4 z-50 max-w-sm animate-in fade-in slide-in-from-top-2">
             <div className="bg-white border-2 border-blue-300 rounded-xl shadow-lg p-4 flex items-start gap-3">
@@ -864,10 +864,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
           </div>
         )}
 
-        {/* ── HERO BANNER ── */}
+        {/* ── HERO BANNER ── */
         <HeroBanner role="state" onDoubleClick={() => onToggleDevMode?.()} />
 
-        {/* ── LENS BRIEFING — always first card below hero ── */}
+        {/* ── LENS BRIEFING — always first card below hero ── */
         <LensDataStory lens={viewLens} role="State" state={stateAbbr} />
 
         <LayoutEditor ccKey="State">
@@ -1089,7 +1089,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             case 'map-grid': return DS(
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-          {/* LEFT: State Map (2/3 width — matches NCC layout) */}
+          {/* LEFT: State Map (2/3 width — matches NCC layout) */
           <Card className="lg:col-span-2 border-2 border-slate-200">
             <CardHeader>
               <CardTitle>{stateName} Monitoring Network</CardTitle>
@@ -1098,7 +1098,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* Overlay Selector */}
+              {/* Overlay Selector */
               <div className="flex flex-wrap gap-2 pb-3">
                 {OVERLAYS.map((o) => {
                   const Icon = o.icon;
@@ -1145,7 +1145,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       />
                     </MapboxMapShell>
                   </div>
-                  {/* Dynamic Legend */}
+                  {/* Dynamic Legend */
                   <div className="flex flex-wrap gap-2 p-3 text-xs bg-slate-50 border-t border-slate-200">
                     {overlay === 'risk' && (
                       <>
@@ -1189,7 +1189,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             </CardContent>
           </Card>
 
-          {/* RIGHT: Watershed Waterbody Panel (1/3 width) */}
+          {/* RIGHT: Watershed Waterbody Panel (1/3 width) */
           <WatershedWaterbodyPanel
             stateAbbr={stateAbbr}
             stateName={stateName}
@@ -1202,12 +1202,12 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
         </div>
             );
 
-            case 'insights': return DS(<>{/* AI Insights Engine removed */}</>);
+            case 'insights': return DS(<>{/* AI Insights Engine removed */</>);
 
             case 'detail': return DS(<>
         <div className="space-y-4">
 
-            {/* No selection state — search prompt */}
+            {/* No selection state — search prompt */
             {!activeDetailId && (
               <Card className="border-2 border-dashed border-slate-300 bg-white/50">
                 <div className="p-6">
@@ -1236,7 +1236,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             )}
 
-            {/* Waterbody Detail Card */}
+            {/* Waterbody Detail Card */
             {activeDetailId && (() => {
               const nccRegion = regionData.find(r => r.id === activeDetailId);
               const regionConfig = getRegionById(activeDetailId);
@@ -1271,7 +1271,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               );
             })()}
 
-            {/* Restoration Plan — NCC-matching collapsible with Deploy/PDF/Cost buttons */}
+            {/* Restoration Plan — NCC-matching collapsible with Deploy/PDF/Cost buttons */
             {showRestorationPlan && activeDetailId && (() => {
               const nccRegion = regionData.find(r => r.id === activeDetailId);
               const regionConfig = getRegionById(activeDetailId);
@@ -1334,7 +1334,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
 
               return (
                 <Card className="border-2 border-cyan-300 shadow-md">
-                  {/* Collapsed summary header — always visible, click to expand */}
+                  {/* Collapsed summary header — always visible, click to expand */
                   <button
                     onClick={() => setShowRestorationCard(prev => !prev)}
                     className="w-full px-4 py-3 flex items-center justify-between hover:bg-cyan-50/50 transition-colors rounded-t-lg"
@@ -1391,11 +1391,11 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                     </div>
                   </button>
 
-                  {/* Expanded content */}
+                  {/* Expanded content */
                   {showRestorationCard && (
                     <CardContent className="pt-0 pb-4 space-y-4">
 
-                      {/* ═══ EXECUTIVE SUMMARY ═══ */}
+                      {/* ═══ EXECUTIVE SUMMARY ═══ */
                       <div className="rounded-lg border-2 border-slate-300 bg-white p-4 space-y-3">
                         <div className="flex items-center justify-between">
                           <div className="text-sm font-bold text-slate-900 uppercase tracking-wide">Executive Summary</div>
@@ -1403,7 +1403,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                             Site Severity: {siteSeverityLabel} ({siteSeverityScore}/100)
                           </span>
                         </div>
-                        {/* Parameter assessment grid */}
+                        {/* Parameter assessment grid */
                         <div className="rounded-md bg-slate-50 border border-slate-200 p-3 space-y-2">
                           <div className="text-2xs font-bold text-slate-500 uppercase tracking-wider">{isMD ? 'MD DNR Threshold' : 'EPA Criteria'} Assessment</div>
                           <div className="grid grid-cols-5 gap-1.5 text-2xs">
@@ -1456,7 +1456,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                           </div>
                           <div className="text-2xs text-slate-400">Composite: DO (25%) + Bloom/Nutrients (25%) + Turbidity (15%) + Impairment (20%) + Monitoring Gap (15%) | Thresholds: {thresholdSource}</div>
                         </div>
-                        {/* Situation + Treatment Priorities */}
+                        {/* Situation + Treatment Priorities */
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div className="rounded-md bg-slate-50 border border-slate-200 p-3">
                             <div className="text-2xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Situation</div>
@@ -1488,7 +1488,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                         </div>
                       </div>
 
-                      {/* Why PIN */}
+                      {/* Why PIN */
                       <div className="space-y-1.5">
                         <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">Site Assessment — {regionName}</div>
                         {whyBullets.map((b, i) => (
@@ -1503,7 +1503,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                         ))}
                       </div>
 
-                      {/* Impairment classification */}
+                      {/* Impairment classification */
                       {impairmentClassification.length > 0 && (
                         <div className="space-y-1">
                           <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
@@ -1527,7 +1527,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                         </div>
                       )}
 
-                      {/* Categories summary */}
+                      {/* Categories summary */
                       <div className="space-y-2">
                         {categories.map(cat => (
                           <div key={cat.id} className={`rounded-lg border p-2.5 ${cat.color}`}>
@@ -1547,7 +1547,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             })()}
           </div>
 
-        {/* ── Environmental Justice — Census ACS + EPA SDWIS (statewide) + EJScreen (per-waterbody) ── */}
+        {/* ── Environmental Justice — Census ACS + EPA SDWIS (statewide) + EJScreen (per-waterbody) ── */
         {activeDetailId && displayData && regionMockData && (
             (() => {
               const ejScore = getEJScore(stateAbbr);
@@ -1588,7 +1588,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   </button>
                   {isSectionOpen('ej') && (
                     <div className="px-4 pb-4 pt-2 space-y-3">
-                      {/* Per-waterbody EJScreen score — dynamic */}
+                      {/* Per-waterbody EJScreen score — dynamic */
                       {wbEJScore !== null && (
                         <div className={`rounded-lg border-2 p-3 ${wbEJScore >= 70 ? 'border-red-300 bg-red-50' : wbEJScore >= 50 ? 'border-orange-200 bg-orange-50' : wbEJScore >= 30 ? 'border-amber-200 bg-amber-50' : 'border-green-200 bg-green-50'}`}>
                           <div className="flex items-center justify-between mb-1">
@@ -1613,7 +1613,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                           Fetching EJScreen data for {wbName}…
                         </div>
                       )}
-                      {/* State Census baseline */}
+                      {/* State Census baseline */
                       <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{stateName} State Baseline — Census ACS</div>
                       <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
                         <div className="rounded-lg bg-purple-50 border border-purple-100 p-2 text-center">
@@ -1647,7 +1647,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                           <div className="text-2xs text-slate-400">per 100k (SDWIS)</div>
                         </div>
                       </div>
-                      {/* Per-waterbody EJ breakdown */}
+                      {/* Per-waterbody EJ breakdown */
                       {totalEJCached > 0 && (
                         <div className="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-lg p-2.5">
                           <span className="font-semibold">Statewide EJScreen Rollup:</span>{' '}
@@ -1655,7 +1655,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                           {highEJWaterbodies > 0 && ' These overlap EJ-designated communities and qualify for enhanced federal support under Justice40.'}
                         </div>
                       )}
-                      {/* Policy callout */}
+                      {/* Policy callout */
                       <div className="text-xs text-cyan-900 bg-cyan-50 border border-cyan-200 rounded-lg p-2.5">
                         <span className="font-bold">📋 Regulatory Relevance:</span>{' '}
                         {(wbEJScore ?? ejScore) >= 60
@@ -1695,7 +1695,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {/* #1 — Potomac River Sewage Spill (pinned, MD only) */}
+                {/* #1 — Potomac River Sewage Spill (pinned, MD only) */
                 {stateAbbr === 'MD' && (
                 <div
                   id="section-potomac"
@@ -1727,31 +1727,31 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   </div>
                   {isSectionOpen('potomac') && (
                   <div className="px-3 pb-3 pt-1 text-xs text-red-900 leading-relaxed border-t border-red-200 bg-red-50/80 space-y-2">
-                    {/* Incident summary */}
+                    {/* Incident summary */
                     <div>
                       <span className="font-bold">Incident:</span> A 72″ section of the <span className="font-semibold">Potomac Interceptor</span> sewer line collapsed near Clara Barton Parkway on Jan 19, 2026, releasing raw sewage into the C&O Canal and Potomac River. The 1960s-era pipe carries ~60M gallons/day from as far as Dulles Airport to the Blue Plains Advanced Wastewater Treatment Plant. DC Water describes it as part of a 54-mile system already identified for rehabilitation.
                     </div>
-                    {/* Scale */}
+                    {/* Scale */
                     <div>
                       <span className="font-bold">Volume:</span> An estimated <span className="font-semibold text-red-700">243–300 million gallons</span> of untreated sewage discharged before bypass activation on Jan 24. Peak overflow rate was ~40M gallons/day (~2% of total Potomac flow). Additional overflow events have continued, including ~600K gallons on Feb 9 when pumps clogged with flushable wipes. UMD called it <span className="italic">one of the largest sewage spills in U.S. history</span>.
                     </div>
-                    {/* Water quality */}
+                    {/* Water quality */
                     <div>
                       <span className="font-bold">Water Quality:</span> UMD researchers found E. coli levels <span className="font-semibold text-red-700">10,000× above EPA recreational standards</span> at the spill site on Jan 21. Potomac Riverkeeper Network measured <span className="font-semibold">nearly 12,000× safe limits</span> near Lockhouse 10. Staphylococcus aureus detected at 33% of sample sites, including antibiotic-resistant <span className="font-semibold">MRSA</span> at the overflow location. Downstream levels (10+ mi) still 1.5× above standards as of Jan 28.
                     </div>
-                    {/* Public health */}
+                    {/* Public health */
                     <div>
                       <span className="font-bold">Public Health:</span> DC/MD/VA agencies issued advisories — avoid all river contact, fishing, and keep pets away. Drinking water confirmed safe (separate system). MDE issued shellfish closure from spill site to Harry W. Nice Bridge (Rt 301). VA advisory covers 72.5 miles from I-495 to King George County. Frozen sewage expected to re-release bacteria as spring temperatures rise.
                     </div>
-                    {/* Repair status */}
+                    {/* Repair status */
                     <div>
                       <span className="font-bold">Repair Status:</span> DC Water bypass system activated Jan 24, reducing overflow. Rock dam discovered inside pipe Feb 5 complicated repairs. Interim fix estimated 4–6 weeks; full repair ~9 months. DC Water has allocated <span className="font-semibold">$625M over 10 years</span> for Potomac Interceptor rehabilitation.
                     </div>
-                    {/* Political */}
+                    {/* Political */
                     <div>
                       <span className="font-bold">Federal Response:</span> President Trump directed FEMA coordination on Feb 17. Gov. Moore's office noted the federal government has been responsible for the Potomac Interceptor since the last century. Potomac Conservancy submitted a letter signed by 2,100+ community members demanding accountability from DC Water.
                     </div>
-                    {/* PIN relevance */}
+                    {/* PIN relevance */
                     <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-2 text-cyan-900">
                       <span className="font-bold">🔬 PIN Relevance:</span> This event demonstrates catastrophic infrastructure failure impact on receiving waters. PIN's real-time monitoring capability would provide continuous E. coli, nutrient, and pathogen tracking during and after spill events — filling the gap that required UMD researchers and volunteer riverkeepers to manually sample. Continuous deployment at 6 DC Water monitoring sites would provide the 24/7 data regulators and the public need.
                     </div>
@@ -1771,7 +1771,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   )}
                 </div>
                 )}
-                {/* Remaining slots — offset numbering if Potomac is shown */}
+                {/* Remaining slots — offset numbering if Potomac is shown */
                 {hotspots.worsening.slice(0, stateAbbr === 'MD' ? 4 : 5).map((region, idx) => (
                   <div
                     key={region.id}
@@ -1869,7 +1869,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             </CardHeader>
             {expandedSections.ms4 && ms4Summary && (
               <CardContent className="space-y-3">
-                {/* Summary tiles */}
+                {/* Summary tiles */
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="bg-white rounded-lg border border-slate-200 p-3 text-center">
                     <div className="text-2xl font-bold text-slate-800">{ms4Summary.total}</div>
@@ -1890,7 +1890,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   </div>
                 </div>
 
-                {/* Jurisdiction drill-down dropdown */}
+                {/* Jurisdiction drill-down dropdown */
                 <div className="flex items-center gap-3">
                   <label className="text-xs font-medium text-slate-600 whitespace-nowrap">Drill into jurisdiction:</label>
                   <select
@@ -1914,7 +1914,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   </select>
                 </div>
 
-                {/* Selected jurisdiction detail card */}
+                {/* Selected jurisdiction detail card */
                 {selectedJurisdiction && (() => {
                   const sel = jurisdictions.find((j: any) => j.permitId === selectedJurisdiction);
                   if (!sel) return null;
@@ -1941,7 +1941,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   );
                 })()}
 
-                {/* Jurisdiction table */}
+                {/* Jurisdiction table */
                 <div className="rounded-lg border border-slate-200 overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
@@ -2091,7 +2091,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             <CardDescription>Long-term impairment trends, TMDL progress, and next assessment cycle outlook for {stateAbbr}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Trend KPI Strip */}
+            {/* Trend KPI Strip */
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
                 { id: 'trend-impairment', label: 'Impairment Trend', value: '↓ 3.1%', sub: 'vs. prior assessment cycle', color: 'text-green-600', bg: 'bg-green-50 border-green-200', drillDetail: `${stateAbbr} 303(d) list: 12 waterbodies delisted, 9 newly listed. Net improvement of 3.1% in Category 5 listings.` },
@@ -2118,7 +2118,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               ))}
             </div>
 
-            {/* Category Trend Cards */}
+            {/* Category Trend Cards */
             <div>
               <h3 className="text-sm font-semibold text-slate-800 mb-3">Water Quality Trend Categories</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -2152,7 +2152,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </div>
             </div>
 
-            {/* Outlook */}
+            {/* Outlook */
             <div>
               <h3 className="text-sm font-semibold text-slate-800 mb-3">Next Assessment Cycle Outlook</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -4438,7 +4438,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {/* Example cascade: Sewage bypass */}
+                    {/* Example cascade: Sewage bypass */
                     <div className="rounded-lg border border-red-200 bg-red-50/50 p-3">
                       <div className="text-xs font-semibold text-red-800 mb-2">Sewage Bypass — Patapsco WWTP</div>
                       <div className="flex items-stretch gap-0 overflow-x-auto">
@@ -4459,7 +4459,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </div>
                     </div>
 
-                    {/* Example cascade: Chemical spill */}
+                    {/* Example cascade: Chemical spill */
                     <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3">
                       <div className="text-xs font-semibold text-amber-800 mb-2">Chemical Spill — I-95 Corridor</div>
                       <div className="flex items-stretch gap-0 overflow-x-auto">
@@ -5947,7 +5947,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </div>
                     ))}
                   </div>
-                  {/* Progress bar */}
+                  {/* Progress bar */
                   <div className="mt-2">
                     <div className="flex justify-between text-2xs text-slate-500 mb-1">
                       <span>Progress toward 40% DAC investment</span>
@@ -6265,7 +6265,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             );}
 
             case 'grant-outcomes': return DS(<>
-              {/* Historical Grant Outcomes */}
+              {/* Historical Grant Outcomes */
               <GrantOutcomesCard />
             </>);
 
