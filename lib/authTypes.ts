@@ -91,63 +91,12 @@ export interface PendingUser {
 
 // ─── Admin list — loaded from environment variables for security ──────────────
 
-// Cache the admin emails to avoid repeated processing
-let _adminEmailsCache: string[] | null = null;
+// Admin access is now purely database-driven via the admin_level column in Supabase profiles.
+// No environment variable fallback - all admin management goes through the UI and database.
 
-function getAdminEmails(): string[] {
-  // Return cached result if available
-  if (_adminEmailsCache !== null) {
-    return _adminEmailsCache;
-  }
-
-  // Only access env vars on server side (avoid client-side errors)
-  if (typeof window !== 'undefined') {
-    // Browser context - return empty array (admin checks should be server-side)
-    _adminEmailsCache = [];
-    return _adminEmailsCache;
-  }
-
-  const adminEmailsEnv = process.env.ADMIN_EMAILS || process.env.NEXT_PUBLIC_ADMIN_EMAILS;
-
-  if (adminEmailsEnv) {
-    _adminEmailsCache = adminEmailsEnv.split(',').map(email => email.trim().toLowerCase());
-    return _adminEmailsCache;
-  }
-
-  // Fallback for development only - log warning
-  if (process.env.NODE_ENV === 'development') {
-    console.warn('⚠️  ADMIN_EMAILS environment variable not set, using development fallback. Set ADMIN_EMAILS in production.');
-    _adminEmailsCache = [
-      'admin@project-pearl.org',
-      'system@project-pearl.org',
-    ];
-    return _adminEmailsCache;
-  }
-
-  // No admin emails in production without proper configuration
-  console.error('❌ ADMIN_EMAILS environment variable must be set in production');
-  _adminEmailsCache = [];
-  return _adminEmailsCache;
-}
-
-// Lazy getter function instead of immediate computation
-export function getADMIN_EMAILS(): string[] {
-  return getAdminEmails();
-}
-
-/** Quick check — used by authContext to set isAdmin on login */
-export function checkIsAdmin(email: string): boolean {
-  if (!email) return false;
-  const adminEmails = getADMIN_EMAILS();
-  if (adminEmails.length === 0) return false;
-  return adminEmails.includes(email.toLowerCase().trim());
-}
-
-/** Resolve effective admin level — DB column takes precedence, ADMIN_EMAILS as super_admin fallback */
+/** Resolve effective admin level from database only — no environment variable fallback */
 export function resolveAdminLevel(dbValue: string | undefined | null, email: string): AdminLevel {
   const level = (dbValue || 'none') as AdminLevel;
   if (level === 'super_admin' || level === 'role_admin') return level;
-  // Fallback: hardcoded super admins
-  if (checkIsAdmin(email)) return 'super_admin';
   return 'none';
 }

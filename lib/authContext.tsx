@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import { supabase } from './supabase';
 import {
   PearlUser, UserRole, AccountStatus, InvitePayload, AdminLevel,
-  isOperatorRole, checkIsAdmin, normalizeUserRole, resolveAdminLevel,
+  isOperatorRole, normalizeUserRole, resolveAdminLevel,
 } from './authTypes';
 import type { User } from '@supabase/supabase-js';
 
@@ -342,7 +342,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user) {
-        const adminLevel = checkIsAdmin(email) ? 'super_admin' : 'none';
+        const adminLevel = 'none'; // All admin access managed through database
         const nowIso = new Date().toISOString();
 
         await supabase

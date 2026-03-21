@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeUserRole, resolveAdminLevel, checkIsAdmin } from '@/lib/authTypes';
+import { normalizeUserRole, resolveAdminLevel } from '@/lib/authTypes';
 
 describe('normalizeUserRole', () => {
   const validRoles = [
@@ -48,30 +48,10 @@ describe('resolveAdminLevel', () => {
     expect(resolveAdminLevel('role_admin', 'random@example.com')).toBe('role_admin');
   });
 
-  it('falls back to super_admin for admin emails', () => {
-    expect(resolveAdminLevel(null, 'doug@project-pearl.org')).toBe('super_admin');
-    expect(resolveAdminLevel(undefined, 'steve@project-pearl.org')).toBe('super_admin');
-  });
-
-  it('returns none for non-admin', () => {
+  it('returns none for database-only system', () => {
+    expect(resolveAdminLevel(null, 'doug@project-pearl.org')).toBe('none');
+    expect(resolveAdminLevel(undefined, 'steve@project-pearl.org')).toBe('none');
     expect(resolveAdminLevel(null, 'nobody@example.com')).toBe('none');
     expect(resolveAdminLevel('none', 'nobody@example.com')).toBe('none');
-  });
-});
-
-describe('checkIsAdmin', () => {
-  it('recognizes admin emails', () => {
-    expect(checkIsAdmin('doug@project-pearl.org')).toBe(true);
-    expect(checkIsAdmin('steve@project-pearl.org')).toBe(true);
-    expect(checkIsAdmin('gwen@project-pearl.org')).toBe(true);
-  });
-
-  it('is case-insensitive', () => {
-    expect(checkIsAdmin('Doug@Project-Pearl.org')).toBe(true);
-    expect(checkIsAdmin('DOUG@PROJECT-PEARL.ORG')).toBe(true);
-  });
-
-  it('rejects non-admin emails', () => {
-    expect(checkIsAdmin('nobody@example.com')).toBe(false);
   });
 });
