@@ -24,6 +24,7 @@ interface Room {
   players: string[];
   currentQuestion: number;
   gameMode: GameMode;
+  soloTest?: boolean;
 }
 
 export default function TriviaGamePage() {
@@ -49,6 +50,20 @@ export default function TriviaGamePage() {
     setGameState('hosting');
   };
 
+  const startSoloTest = () => {
+    const soloName = playerName.trim() || 'Solo Tester';
+    const newRoom: Room = {
+      code: 'SOLO',
+      players: [soloName],
+      currentQuestion: 0,
+      gameMode,
+      soloTest: true,
+    };
+    setPlayerName(soloName);
+    setRoom(newRoom);
+    setGameState('hosting');
+  };
+
   const joinRoom = () => {
     if (!playerName.trim() || !roomCode.trim()) return;
     // In real implementation, this would connect to WebSocket
@@ -67,10 +82,10 @@ export default function TriviaGamePage() {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-6xl font-bold text-white mb-4 font-mono">
-            You Don't Know <span className="text-yellow-400">JACK</span>
+            PIN <span className="text-yellow-400">TRIVIA</span>
           </h1>
           <p className="text-xl text-gray-300">
-            Jackbox-style trivia with edgy humor, era-based categories, and video game references
+            Multiplayer-style trivia with edgy humor, era-based categories, and video game references
           </p>
         </div>
 
@@ -117,6 +132,12 @@ export default function TriviaGamePage() {
                   disabled={!playerName.trim()}
                 >
                   Create Room
+                </Button>
+                <Button
+                  onClick={startSoloTest}
+                  className="w-full bg-amber-600 hover:bg-amber-700"
+                >
+                  Solo Test (No Join Needed)
                 </Button>
               </CardContent>
             </Card>
@@ -191,9 +212,9 @@ export default function TriviaGamePage() {
 
                 <Button
                   className="w-full bg-green-600 hover:bg-green-700"
-                  disabled={room.players.length < 2}
+                  disabled={room.players.length < (room.soloTest ? 1 : 2)}
                 >
-                  Start Game ({room.players.length >= 2 ? 'Ready!' : 'Need 2+ players'})
+                  Start Game ({room.soloTest || room.players.length >= 2 ? 'Ready!' : 'Need 2+ players'})
                 </Button>
               </div>
             </CardContent>
