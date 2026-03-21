@@ -3622,10 +3622,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
-            {/* TODO: Future click-throughs for Watershed-Based Plans:
-                - "14 Accepted Plans" → list plans with implementation status
-                - "6 In Development" → show drafts
-                - "42% Avg Implementation" → plan-by-plan progress */}
             case 'ag-wbp': return DS(
               <Card>
                 <CardHeader>
