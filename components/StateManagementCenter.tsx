@@ -380,6 +380,9 @@ function generateStateRegionData(stateAbbr: string): RegionRow[] {
 
 export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMode }: Props) {
   const stateName = STATE_NAMES[stateAbbr] || stateAbbr;
+
+  // State center coordinates for map
+  const stateCenter: [number, number] = STATE_GEO_LEAFLET[stateAbbr]?.center || [-76.5, 39.0];
   const agency = STATE_AGENCIES[stateAbbr] || STATE_AUTHORITIES[stateAbbr] || null;
   const { user, logout, isAdmin } = useAuth();
   const { activeJurisdiction } = useJurisdictionContext();
@@ -850,9 +853,144 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
   const toggleSection = (id: string) => setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
 
   return (
-    <div>
-      <h1>DEBUG: Minimal Component Test</h1>
-      <p>State: {stateAbbr}</p>
+    <div className="container mx-auto px-4 py-8 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">{stateName} State Management Center</h1>
+          <p className="text-slate-600">Comprehensive water quality oversight for {stateName}</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <Badge variant="secondary">
+            {jurisdictionScoreRows.length} Jurisdictions
+          </Badge>
+          <Badge variant="secondary">
+            {regionData.length} Watersheds
+          </Badge>
+        </div>
+      </div>
+
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Avg Compliance Score</CardTitle>
+            <Gauge className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{jurisdictionScoreSummary.avgScore}</div>
+            <p className="text-xs text-muted-foreground">
+              Grade: {jurisdictionScoreSummary.avgGrade}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">In Compliance</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{jurisdictionScoreSummary.inComplianceRate}%</div>
+            <p className="text-xs text-muted-foreground">
+              {jurisdictionScoreRows.length - jurisdictionScoreSummary.attentionCount} jurisdictions
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Need Attention</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{jurisdictionScoreSummary.attentionCount}</div>
+            <p className="text-xs text-muted-foreground">
+              Jurisdictions requiring review
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Last Updated</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{jurisdictionScoreSummary.asOf}</div>
+            <p className="text-xs text-muted-foreground">
+              Data refresh
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Weather Alerts */}
+      <WeatherAlertsSection />
+
+      {/* Triage Queue */}
+      <TriageQueueSection />
+
+      {/* Map and Jurisdictions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>State Overview Map</CardTitle>
+            <CardDescription>Water quality monitoring locations</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-96">
+              <MapboxMapShell
+                center={stateCenter}
+                zoom={6}
+                style="mapbox://styles/mapbox/light-v11"
+              >
+                <MapboxMarkers
+                  markers={regionData.map(r => ({
+                    lng: r.lng,
+                    lat: r.lat,
+                    popup: `${r.name}: ${r.status}`,
+                    color: r.alertLevel === 'critical' ? '#ef4444' :
+                           r.alertLevel === 'warning' ? '#f59e0b' : '#10b981'
+                  }))}
+                />
+              </MapboxMapShell>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>MS4 Jurisdictions</CardTitle>
+            <CardDescription>Municipal compliance overview</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {jurisdictionScoreRows.slice(0, 10).map((jurisdiction: any) => (
+                <div key={jurisdiction.name} className="flex items-center justify-between p-2 border rounded">
+                  <div>
+                    <div className="font-medium">{jurisdiction.name}</div>
+                    <div className="text-sm text-muted-foreground">{jurisdiction.status}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={jurisdiction.needsAttention ? "destructive" : "secondary"}>
+                      {jurisdiction.score}
+                    </Badge>
+                    {jurisdiction.trendIcon}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Flood Forecast */}
+      <FloodForecastCard />
+
+      {/* Flood Risk Overview */}
+      <FloodRiskOverviewCard />
+
     </div>
   );
 }
