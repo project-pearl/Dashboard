@@ -3,7 +3,7 @@
 // and staleness flags for all 12 cache modules.
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 120;
+export const maxDuration = 30; // Reduced for faster response
 
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthorized } from '@/lib/apiAuth';
@@ -131,30 +131,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Warm caches from blob storage in batches of 6 (avoid overwhelming network)
-  const warmBatches = [
-    [warmWqp, warmAttains, warmCeden, warmIcis, warmSdwis, warmNwisGw],
-    [warmEcho, warmFrs, warmPfas, warmStateReports, warmBwb],
-    [warmCdcNwss, warmNdbc, warmNasaCmr, warmNars, warmDataGov, warmUsace],
-    [warmNwisIv, warmUsgsAlerts, warmNwsAlerts, warmNwps, warmCoops, warmSnotel],
-    [warmTri, warmUSAs, warmGrants, warmSam, warmSentinelHealth, warmSentinelQueue, warmSentinelScores],
-    [warmFema, warmSuperfund, warmUsdm, warmUsgsDv, warmCoopsDerived, warmErddapSat],
-    [warmNasaStream, warmNwm, warmIpac, warmNcei, warmHabsos, warmGlerl, warmHefs, warmBeacon, warmSsoCso, warmFirms, warmSeismic, warmDam, warmEmbassyAqi],
-    [warmNfipClaims, warmHazMit, warmUsbr, warmEchoEffluent, warmRcra, warmSems, warmAdvocacy],
-    [warmHospitals, warmOutbreaks, warmEnvironmentalHealth, warmCDCWonder, warmEnvironmentalTracking, warmHealthDataGov, warmOpenFDA],
-    [warmHrsaHpsa],
-    [warmEJScreen, warmCampd, warmClimateNormals],
-    [warmMyHealthfinder, warmATSDRToxicology, warmUSGSWQP, warmDataCDCGov, warmDoDPFAS],
-    [warmUsgsOgc, warmNgwmn, warmFloodImpact, warmEpaPfas, warmDodPfasSites],
-    [warmNwsForecast, warmWaterAvail, warmCyberRisk, warmGemStat, warmCopernicusCds],
-    [warmWqxModern, warmStnFlood, warmDmrViolations, warmHabForecast, warmStreamStats, warmEReporting],
-    [warmCdcPlaces, warmCoastwatch, warmIcisAir, warmSsurgo, warmNadpPfas, warmMs4Permit],
-    [warmNlcd, warmEchoBiosolids, warmCoopsPredictions, warmVolcano, warmOshaWater, warmSwdi],
-    [warmNassLivestock, warmNassCrops, warmCongress, warmPhmsaPipeline, warmNexradQpe, warmEpaOppPesticide, warmHypoxia, warmForceProtection],
-  ];
-  for (const batch of warmBatches) {
-    await Promise.allSettled(batch.map(fn => fn()));
-  }
+  // EMERGENCY FIX: Disable cache warming to prevent memory exhaustion
+  // TODO: Implement smarter status checking without loading full cache data
+  // const warmBatches = [...]; // Commented out to prevent 128MB+ files loading
+  console.log('[Cache Status] Warming disabled to prevent memory issues');
 
   const wqp = getWqpCacheStatus();
   const attains = getAttainsCacheStatus();
