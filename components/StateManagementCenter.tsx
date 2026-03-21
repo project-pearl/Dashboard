@@ -853,16 +853,8 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
     <div className="min-h-screen w-full bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
       <div className="mx-auto max-w-7xl p-4 space-y-6">
 
-        {/* Toast */
-        {toastMsg ? (
-          <div className="fixed top-4 right-4 z-50 max-w-sm animate-in fade-in slide-in-from-top-2">
-            <div className="bg-white border-2 border-blue-300 rounded-xl shadow-lg p-4 flex items-start gap-3">
-              <div className="text-blue-600 mt-0.5">ℹ️</div>
-              <div className="flex-1"><div className="text-sm text-slate-700">{toastMsg}</div></div>
-              <button onClick={() => setToastMsg(null)} className="text-slate-400 hover:text-slate-600 text-lg leading-none">×</button>
-            </div>
-          </div>
-        ) : null}
+        {/* Toast */}
+        {toastMsg && <div>Toast: {toastMsg}</div>}
 
         {/* ── HERO BANNER ── */
         <HeroBanner role="state" onDoubleClick={() => onToggleDevMode?.()} />
