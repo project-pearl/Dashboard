@@ -46,6 +46,9 @@ const ROLE_ALLOWED_ROUTES: Record<UserRole, string[]> = {
   Pearl:      [], // special-cased: admin sees everything
 };
 
+// Dashboard routes intentionally open to all authenticated roles.
+const GLOBAL_DASHBOARD_ALLOWLIST = ['/dashboard/trivia'];
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /** Resolve the primary dashboard route for a given user, filling in dynamic segments. */
@@ -69,6 +72,8 @@ export function canAccessRoute(user: PearlUser, pathname: string): boolean {
 
   // Non-dashboard routes are accessible to everyone
   if (!pathname.startsWith('/dashboard')) return true;
+
+  if (GLOBAL_DASHBOARD_ALLOWLIST.some((prefix) => pathname.startsWith(prefix))) return true;
 
   const allowed = ROLE_ALLOWED_ROUTES[normalizedRole] ?? [];
   return allowed.some((prefix) => pathname.startsWith(prefix));
