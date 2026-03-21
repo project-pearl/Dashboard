@@ -2,6 +2,9 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import { headers } from 'next/headers';
+
+// Force dynamic rendering for nonce access
+export const dynamic = 'force-dynamic';
 import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from '@/lib/authContext';
 import { SpeedInsights } from '@vercel/speed-insights/next';
@@ -68,19 +71,26 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // EMERGENCY FIX: Remove problematic nonce logic entirely to prevent SSR crashes
-  // Site will work without CSP nonce - security is less strict but functional
-  const nonce = '';
+  // Get CSP nonce from middleware
+  let nonce = '';
+  try {
+    const headersList = await headers();
+    nonce = headersList.get('x-csp-nonce') || '';
+  } catch (error) {
+    console.warn('[Layout] Could not get nonce:', error);
+    // Continue without nonce
+  }
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script suppressHydrationWarning dangerouslySetInnerHTML={{ __html: `(function(){try{var a=localStorage.getItem('pin-accent');if(a&&a!=='teal')document.documentElement.setAttribute('data-accent',a)}catch(e){}})()` }} />
+        <script nonce={nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: `(function(){try{var a=localStorage.getItem('pin-accent');if(a&&a!=='teal')document.documentElement.setAttribute('data-accent',a)}catch(e){}})()` }} />
         <script
+          nonce={nonce}
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
