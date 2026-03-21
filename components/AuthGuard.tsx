@@ -24,10 +24,11 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const isTriviaRoute = pathname.startsWith('/dashboard/trivia');
 
   // Role-route access check — must be above early returns so the hook is always called
   const isUnauthorizedRoute = !!user && user.status === 'active' &&
-    pathname.startsWith('/dashboard') && !canAccessRoute(user, pathname);
+    pathname.startsWith('/dashboard') && !isTriviaRoute && !canAccessRoute(user, pathname);
 
   useEffect(() => {
     if (isUnauthorizedRoute && user) {
