@@ -850,8 +850,11 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
   const toggleSection = (id: string) => setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
-      <div className="mx-auto max-w-7xl p-4 space-y-6">
+    <div>
+      <h1>DEBUG: Minimal Component Test</h1>
+      <p>State: {stateAbbr}</p>
+    </div>
+  );
 
         {/* Toast - debug build trigger */}
         {toastMsg && <div>Toast: {toastMsg}</div>}
