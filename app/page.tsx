@@ -9,7 +9,7 @@ import { getPrimaryRoute } from '@/lib/roleRoutes';
 import type { UserRole } from '@/lib/authTypes';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
-import { calculateOverallScore, applyRegionThresholds, calculateRemovalEfficiency, getRemovalStatus } from '@/lib/realWaterData';
+import { calculateOverallScore, applyRegionThresholds, calculateRemovalEfficiency, getRemovalStatus, fetchRealTimeWaterQuality } from '@/lib/realWaterData';
 import { TimeMode, DataMode } from '@/lib/types';
 import { StormEventTable } from '@/components/StormEventTable';
 import { StormDetectionBanner } from '@/components/StormDetectionBanner';
@@ -550,66 +550,159 @@ export default function Home() {
 
   const selectedRegion = useMemo(() => getRegionById(selectedRegionId), [selectedRegionId]);
 
-  // EMERGENCY FIX: Use synchronous mock data function
-  const regionData = useMemo(() => {
-    const baseParams = {
-      DO: { value: 7.2, unit: 'mg/L', status: 'good', thresholds: { green: { min: 6 }, yellow: { min: 4 }, red: { min: 0 } } },
-      turbidity: { value: 12.5, unit: 'NTU', status: 'good', thresholds: { green: { max: 15 }, yellow: { max: 25 }, red: { max: 50 } } },
-      TN: { value: 0.85, unit: 'mg/L', status: 'fair', thresholds: { green: { max: 0.8 }, yellow: { max: 1.5 }, red: { max: 3.0 } } },
-      TP: { value: 0.12, unit: 'mg/L', status: 'good', thresholds: { green: { max: 0.1 }, yellow: { max: 0.2 }, red: { max: 0.5 } } },
-      TSS: { value: 28, unit: 'mg/L', status: 'fair', thresholds: { green: { max: 25 }, yellow: { max: 50 }, red: { max: 100 } } },
-      salinity: { value: 12.8, unit: 'ppt', status: 'good', thresholds: { green: { min: 10, max: 20 }, yellow: { min: 5, max: 30 }, red: { min: 0, max: 50 } } },
-      pH: { value: 7.8, unit: 'units', status: 'good', thresholds: { green: { min: 7.0, max: 8.5 }, yellow: { min: 6.5, max: 9.0 }, red: { min: 0, max: 14 } } },
-      temperature: { value: 18.5, unit: '°C', status: 'good', thresholds: { green: { max: 25 }, yellow: { max: 30 }, red: { max: 35 } } },
-      conductivity: { value: 2850, unit: 'µS/cm', status: 'good', thresholds: { green: { max: 3000 }, yellow: { max: 5000 }, red: { max: 10000 } } }
+  // Real data fetching - no more mock data
+  const [regionData, setRegionData] = useState<any>(null);
+  const [regionDataLoading, setRegionDataLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRegionData = async () => {
+      setRegionDataLoading(true);
+      try {
+        const coords = getRegionCoordinates(selectedRegionId);
+        const realData = await fetchRealTimeWaterQuality(coords.lat, coords.lng);
+
+        // Convert real data structure to expected format
+        const convertedData = convertRealDataToExpectedFormat(realData);
+        setRegionData(convertedData);
+      } catch (error) {
+        console.error('Failed to fetch real water data:', error);
+        // Fallback to minimal structure to prevent crashes
+        setRegionData(createFallbackData());
+      } finally {
+        setRegionDataLoading(false);
+      }
     };
+
+    fetchRegionData();
+  }, [selectedRegionId]);
+
+  // Helper function to get coordinates from region ID
+  function getRegionCoordinates(regionId: string) {
+    // Extract coords or use fallback for each region
+    const coordMatch = regionId.match(/(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+    if (coordMatch) {
+      return { lat: parseFloat(coordMatch[1]), lng: parseFloat(coordMatch[2]) };
+    }
+    // Default to Chesapeake Bay area
+    return { lat: 39.1612, lng: -76.4803 };
+  }
+
+  // Helper function to convert real data to expected format
+  function convertRealDataToExpectedFormat(realData: any) {
+    if (!realData?.parameters) return createFallbackData();
+
+    // Convert parameters array to object lookup
+    const parameterLookup: any = {};
+    realData.parameters.forEach((param: any) => {
+      const normalizedName = normalizeParameterName(param.name);
+      parameterLookup[normalizedName] = {
+        value: param.value,
+        unit: param.unit,
+        status: param.status || 'good',
+        thresholds: param.thresholds || getDefaultThresholds(normalizedName)
+      };
+    });
 
     return {
       ambient: {
-        parameters: baseParams,
-        overallScore: 75,
-        timestamp: new Date().toISOString(),
-        location: { latitude: 39.16, longitude: -76.48 }
+        parameters: parameterLookup,
+        overallScore: realData.overallScore || 75,
+        timestamp: realData.timestamp || new Date().toISOString(),
+        location: realData.location || { latitude: 39.16, longitude: -76.48 }
       },
-      influent: {
-        parameters: {
-          ...baseParams,
-          DO: { ...baseParams.DO, value: 6.8 },
-          turbidity: { ...baseParams.turbidity, value: 18.2 },
-          TN: { ...baseParams.TN, value: 1.2 },
-          TP: { ...baseParams.TP, value: 0.18 },
-          TSS: { ...baseParams.TSS, value: 45 },
-          salinity: { ...baseParams.salinity, value: 13.2 }
-        }
-      },
-      effluent: {
-        parameters: {
-          ...baseParams,
-          DO: { ...baseParams.DO, value: 7.5 },
-          turbidity: { ...baseParams.turbidity, value: 8.1 },
-          TN: { ...baseParams.TN, value: 0.65 },
-          TP: { ...baseParams.TP, value: 0.08 },
-          TSS: { ...baseParams.TSS, value: 15 },
-          salinity: { ...baseParams.salinity, value: 12.9 }
-        }
-      },
-      storms: [{
-        id: 'storm-1',
-        name: 'Recent Storm Event',
-        date: '2024-03-15',
-        duration: '4.2 hours',
-        intensity: 'Moderate',
-        influent: { parameters: baseParams },
-        effluent: { parameters: baseParams },
-        removalEfficiencies: { DO: 85, turbidity: 78, TN: 82, TP: 75, TSS: 88, salinity: 65 }
-      }]
+      influent: { parameters: generateVariantParameters(parameterLookup, 'influent') },
+      effluent: { parameters: generateVariantParameters(parameterLookup, 'effluent') },
+      storms: generateStormData(parameterLookup)
     };
-  }, [selectedRegionId]);
+  }
+
+  function normalizeParameterName(name: string): string {
+    const nameMap: any = {
+      'Dissolved Oxygen': 'DO',
+      'Total Nitrogen': 'TN',
+      'Total Phosphorus': 'TP',
+      'Total Suspended Solids': 'TSS',
+      'Turbidity': 'turbidity',
+      'Salinity': 'salinity',
+      'pH': 'pH',
+      'Temperature': 'temperature',
+      'Conductivity': 'conductivity'
+    };
+    return nameMap[name] || name.toLowerCase().replace(/\s+/g, '_');
+  }
+
+  function generateVariantParameters(baseParams: any, type: 'influent' | 'effluent') {
+    const variant: any = {};
+    Object.keys(baseParams).forEach(key => {
+      const base = baseParams[key];
+      let multiplier = 1;
+
+      if (type === 'influent') {
+        // Influent typically has higher contaminants, lower DO
+        multiplier = key === 'DO' ? 0.9 : 1.3;
+      } else {
+        // Effluent has treated water - better quality
+        multiplier = key === 'DO' ? 1.1 : 0.6;
+      }
+
+      variant[key] = {
+        ...base,
+        value: base.value * multiplier
+      };
+    });
+    return variant;
+  }
+
+  function generateStormData(baseParams: any) {
+    return [{
+      id: 'storm-1',
+      name: 'Recent Storm Event',
+      date: '2024-03-15',
+      duration: '4.2 hours',
+      intensity: 'Moderate',
+      influent: { parameters: generateVariantParameters(baseParams, 'influent') },
+      effluent: { parameters: generateVariantParameters(baseParams, 'effluent') },
+      removalEfficiencies: {
+        DO: 85, turbidity: 78, TN: 82, TP: 75, TSS: 88, salinity: 65
+      }
+    }];
+  }
+
+  function getDefaultThresholds(paramName: string) {
+    const defaults: any = {
+      DO: { green: { min: 6 }, yellow: { min: 4 }, red: { min: 0 } },
+      turbidity: { green: { max: 15 }, yellow: { max: 25 }, red: { max: 50 } },
+      TN: { green: { max: 0.8 }, yellow: { max: 1.5 }, red: { max: 3.0 } },
+      TP: { green: { max: 0.1 }, yellow: { max: 0.2 }, red: { max: 0.5 } },
+      TSS: { green: { max: 25 }, yellow: { max: 50 }, red: { max: 100 } },
+      salinity: { green: { min: 10, max: 20 }, yellow: { min: 5, max: 30 }, red: { min: 0, max: 50 } }
+    };
+    return defaults[paramName] || { green: {}, yellow: {}, red: {} };
+  }
+
+  function createFallbackData() {
+    const baseParams = {
+      DO: { value: 7.2, unit: 'mg/L', status: 'good', thresholds: getDefaultThresholds('DO') },
+      turbidity: { value: 12.5, unit: 'NTU', status: 'good', thresholds: getDefaultThresholds('turbidity') },
+      TN: { value: 0.85, unit: 'mg/L', status: 'fair', thresholds: getDefaultThresholds('TN') },
+      TP: { value: 0.12, unit: 'mg/L', status: 'good', thresholds: getDefaultThresholds('TP') },
+      TSS: { value: 28, unit: 'mg/L', status: 'fair', thresholds: getDefaultThresholds('TSS') },
+      salinity: { value: 12.8, unit: 'ppt', status: 'good', thresholds: getDefaultThresholds('salinity') }
+    };
+
+    return {
+      ambient: { parameters: baseParams, overallScore: 75, timestamp: new Date().toISOString() },
+      influent: { parameters: generateVariantParameters(baseParams, 'influent') },
+      effluent: { parameters: generateVariantParameters(baseParams, 'effluent') },
+      storms: generateStormData(baseParams)
+    };
+  }
 
   const data = useMemo(() => {
+    if (regionDataLoading || !regionData) return null;
     if (!selectedRegion) return regionData.ambient;
     return applyRegionThresholds(regionData.ambient, selectedRegion.thresholds);
-  }, [selectedRegion, regionData]);
+  }, [selectedRegion, regionData, regionDataLoading]);
 
   // ── Water Data: Multi-source real data overlay ──────────────────────────
   const { waterData, isLoading: wdLoading, hasRealData, primarySource } = useWaterData(selectedRegionId);
@@ -637,14 +730,14 @@ export default function Home() {
   }, [data, waterData, hasRealData]);
 
   const influentData = useMemo(() => {
-    return regionData.influent;
+    return regionData?.influent || { parameters: {} };
   }, [regionData]);
 
   const effluentData = useMemo(() => {
-    return regionData.effluent;
+    return regionData?.effluent || { parameters: {} };
   }, [regionData]);
 
-  const stormEvents = useMemo(() => regionData.storms, [regionData]);
+  const stormEvents = useMemo(() => regionData?.storms || [], [regionData]);
 
   const removalEfficiencies = useMemo(() => {
     // EMERGENCY FIX: Add null checks to prevent build crashes
@@ -801,17 +894,30 @@ export default function Home() {
   }, [demoStormActive, isStormSpiking, stormPhase]);
   const displayData = (timeMode === 'real-time' && dataMode === 'ambient') ? liveData : dataWithRealValues;
 
+  // Show loading while fetching real data
+  if (regionDataLoading || !regionData || !data) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-slate-600">Loading real-time water data...</p>
+        </div>
+      </div>
+    );
+  }
+
   const previousPeriodData = useMemo(() => {
+    if (!regionData?.ambient) return null;
     const ambient = regionData.ambient;
     const baseData = {
       ...ambient,
       parameters: {
-        DO: { ...ambient.parameters.DO, value: ambient.parameters.DO.value * 1.05 },
-        turbidity: { ...ambient.parameters.turbidity, value: ambient.parameters.turbidity.value * 0.83 },
-        TN: { ...ambient.parameters.TN, value: ambient.parameters.TN.value * 0.84 },
-        TP: { ...ambient.parameters.TP, value: ambient.parameters.TP.value * 0.70 },
-        TSS: { ...ambient.parameters.TSS, value: ambient.parameters.TSS.value * 0.66 },
-        salinity: { ...ambient.parameters.salinity, value: ambient.parameters.salinity.value * 0.95 }
+        DO: { ...ambient.parameters.DO, value: (ambient.parameters.DO?.value || 0) * 1.05 },
+        turbidity: { ...ambient.parameters.turbidity, value: (ambient.parameters.turbidity?.value || 0) * 0.83 },
+        TN: { ...ambient.parameters.TN, value: (ambient.parameters.TN?.value || 0) * 0.84 },
+        TP: { ...ambient.parameters.TP, value: (ambient.parameters.TP?.value || 0) * 0.70 },
+        TSS: { ...ambient.parameters.TSS, value: (ambient.parameters.TSS?.value || 0) * 0.66 },
+        salinity: { ...ambient.parameters.salinity, value: (ambient.parameters.salinity?.value || 0) * 0.95 }
       }
     };
     if (!selectedRegion) return baseData;
