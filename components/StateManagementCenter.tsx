@@ -741,11 +741,12 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
 
   // ── Summary stats ──
   const stats = useMemo(() => {
-    const high = regionData.filter(r => r.alertLevel === 'high').length;
-    const medium = regionData.filter(r => r.alertLevel === 'medium').length;
-    const low = regionData.filter(r => r.alertLevel === 'low').length;
-    const monitored = regionData.filter(r => r.dataSourceCount > 0).length;
-    return { total: regionData.length, high, medium, low, monitored };
+    const safeRegionData = regionData || [];
+    const high = safeRegionData.filter(r => r.alertLevel === 'high').length;
+    const medium = safeRegionData.filter(r => r.alertLevel === 'medium').length;
+    const low = safeRegionData.filter(r => r.alertLevel === 'low').length;
+    const monitored = safeRegionData.filter(r => r.dataSourceCount > 0).length;
+    return { total: safeRegionData.length, high, medium, low, monitored };
   }, [regionData]);
 
   // ── MS4 jurisdictions ──
@@ -801,18 +802,20 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
         asOf: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       };
     }
-    const avgScore = Math.round(jurisdictionScoreRows.reduce((s: number, r: any) => s + r.score, 0) / jurisdictionScoreRows.length);
+    const avgScore = Math.round(safeJurisdictionRows.reduce((s: number, r: any) => s + r.score, 0) / safeJurisdictionRows.length);
     const avgGrade = scoreToGrade(avgScore);
-    const attentionCount = jurisdictionScoreRows.filter((r: any) => r.needsAttention).length;
-    const inCompliance = jurisdictionScoreRows.filter((r: any) => r.status === 'In Compliance').length;
-    const inComplianceRate = Math.round((inCompliance / jurisdictionScoreRows.length) * 100);
+    const safeJurisdictionRows = jurisdictionScoreRows || [];
+    const attentionCount = safeJurisdictionRows.filter((r: any) => r.needsAttention).length;
+    const inCompliance = safeJurisdictionRows.filter((r: any) => r.status === 'In Compliance').length;
+    const inComplianceRate = Math.round((inCompliance / safeJurisdictionRows.length) * 100);
     const asOf = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     return { avgScore, avgGrade, attentionCount, inComplianceRate, asOf };
   }, [jurisdictionScoreRows]);
 
   // ── Hotspots: Top 5 worsening / improving (state-scoped) ──
   const hotspots = useMemo(() => {
-    const assessed = regionData.filter(r => r.status === 'assessed');
+    const safeRegionData = regionData || [];
+    const assessed = safeRegionData.filter(r => r.status === 'assessed');
     const worsening = [...assessed]
       .sort((a, b) => (SEVERITY_ORDER[b.alertLevel] - SEVERITY_ORDER[a.alertLevel]) || (b.activeAlerts - a.activeAlerts))
       .slice(0, 5);
