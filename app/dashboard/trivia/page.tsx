@@ -33,6 +33,37 @@ export default function TriviaGamePage() {
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const [gameMode, setGameMode] = useState<GameMode>('comedy');
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+
+  const sampleQuestions: Question[] = [
+    {
+      id: 'q1',
+      category: 'Gaming',
+      text: 'Which classic game popularized the Konami Code?',
+      options: ['Sonic the Hedgehog', 'Contra', 'Tetris', 'Pac-Man'],
+      correctAnswer: 1,
+      funniestAnswer: 0,
+      type: 'factual',
+    },
+    {
+      id: 'q2',
+      category: 'Pop Culture',
+      text: 'What was the dominant social media platform in the late 2000s?',
+      options: ['MySpace', 'TikTok', 'Threads', 'Discord'],
+      correctAnswer: 0,
+      funniestAnswer: 3,
+      type: 'factual',
+    },
+    {
+      id: 'q3',
+      category: 'Current Events',
+      text: 'Which answer is most likely to appear in a chaotic 2026 headline?',
+      options: ['AI became mayor', 'The weather was normal', 'No one posted online', 'Everyone agreed'],
+      correctAnswer: 0,
+      funniestAnswer: 0,
+      type: 'currentEvents',
+    },
+  ];
 
   const generateRoomCode = () => {
     return Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -68,6 +99,26 @@ export default function TriviaGamePage() {
     if (!playerName.trim() || !roomCode.trim()) return;
     // In real implementation, this would connect to WebSocket
     setGameState('joining');
+  };
+
+  const startGame = () => {
+    if (!room) return;
+    setSelectedAnswer(null);
+    setRoom({ ...room, currentQuestion: 0 });
+    setGameState('playing');
+  };
+
+  const nextQuestion = () => {
+    if (!room) return;
+    const next = room.currentQuestion + 1;
+    if (next >= sampleQuestions.length) {
+      setGameState('menu');
+      setRoom(null);
+      setSelectedAnswer(null);
+      return;
+    }
+    setRoom({ ...room, currentQuestion: next });
+    setSelectedAnswer(null);
   };
 
   const gameModeDescriptions = {
@@ -211,6 +262,7 @@ export default function TriviaGamePage() {
                 </div>
 
                 <Button
+                  onClick={startGame}
                   className="w-full bg-green-600 hover:bg-green-700"
                   disabled={room.players.length < (room.soloTest ? 1 : 2)}
                 >
@@ -230,6 +282,56 @@ export default function TriviaGamePage() {
               <p className="text-gray-300">
                 Attempting to join room <span className="font-mono text-yellow-400">{roomCode}</span>
               </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {gameState === 'playing' && room && (
+          <Card className="bg-gray-800 border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-white text-2xl">
+                Question {room.currentQuestion + 1} / {sampleQuestions.length}
+              </CardTitle>
+              <div className="flex gap-2">
+                <Badge variant="secondary">{sampleQuestions[room.currentQuestion].category}</Badge>
+                <Badge variant="outline" className="text-white">
+                  {room.gameMode.charAt(0).toUpperCase() + room.gameMode.slice(1)} Mode
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-white text-lg">{sampleQuestions[room.currentQuestion].text}</p>
+              <div className="space-y-2">
+                {sampleQuestions[room.currentQuestion].options.map((opt, idx) => (
+                  <Button
+                    key={idx}
+                    variant={selectedAnswer === idx ? 'default' : 'outline'}
+                    onClick={() => setSelectedAnswer(idx)}
+                    className="w-full justify-start"
+                  >
+                    {opt}
+                  </Button>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={nextQuestion}
+                  className="bg-green-600 hover:bg-green-700"
+                  disabled={selectedAnswer === null}
+                >
+                  {room.currentQuestion + 1 >= sampleQuestions.length ? 'Finish' : 'Next Question'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setGameState('menu');
+                    setRoom(null);
+                    setSelectedAnswer(null);
+                  }}
+                >
+                  Exit Game
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
