@@ -763,6 +763,18 @@ export default function Home() {
   }, [influentData, effluentData]);
 
   const selectedStormEvent = useMemo(() => {
+    if (!Array.isArray(stormEvents) || stormEvents.length === 0) {
+      return {
+        id: 'fallback',
+        name: 'No Storm Data',
+        date: '2024-01-01',
+        duration: '0 hours',
+        intensity: 'None',
+        influent: { parameters: {} },
+        effluent: { parameters: {} },
+        removalEfficiencies: {}
+      };
+    }
     return stormEvents.find(event => event.id === selectedStormEventId) || stormEvents[0];
   }, [selectedStormEventId, stormEvents]);
 
@@ -893,6 +905,14 @@ export default function Home() {
     }
   }, [demoStormActive, isStormSpiking, stormPhase]);
   const displayData = (timeMode === 'real-time' && dataMode === 'ambient') ? liveData : dataWithRealValues;
+
+  // EMERGENCY: Ensure displayData has proper structure
+  const safeDisplayData = useMemo(() => {
+    if (!displayData || !safeDisplayData.parameters) {
+      return createFallbackData().ambient;
+    }
+    return displayData;
+  }, [displayData]);
 
   // Only show loading in browser, not during SSR
   if (typeof window !== 'undefined' && regionDataLoading && !data) {
@@ -1026,7 +1046,7 @@ export default function Home() {
   // ── Branded PDF Exports for sections missing them ──────────────────────
   const exportWaterQualityPDF = async () => {
     const regionName = selectedRegion?.name || 'Unknown';
-    const params = displayData.parameters;
+    const params = safeDisplayData.parameters;
     const paramKeys = Object.keys(params) as (keyof typeof params)[];
     const sections: PDFContentSection[] = [
       {
@@ -1103,7 +1123,7 @@ export default function Home() {
 
   const exportFineAvoidancePDF = async () => {
     const regionName = selectedRegion?.name || 'Unknown';
-    const params = displayData.parameters;
+    const params = safeDisplayData.parameters;
     const avgRemoval = ((removalEfficiencies.TSS + removalEfficiencies.TN + removalEfficiencies.TP) / 3);
     const tssCompliant = removalEfficiencies.TSS >= 80;
     const nutrientCompliant = ((removalEfficiencies.TN + removalEfficiencies.TP) / 2) >= 60;
@@ -1151,7 +1171,7 @@ export default function Home() {
 
   const exportTrendsPDF = async () => {
     const regionName = selectedRegion?.name || 'Unknown';
-    const params = displayData.parameters;
+    const params = safeDisplayData.parameters;
     const paramKeys = Object.keys(params) as (keyof typeof params)[];
     const sections: PDFContentSection[] = [
       {
@@ -2006,7 +2026,7 @@ export default function Home() {
               <CardContent>
                 {/* Parameter Cards Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                  {Object.entries(displayData.parameters).map(([key, param]) => {
+                  {Object.entries(safeDisplayData.parameters).map(([key, param]) => {
                     // Determine status color from thresholds
                     const v = param.value;
                     let status: 'green' | 'yellow' | 'orange' | 'red' = 'green';
@@ -2102,7 +2122,7 @@ export default function Home() {
                 {/* Extra live parameters not in mock data */}
                 {waterData && (() => {
                   const wd = waterData!;
-                  const mockKeys = new Set(Object.keys(displayData.parameters));
+                  const mockKeys = new Set(Object.keys(safeDisplayData.parameters));
                   const extraKeys = Object.keys(wd.parameters).filter(k => !mockKeys.has(k));
                   if (extraKeys.length === 0) return null;
 
@@ -2486,11 +2506,11 @@ export default function Home() {
             <CollapsibleSection id="esg-score" title="Sustainability Score Dashboard" icon="📊" collapsed={isCollapsed('esg-score')} onToggle={toggleSection}>
             {(() => {
             // Calculate ESG scores for Corporate dashboard
-            const doScore = Math.min(100, ((displayData?.parameters?.DO?.value || 0) / 9) * 100);
-            const turbScore = Math.max(0, 100 - ((displayData?.parameters?.turbidity?.value || 0) / 50) * 100);
-            const tnScore = Math.max(0, 100 - ((displayData?.parameters?.TN?.value || 0) / 1.5) * 100);
-            const tpScore = Math.max(0, 100 - ((displayData?.parameters?.TP?.value || 0) / 0.15) * 100);
-            const tssScore = Math.max(0, 100 - ((displayData?.parameters?.TSS?.value || 0) / 100) * 100);
+            const doScore = Math.min(100, ((safeDisplayData?.parameters?.DO?.value || 0) / 9) * 100);
+            const turbScore = Math.max(0, 100 - ((safeDisplayData?.parameters?.turbidity?.value || 0) / 50) * 100);
+            const tnScore = Math.max(0, 100 - ((safeDisplayData?.parameters?.TN?.value || 0) / 1.5) * 100);
+            const tpScore = Math.max(0, 100 - ((safeDisplayData?.parameters?.TP?.value || 0) / 0.15) * 100);
+            const tssScore = Math.max(0, 100 - ((safeDisplayData?.parameters?.TSS?.value || 0) / 100) * 100);
             const waterQuality = Math.round((doScore * 2 + turbScore + tnScore + tpScore + tssScore) / 6);
             
             const tssEff = Math.min(100, removalEfficiencies.TSS || 0);
@@ -2499,9 +2519,9 @@ export default function Home() {
             const turbEff = Math.min(100, removalEfficiencies.turbidity || 0);
             const loadReduction = Math.round((tssEff * 1.5 + tnEff + tpEff + turbEff) / 4.5);
             
-            const doValue = displayData?.parameters?.DO?.value || 0;
-            const tnValue = displayData?.parameters?.TN?.value || 0;
-            const tpValue = displayData?.parameters?.TP?.value || 0;
+            const doValue = safeDisplayData?.parameters?.DO?.value || 0;
+            const tnValue = safeDisplayData?.parameters?.TN?.value || 0;
+            const tpValue = safeDisplayData?.parameters?.TP?.value || 0;
             const doEcosystem = doValue >= 6 ? 100 : doValue >= 4 ? 60 : 20;
             const tnEcosystem = tnValue <= 0.8 ? 100 : tnValue <= 1.5 ? 65 : 30;
             const tpEcosystem = tpValue <= 0.05 ? 100 : tpValue <= 0.15 ? 65 : 25;
@@ -2641,7 +2661,7 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-4">
-                  {Object.entries(displayData.parameters).slice(0, 4).map(([key, param]) => {
+                  {Object.entries(safeDisplayData.parameters).slice(0, 4).map(([key, param]) => {
                     const k = key as keyof typeof removalEfficiencies;
                     const influent = param.value * (1 + (removalEfficiencies[k] || 0) / 100);
                     const removal = removalEfficiencies[k] || 0;
