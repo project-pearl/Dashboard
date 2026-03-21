@@ -408,6 +408,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
   }, []);
 
   const leafletGeo = STATE_GEO_LEAFLET[stateAbbr] || { center: [39.8, -98.5] as [number, number], zoom: 4 };
+  const stateZoom = leafletGeo.zoom;
 
   // ── ATTAINS bulk for this state ──
   const [attainsBulk, setAttainsBulk] = useState<Array<{ id: string; name: string; category: string; alertLevel: AlertLevel; causes: string[]; cycle: string; lat?: number | null; lon?: number | null; waterType?: string | null; causeCount: number }>>([]);
@@ -870,7 +871,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               className="flex items-center gap-2"
             >
               <Wrench className="h-4 w-4" />
-              {isEditMode ? 'Exit Edit' : 'Edit Layout'}
+              Edit Layout
             </Button>
           )}
         </div>
@@ -878,20 +879,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
 
       <LensDataStory lens={viewLens} role="State" state={stateAbbr} />
 
-      {isEditMode && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <div className="flex items-center gap-2 text-blue-800">
-            <Info className="h-5 w-5" />
-            <span className="font-medium">Edit Mode Active</span>
-          </div>
-          <p className="text-sm text-blue-700 mt-1">
-            Drag and drop sections to reorder them. Use the visibility toggles to show/hide sections.
-            Click "Save" in the floating toolbar to save your changes.
-          </p>
-        </div>
-      )}
-
-      <div className={`space-y-6 ${isEditMode ? 'pl-12' : ''}`}>
+      <div className="space-y-6">
 
       {sections.filter(s => {
         if (isEditMode) return true;
