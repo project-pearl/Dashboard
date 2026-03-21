@@ -966,7 +966,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
           </CardHeader>
           <CardContent>
             <div className="space-y-4 max-h-96 overflow-y-auto">
-              {jurisdictionScoreRows.slice(0, 10).map((jurisdiction: any) => (
+              {(jurisdictionScoreRows || []).slice(0, 10).map((jurisdiction: any) => (
                 <div key={jurisdiction.name} className="flex items-center justify-between p-2 border rounded">
                   <div>
                     <div className="font-medium">{jurisdiction.name}</div>
