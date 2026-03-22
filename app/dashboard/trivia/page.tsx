@@ -37,6 +37,8 @@ export default function TriviaGamePage() {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [gameQuestions, setGameQuestions] = useState<TriviaQuestion[]>([]);
   const [gameEnded, setGameEnded] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [totalScore, setTotalScore] = useState(0);
 
   const generateRoomCode = () => {
     return Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -80,8 +82,36 @@ export default function TriviaGamePage() {
     setGameQuestions(questions);
     setSelectedAnswer(null);
     setGameEnded(false);
+    setShowResults(false);
+    setTotalScore(0);
     setRoom({ ...room, currentQuestion: 0 });
     setGameState('playing');
+  };
+
+  const submitAnswer = () => {
+    if (!room || !gameQuestions.length || selectedAnswer === null) return;
+    setShowResults(true);
+
+    // Calculate score based on game mode
+    const currentQ = gameQuestions[room.currentQuestion];
+    let points = 0;
+
+    if (gameMode === 'comedy') {
+      if (selectedAnswer === currentQ.funniestAnswer) points = 100;
+      else if (selectedAnswer === currentQ.correctAnswer) points = 50;
+      // Popular answer bonus would go here in multiplayer
+    } else if (gameMode === 'nerd') {
+      if (selectedAnswer === currentQ.correctAnswer) points = 100;
+      else if (selectedAnswer === currentQ.funniestAnswer) points = 50;
+    } else if (gameMode === 'crowd') {
+      if (selectedAnswer === currentQ.funniestAnswer) points = 100;
+      else if (selectedAnswer === currentQ.correctAnswer) points = 50;
+    } else if (gameMode === 'democracy') {
+      // In solo mode, just give points for any answer
+      points = 50;
+    }
+
+    setTotalScore(prev => prev + points);
   };
 
   const nextQuestion = () => {
@@ -92,6 +122,7 @@ export default function TriviaGamePage() {
     } else {
       setRoom({ ...room, currentQuestion: next });
       setSelectedAnswer(null);
+      setShowResults(false);
     }
   };
 
@@ -267,10 +298,13 @@ export default function TriviaGamePage() {
                 {gameEnded ? '🎉 Game Complete!' : `Question ${room.currentQuestion + 1} / ${gameQuestions.length}`}
               </CardTitle>
               {!gameEnded && (
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
                   <Badge variant="secondary">{gameQuestions[room.currentQuestion].category}</Badge>
                   <Badge variant="outline" className="text-white">
                     {room.gameMode.charAt(0).toUpperCase() + room.gameMode.slice(1)} Mode
+                  </Badge>
+                  <Badge variant="outline" className="text-yellow-400 border-yellow-400">
+                    Score: {totalScore}
                   </Badge>
                 </div>
               )}
@@ -278,7 +312,8 @@ export default function TriviaGamePage() {
             <CardContent className="space-y-4">
               {gameEnded ? (
                 <div className="text-center space-y-4">
-                  <p className="text-yellow-400 text-xl">Thanks for playing PIN TRIVIA!</p>
+                  <p className="text-yellow-400 text-2xl">Thanks for playing PIN TRIVIA!</p>
+                  <p className="text-gray-300 text-lg">Final Score: <span className="text-yellow-400 font-bold">{totalScore} points</span></p>
                   <p className="text-gray-300">You answered {gameQuestions.length} questions.</p>
                   <Button
                     onClick={() => {
@@ -287,10 +322,88 @@ export default function TriviaGamePage() {
                       setSelectedAnswer(null);
                       setGameEnded(false);
                       setGameQuestions([]);
+                      setShowResults(false);
+                      setTotalScore(0);
                     }}
                     className="bg-blue-600 hover:bg-blue-700"
                   >
                     Play Again
+                  </Button>
+                </div>
+              ) : showResults ? (
+                <div className="space-y-4">
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <p className="text-yellow-400 text-lg font-semibold mb-3">
+                      {gameQuestions[room.currentQuestion].text}
+                    </p>
+
+                    {/* Show results */}
+                    <div className="space-y-2">
+                      {gameQuestions[room.currentQuestion].options.map((opt, idx) => {
+                        const isCorrect = idx === gameQuestions[room.currentQuestion].correctAnswer;
+                        const isFunniest = idx === gameQuestions[room.currentQuestion].funniestAnswer;
+                        const isSelected = selectedAnswer === idx;
+
+                        let bgColor = 'bg-gray-600';
+                        let textColor = 'text-gray-300';
+                        let label = '';
+
+                        if (isSelected) {
+                          if (isCorrect) {
+                            bgColor = 'bg-green-600';
+                            textColor = 'text-white';
+                            label = '✅ Your Answer (Correct!)';
+                          } else if (isFunniest) {
+                            bgColor = 'bg-blue-600';
+                            textColor = 'text-white';
+                            label = '😂 Your Answer (Funniest!)';
+                          } else {
+                            bgColor = 'bg-red-600';
+                            textColor = 'text-white';
+                            label = '❌ Your Answer';
+                          }
+                        } else if (isCorrect) {
+                          bgColor = 'bg-green-500';
+                          textColor = 'text-white';
+                          label = '✅ Correct Answer';
+                        } else if (isFunniest) {
+                          bgColor = 'bg-blue-500';
+                          textColor = 'text-white';
+                          label = '😂 Funniest Answer';
+                        }
+
+                        return (
+                          <div key={idx} className={`p-3 rounded ${bgColor} ${textColor}`}>
+                            <div className="flex justify-between items-center">
+                              <span>
+                                <span className="font-mono mr-3">
+                                  {String.fromCharCode(65 + idx)})
+                                </span>
+                                {opt}
+                              </span>
+                              {label && <span className="text-sm font-semibold">{label}</span>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Score breakdown */}
+                    <div className="mt-4 p-3 bg-gray-800 rounded">
+                      <p className="text-yellow-400 font-semibold">
+                        Points earned: {selectedAnswer === gameQuestions[room.currentQuestion].funniestAnswer ?
+                          (gameMode === 'comedy' || gameMode === 'crowd' ? 100 : 50) :
+                          selectedAnswer === gameQuestions[room.currentQuestion].correctAnswer ?
+                          (gameMode === 'nerd' ? 100 : 50) : 0}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={nextQuestion}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                  >
+                    {room.currentQuestion + 1 >= gameQuestions.length ? 'See Final Score' : 'Next Question'}
                   </Button>
                 </div>
               ) : (
@@ -321,11 +434,11 @@ export default function TriviaGamePage() {
                   </div>
                   <div className="flex gap-2">
                     <Button
-                      onClick={nextQuestion}
+                      onClick={submitAnswer}
                       className="bg-green-600 hover:bg-green-700"
                       disabled={selectedAnswer === null}
                     >
-                      {room.currentQuestion + 1 >= gameQuestions.length ? 'Finish Game' : 'Next Question'}
+                      Submit Answer
                     </Button>
                     <Button
                       variant="outline"
@@ -335,6 +448,8 @@ export default function TriviaGamePage() {
                         setSelectedAnswer(null);
                         setGameEnded(false);
                         setGameQuestions([]);
+                        setShowResults(false);
+                        setTotalScore(0);
                       }}
                       className="text-gray-300 border-gray-600 hover:bg-gray-700"
                     >
