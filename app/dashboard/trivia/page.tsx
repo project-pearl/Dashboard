@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { triviaQuestions, getQuestionMix, type TriviaQuestion } from '@/lib/triviaQuestions';
 
 type GameMode = 'comedy' | 'nerd' | 'crowd' | 'democracy';
 type QuestionType = 'edgy' | 'funny' | 'factual' | 'trueFalse' | 'currentEvents';
@@ -34,36 +35,8 @@ export default function TriviaGamePage() {
   const [roomCode, setRoomCode] = useState('');
   const [gameMode, setGameMode] = useState<GameMode>('comedy');
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-
-  const sampleQuestions: Question[] = [
-    {
-      id: 'q1',
-      category: 'Gaming',
-      text: 'Which classic game popularized the Konami Code?',
-      options: ['Sonic the Hedgehog', 'Contra', 'Tetris', 'Pac-Man'],
-      correctAnswer: 1,
-      funniestAnswer: 0,
-      type: 'factual',
-    },
-    {
-      id: 'q2',
-      category: 'Pop Culture',
-      text: 'What was the dominant social media platform in the late 2000s?',
-      options: ['MySpace', 'TikTok', 'Threads', 'Discord'],
-      correctAnswer: 0,
-      funniestAnswer: 3,
-      type: 'factual',
-    },
-    {
-      id: 'q3',
-      category: 'Current Events',
-      text: 'Which answer is most likely to appear in a chaotic 2026 headline?',
-      options: ['AI became mayor', 'The weather was normal', 'No one posted online', 'Everyone agreed'],
-      correctAnswer: 0,
-      funniestAnswer: 0,
-      type: 'currentEvents',
-    },
-  ];
+  const [gameQuestions, setGameQuestions] = useState<TriviaQuestion[]>([]);
+  const [gameEnded, setGameEnded] = useState(false);
 
   const generateRoomCode = () => {
     return Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -103,16 +76,23 @@ export default function TriviaGamePage() {
 
   const startGame = () => {
     if (!room) return;
+    const questions = getQuestionMix(15); // Get 15 mixed questions
+    setGameQuestions(questions);
     setSelectedAnswer(null);
+    setGameEnded(false);
     setRoom({ ...room, currentQuestion: 0 });
     setGameState('playing');
   };
 
   const nextQuestion = () => {
-    if (!room) return;
-    const next = (room.currentQuestion + 1) % sampleQuestions.length;
-    setRoom({ ...room, currentQuestion: next });
-    setSelectedAnswer(null);
+    if (!room || !gameQuestions.length) return;
+    const next = room.currentQuestion + 1;
+    if (next >= gameQuestions.length) {
+      setGameEnded(true);
+    } else {
+      setRoom({ ...room, currentQuestion: next });
+      setSelectedAnswer(null);
+    }
   };
 
   const gameModeDescriptions = {
@@ -280,56 +260,89 @@ export default function TriviaGamePage() {
           </Card>
         )}
 
-        {gameState === 'playing' && room && (
+        {gameState === 'playing' && room && gameQuestions.length > 0 && (
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader>
               <CardTitle className="text-white text-2xl">
-                Question {room.currentQuestion + 1} / {sampleQuestions.length}
+                {gameEnded ? '🎉 Game Complete!' : `Question ${room.currentQuestion + 1} / ${gameQuestions.length}`}
               </CardTitle>
-              <div className="flex gap-2">
-                <Badge variant="secondary">{sampleQuestions[room.currentQuestion].category}</Badge>
-                <Badge variant="outline" className="text-white">
-                  {room.gameMode.charAt(0).toUpperCase() + room.gameMode.slice(1)} Mode
-                </Badge>
-              </div>
+              {!gameEnded && (
+                <div className="flex gap-2">
+                  <Badge variant="secondary">{gameQuestions[room.currentQuestion].category}</Badge>
+                  <Badge variant="outline" className="text-white">
+                    {room.gameMode.charAt(0).toUpperCase() + room.gameMode.slice(1)} Mode
+                  </Badge>
+                </div>
+              )}
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-white text-lg">{sampleQuestions[room.currentQuestion].text}</p>
-              <div className="space-y-2">
-                {sampleQuestions[room.currentQuestion].options.map((opt, idx) => (
+              {gameEnded ? (
+                <div className="text-center space-y-4">
+                  <p className="text-yellow-400 text-xl">Thanks for playing PIN TRIVIA!</p>
+                  <p className="text-gray-300">You answered {gameQuestions.length} questions.</p>
                   <Button
-                    key={idx}
-                    variant="outline"
-                    onClick={() => setSelectedAnswer(idx)}
-                    className={`w-full justify-start border ${
-                      selectedAnswer === idx
-                        ? 'bg-yellow-300 text-slate-900 border-yellow-400 hover:bg-yellow-200'
-                        : 'bg-white text-slate-900 border-slate-300 hover:bg-slate-100'
-                    }`}
+                    onClick={() => {
+                      setGameState('menu');
+                      setRoom(null);
+                      setSelectedAnswer(null);
+                      setGameEnded(false);
+                      setGameQuestions([]);
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700"
                   >
-                    {opt}
+                    Play Again
                   </Button>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={nextQuestion}
-                  className="bg-green-600 hover:bg-green-700"
-                  disabled={selectedAnswer === null}
-                >
-                  Next Question
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setGameState('menu');
-                    setRoom(null);
-                    setSelectedAnswer(null);
-                  }}
-                >
-                  Exit Game
-                </Button>
-              </div>
+                </div>
+              ) : (
+                <>
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <p className="text-yellow-400 text-lg font-semibold">
+                      {gameQuestions[room.currentQuestion].text}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    {gameQuestions[room.currentQuestion].options.map((opt, idx) => (
+                      <Button
+                        key={idx}
+                        variant="outline"
+                        onClick={() => setSelectedAnswer(idx)}
+                        className={`w-full justify-start text-left p-4 ${
+                          selectedAnswer === idx
+                            ? 'bg-yellow-300 text-slate-900 border-yellow-400 hover:bg-yellow-200'
+                            : 'bg-gray-700 text-yellow-100 border-gray-600 hover:bg-gray-600'
+                        }`}
+                      >
+                        <span className="font-mono mr-3 text-yellow-400">
+                          {String.fromCharCode(65 + idx)})
+                        </span>
+                        {opt}
+                      </Button>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={nextQuestion}
+                      className="bg-green-600 hover:bg-green-700"
+                      disabled={selectedAnswer === null}
+                    >
+                      {room.currentQuestion + 1 >= gameQuestions.length ? 'Finish Game' : 'Next Question'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setGameState('menu');
+                        setRoom(null);
+                        setSelectedAnswer(null);
+                        setGameEnded(false);
+                        setGameQuestions([]);
+                      }}
+                      className="text-gray-300 border-gray-600 hover:bg-gray-700"
+                    >
+                      Exit Game
+                    </Button>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         )}

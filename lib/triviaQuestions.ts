@@ -254,6 +254,228 @@ export const triviaQuestions: TriviaQuestion[] = [
     funniestAnswer: 0,
     type: 'funny',
     era: '1980s'
+  },
+
+  // MORE EDGY QUESTIONS
+  {
+    id: 'edgy-5',
+    category: 'Ex-Files',
+    text: 'If your ex was a streaming service, they\'d be:',
+    options: [
+      'Netflix (used to be good)',
+      'Peacock (nobody asked for this)',
+      'Apple TV+ (expensive and disappointing)',
+      'Quibi (dead and forgotten)'
+    ],
+    correctAnswer: 3,
+    funniestAnswer: 3,
+    type: 'edgy'
+  },
+  {
+    id: 'edgy-6',
+    category: 'Therapy Session Soundtracks',
+    text: 'Which song would play during a breakup with your smartphone:',
+    options: [
+      'Somebody That I Used to Know',
+      'Before He Cheats',
+      'I Will Survive',
+      'We Are Never Getting Back Together'
+    ],
+    correctAnswer: 3,
+    funniestAnswer: 0,
+    type: 'edgy'
+  },
+  {
+    id: 'edgy-7',
+    category: '2026 Dating Horror Stories',
+    text: 'Which dating app feature would terrify Gen X the most:',
+    options: [
+      'AI personality matching',
+      'Credit score verification',
+      'Parent approval required',
+      'Video calls mandatory'
+    ],
+    correctAnswer: 3,
+    funniestAnswer: 2,
+    type: 'edgy'
+  },
+
+  // MORE GAMING QUESTIONS
+  {
+    id: 'gaming-3',
+    category: 'Characters Who Need Dating Apps',
+    text: 'Sonic\'s dating profile would most likely say:',
+    options: [
+      '"I move too fast for most people"',
+      '"Gotta go fast (in relationships too)"',
+      '"Collect rings, not red flags"',
+      '"Blue hedgehog seeks yellow rings"'
+    ],
+    correctAnswer: 0,
+    funniestAnswer: 1,
+    type: 'edgy'
+  },
+  {
+    id: 'gaming-4',
+    category: 'Boss Fight Breakups',
+    text: 'Which Final Fantasy character would your ex most relate to:',
+    options: [
+      'Sephiroth (burns everything down)',
+      'Cloud (emotionally unavailable)',
+      'Yuffie (steals your stuff)',
+      'Cactuar (runs away from problems)'
+    ],
+    correctAnswer: 1,
+    funniestAnswer: 3,
+    type: 'edgy'
+  },
+  {
+    id: 'gaming-5',
+    category: 'Modern Gaming Chaos',
+    text: 'Which 2026 gaming trend would confuse a 1990s gamer most:',
+    options: [
+      'Paying $20 for character skins',
+      'Games that aren\'t finished at launch',
+      'Streaming yourself playing games',
+      'NFT weapon unlocks'
+    ],
+    correctAnswer: 2,
+    funniestAnswer: 3,
+    type: 'currentEvents'
+  },
+
+  // MORE CURRENT EVENTS
+  {
+    id: 'current-3',
+    category: 'AI Took My Job',
+    text: 'Which profession would ChatGPT struggle with most:',
+    options: [
+      'Therapist',
+      'Stand-up comedian',
+      'DMV employee',
+      'Divorce lawyer'
+    ],
+    correctAnswer: 2,
+    funniestAnswer: 1,
+    type: 'currentEvents'
+  },
+  {
+    id: 'current-4',
+    category: 'Influencer Economics',
+    text: 'Which 2026 side hustle would make your grandmother cry:',
+    options: [
+      'OnlyFans fitness coach',
+      'TikTok grief counselor',
+      'LinkedIn life coach',
+      'Instagram plant therapist'
+    ],
+    correctAnswer: 1,
+    funniestAnswer: 3,
+    type: 'currentEvents'
+  },
+
+  // MORE FUNNY QUESTIONS
+  {
+    id: 'funny-4',
+    category: 'Things Your Inner Child Would Say',
+    text: 'A rubber duck\'s therapy session would focus on:',
+    options: [
+      'Nobody takes me seriously',
+      'I\'m tired of always being squeezed',
+      'Bath time trauma',
+      'Why do I always float alone?'
+    ],
+    correctAnswer: 2,
+    funniestAnswer: 3,
+    type: 'funny'
+  },
+  {
+    id: 'funny-5',
+    category: 'Karaoke From Hell',
+    text: 'If a disco ball could sing karaoke, it would choose:',
+    options: [
+      'I Will Survive',
+      'Dancing Queen',
+      'Mirror Ball (Taylor Swift)',
+      'Shiny Happy People'
+    ],
+    correctAnswer: 1,
+    funniestAnswer: 2,
+    type: 'funny'
+  },
+  {
+    id: 'funny-6',
+    category: 'Corporate Nightmare Fuel',
+    text: 'Which Zoom meeting feature causes the most existential dread:',
+    options: [
+      'Camera always on',
+      'Can see yourself talking',
+      'Awkward silence counter',
+      'Productivity score visible to all'
+    ],
+    correctAnswer: 1,
+    funniestAnswer: 3,
+    type: 'funny'
+  },
+
+  // MORE FACTUAL QUESTIONS (in funny categories)
+  {
+    id: 'factual-3',
+    category: 'Historical Oversharing',
+    text: 'The Boston Tea Party happened in:',
+    options: [
+      '1773',
+      '1775',
+      '1776',
+      'When Starbucks got too expensive'
+    ],
+    correctAnswer: 0,
+    funniestAnswer: 3,
+    type: 'factual'
+  },
+  {
+    id: 'factual-4',
+    category: 'Science Class Trauma',
+    text: 'Which planet has the most moons:',
+    options: [
+      'Jupiter',
+      'Saturn',
+      'The moon (it\'s complicated)',
+      'Earth (if you count commitment issues)'
+    ],
+    correctAnswer: 1,
+    funniestAnswer: 3,
+    type: 'factual'
+  },
+
+  // MORE TRUE/FALSE
+  {
+    id: 'tf-2',
+    category: 'Songs That Hit Too Close to Home',
+    text: 'True or False: "Baby Shark" was the most-watched YouTube video of 2021.',
+    options: [
+      'True',
+      'False',
+      'Unfortunately true',
+      'Stop making me think about it'
+    ],
+    correctAnswer: 1,
+    funniestAnswer: 3,
+    type: 'trueFalse'
+  },
+  {
+    id: 'tf-3',
+    category: 'Relationship Advice from Hell',
+    text: 'True or False: Bananas are berries, but strawberries are not.',
+    options: [
+      'True',
+      'False',
+      'Only organic ones',
+      'Depends on the smoothie'
+    ],
+    correctAnswer: 0,
+    funniestAnswer: 3,
+    type: 'trueFalse'
   }
 ];
 
